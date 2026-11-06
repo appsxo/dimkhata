@@ -11,13 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
       - name: Ping Supabase Database (Prevent Free-Tier Pausing)
         run: |
-          if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
+          SB_KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_ANON_KEY}"
+          if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$SB_KEY" ]; then
             echo "Pinging Supabase REST endpoint to keep project active..."
-            curl -s -f -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY" \
+            curl -s -f -H "apikey: $SB_KEY" \
               "$VITE_SUPABASE_URL/rest/v1/company_settings?select=id&limit=1" > /dev/null || true
             echo "Keep-alive ping completed."
           else
