@@ -114,19 +114,47 @@
   box-shadow: 0 0 0 1px #0c0a09;
 }
 
-/* Custom Print Styles for Sales Invoices, Challans & Salary Slips */
+/* Custom Print Styles for Sales Invoices, Challans, Salary Slips & P&L Reports */
 @media print {
   body {
     background: white !important;
     color: black !important;
   }
 
-  .no-print {
+  .no-print,
+  .no-print * {
     display: none !important;
   }
 
   .print-only {
     display: block !important;
+  }
+
+  /* When a modal with .print-card (Invoice, Challan, or Salary Slip) is open, isolate it for printing */
+  body:has(.fixed .print-card) * {
+    visibility: hidden;
+  }
+
+  body:has(.fixed .print-card) .fixed:has(.print-card),
+  body:has(.fixed .print-card) .fixed:has(.print-card) * {
+    visibility: visible;
+  }
+
+  body:has(.fixed .print-card) .fixed:has(.print-card) {
+    position: absolute !important;
+    inset: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    align-items: flex-start !important;
+  }
+
+  body:has(.fixed .print-card) .fixed:has(.print-card) > div {
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .print-card {

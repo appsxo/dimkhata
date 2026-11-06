@@ -89,12 +89,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'cashbook',
       label: 'ক্যাশ ও ব্যাংক হিসাব',
       icon: Wallet,
+      adminOnly: true,
       badge: 'লাইভ সিঙ্ক',
     },
     {
       id: 'payroll',
       label: 'কর্মচারী ও বেতন পে-রোল',
       icon: Briefcase,
+      adminOnly: true,
     },
     {
       id: 'expenses',

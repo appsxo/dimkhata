@@ -3,7 +3,7 @@
 // ====================================================================
 
 import React, { useState } from 'react';
-import { AlertTriangle, Gift, CheckCircle2, History } from 'lucide-react';
+import { AlertTriangle, Gift, CheckCircle2, History, ArrowRightLeft } from 'lucide-react';
 import { EggCategory, InventoryStock, Branch, StockAdjustment } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
@@ -11,6 +11,7 @@ import { formatTaka, toBengaliNumber } from '../lib/egg-units';
 interface WastageCourtesyViewProps {
   categories: EggCategory[];
   stocks: InventoryStock[];
+  allBranchStocks?: InventoryStock[];
   branches: Branch[];
   adjustments: StockAdjustment[];
   onRefresh: () => void;
@@ -19,19 +20,24 @@ interface WastageCourtesyViewProps {
 export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
   categories,
   stocks,
+  allBranchStocks,
   branches,
   adjustments,
   onRefresh,
 }) => {
-  const [activeTab, setActiveTab] = useState<'WASTAGE' | 'COURTESY'>('WASTAGE');
+  const rawBranchStocks = allBranchStocks || stocks;
+  const [activeTab, setActiveTab] = useState<'WASTAGE' | 'COURTESY' | 'TRANSFER'>('WASTAGE');
   const [branchId, setBranchId] = useState(branches[0]?.id || '');
+  const [targetBranchId, setTargetBranchId] = useState(branches[1]?.id || branches[0]?.id || '');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
   const [adjustmentDate, setAdjustmentDate] = useState(new Date().toISOString().split('T')[0]);
   const [qtyPcs, setQtyPcs] = useState<number>(30);
   const [wastageType, setWastageType] = useState<'WASTAGE_BROKEN' | 'WASTAGE_ROTTEN'>('WASTAGE_BROKEN');
   const [recipientOrReason, setRecipientOrReason] = useState('');
 
-  const currentStock = stocks.find((s) => s.category_id === categoryId && s.branch_id === branchId);
+  const selectedCat = categories.find((c) => c.id === categoryId);
+  const crateSize = selectedCat?.pcs_per_crate || 30;
+  const currentStock = rawBranchStocks.find((s) => s.category_id === categoryId && s.branch_id === branchId);
   const currentUnitLandedCost = currentStock?.avg_landed_cost_per_pc || 10.50;
   const totalCostValue = Math.round(qtyPcs * currentUnitLandedCost * 100) / 100;
 
@@ -42,7 +48,17 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
       return;
     }
 
-    const type = activeTab === 'WASTAGE' ? wastageType : 'COURTESY_GIFT';
+    if (activeTab === 'TRANSFER' && branchId === targetBranchId) {
+      alert('উৎস এবং গন্তব্য শাখা আলাদা হতে হবে!');
+      return;
+    }
+
+    const type: StockAdjustment['adjustment_type'] =
+      activeTab === 'WASTAGE'
+        ? wastageType
+        : activeTab === 'COURTESY'
+        ? 'COURTESY_GIFT'
+        : 'BRANCH_TRANSFER';
     const adjCode = DimKhataStore.getNextCode('ADJ');
 
     const newAdjustment: StockAdjustment = {
@@ -50,17 +66,28 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
       adjustment_code: adjCode,
       adjustment_date: adjustmentDate,
       branch_id: branchId,
+      target_branch_id: activeTab === 'TRANSFER' ? targetBranchId : undefined,
       category_id: categoryId,
       adjustment_type: type,
       qty_pcs: qtyPcs,
       unit_landed_cost: currentUnitLandedCost,
       total_cost_value: totalCostValue,
-      recipient_or_reason: recipientOrReason || (activeTab === 'WASTAGE' ? 'পরিবহনে ভাঙা / গরমে পচা' : 'সৌজন্য গিফট'),
+      recipient_or_reason:
+        recipientOrReason ||
+        (activeTab === 'WASTAGE'
+          ? 'পরিবহনে ভাঙা / গরমে পচা'
+          : activeTab === 'COURTESY'
+          ? 'সৌজন্য গিফট'
+          : `শাখা ট্রান্সফার (${branches.find((b) => b.id === targetBranchId)?.name || 'গন্তব্য শাখা'})`),
       created_at: new Date().toISOString(),
     };
 
     DimKhataStore.recordStockAdjustment(newAdjustment);
-    alert('সফল! ডিম স্টক থেকে বিয়োগ করা হয়েছে এবং লাভ-লোকসানের খরচে যুক্ত হয়েছে।');
+    alert(
+      activeTab === 'TRANSFER'
+        ? 'সফল! এক শাখা থেকে অন্য শাখায় ডিমের স্টক স্থানান্তরিত হয়েছে।'
+        : 'সফল! ডিম স্টক থেকে বিয়োগ করা হয়েছে এবং লাভ-লোকসানের খরচে যুক্ত হয়েছে।'
+    );
     onRefresh();
 
     setQtyPcs(30);
@@ -81,10 +108,10 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
       {/* Title */}
       <div>
         <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
-          ড্যামেজ, পচা ও সৌজন্যে দেওয়া ডিমের হিসাব (Req 7, 8)
+          ড্যামেজ, পচা, সৌজন্য ডিম ও শাখা স্থানান্তর (Req 3, 7, 8)
         </h2>
         <p className="text-xs text-[#777169] mt-0.5">
-          ভাঙা বা নষ্ট ডিম ও স্থানীয় সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি সরাসরি লাভ-লোকসানে সমন্বয়
+          ভাঙা বা নষ্ট ডিম ও স্থানীয় সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি সরাসরি লাভ-লোকসানে সমন্বয় এবং শাখাভিত্তিক স্টক ট্রান্সফার
         </p>
       </div>
 
@@ -125,30 +152,42 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
         {/* Form (2 Cols) */}
         <div className="lg:col-span-2 card-editorial space-y-5">
           {/* Tab Selector (Pill Geometry) */}
-          <div className="flex bg-[#f0efed] p-1 rounded-full text-xs font-medium">
+          <div className="flex flex-wrap bg-[#f0efed] p-1 rounded-full text-xs font-medium gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('WASTAGE')}
-              className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition ${
+              className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-1.5 transition ${
                 activeTab === 'WASTAGE'
                   ? 'bg-[#292524] text-white shadow-xs'
                   : 'text-[#4e4e4e] hover:text-[#0c0a09]'
               }`}
             >
-              <AlertTriangle className="w-4 h-4" />
-              <span>ভাঙা ও পচা ডিম (Wastage Loss)</span>
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>ভাঙা ও পচা (Wastage)</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('COURTESY')}
-              className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition ${
+              className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-1.5 transition ${
                 activeTab === 'COURTESY'
                   ? 'bg-[#292524] text-white shadow-xs'
                   : 'text-[#4e4e4e] hover:text-[#0c0a09]'
               }`}
             >
-              <Gift className="w-4 h-4" />
-              <span>সৌজন্যে / গিফটে দেওয়া ডিম (Courtesy)</span>
+              <Gift className="w-3.5 h-3.5" />
+              <span>সৌজন্য গিফট (Courtesy)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('TRANSFER')}
+              className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-1.5 transition ${
+                activeTab === 'TRANSFER'
+                  ? 'bg-[#292524] text-white shadow-xs'
+                  : 'text-[#4e4e4e] hover:text-[#0c0a09]'
+              }`}
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span>শাখা স্থানান্তর (Transfer)</span>
             </button>
           </div>
 
@@ -156,7 +195,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-[#292524] mb-1">
-                  শাখা / গোডাউন
+                  {activeTab === 'TRANSFER' ? 'উৎস শাখা (যেখান থেকে যাবে)' : 'শাখা / গোডাউন'}
                 </label>
                 <select
                   value={branchId}
@@ -242,7 +281,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                   </label>
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'COURTESY' ? (
               <div>
                 <label className="block text-xs font-medium text-[#292524] mb-1">
                   কাকে সৌজন্যে দেওয়া হলো (প্রাপক / কারণ)
@@ -255,13 +294,44 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                   className="input-editorial w-full text-xs"
                 />
               </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    গন্তব্য শাখা (যেখানে জমা হবে)
+                  </label>
+                  <select
+                    value={targetBranchId}
+                    onChange={(e) => setTargetBranchId(e.target.value)}
+                    className="input-editorial w-full text-xs"
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    ট্রান্সফার নোট / বাহন
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="উদা: নিজস্ব ভ্যানে যাত্রাবাড়ী গোডাউনে প্রেরণ"
+                    value={recipientOrReason}
+                    onChange={(e) => setRecipientOrReason(e.target.value)}
+                    className="input-editorial w-full text-xs"
+                  />
+                </div>
+              </div>
             )}
 
             {/* Quantity */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#fafafa] p-4 rounded-xl border border-[#e7e5e4]">
               <div>
                 <label className="block text-xs font-medium text-[#292524] mb-1">
-                  পরিমাণ (পিস)
+                  পরিমাণ (পিস) | শাখায় মজুদ: {toBengaliNumber(currentStock?.qty_pcs || 0)} পিস
                 </label>
                 <input
                   type="number"
@@ -270,12 +340,14 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                   className="input-editorial w-full text-sm font-semibold"
                 />
                 <div className="text-[11px] text-[#777169] mt-1">
-                  মোট: {toBengaliNumber(qtyPcs)} পিস ({toBengaliNumber(Math.floor(qtyPcs / 30))} খাঁচি {toBengaliNumber(qtyPcs % 30)} পিস)
+                  মোট: {toBengaliNumber(qtyPcs)} পিস ({toBengaliNumber(Math.floor(qtyPcs / crateSize))} খাঁচি {toBengaliNumber(qtyPcs % crateSize)} পিস)
                 </div>
               </div>
 
               <div>
-                <div className="text-xs text-[#777169]">আর্থিক ক্ষতির মূল্য (স্বয়ংক্রিয় ল্যান্ডেড দর)</div>
+                <div className="text-xs text-[#777169]">
+                  {activeTab === 'TRANSFER' ? 'স্থানান্তরিত স্টকের ল্যান্ডেড মূল্য' : 'আর্থিক ক্ষতির মূল্য (স্বয়ংক্রিয় ল্যান্ডেড দর)'}
+                </div>
                 <div className="font-serif font-light text-2xl text-[#0c0a09] mt-1">
                   {formatTaka(totalCostValue)}
                 </div>
@@ -290,7 +362,11 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               className="btn-primary w-full h-11"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>স্টক থেকে বাদ দিন ও লাভ-লোকসানে যুক্ত করুন</span>
+              <span>
+                {activeTab === 'TRANSFER'
+                  ? 'শাখা স্টক ট্রান্সফার সম্পন্ন করুন'
+                  : 'স্টক থেকে বাদ দিন ও লাভ-লোকসানে যুক্ত করুন'}
+              </span>
             </button>
           </form>
         </div>
@@ -311,6 +387,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               adjustments.map((a) => {
                 const cat = categories.find((c) => c.id === a.category_id);
                 const isWastage = a.adjustment_type === 'WASTAGE_BROKEN' || a.adjustment_type === 'WASTAGE_ROTTEN';
+                const isTransfer = a.adjustment_type === 'BRANCH_TRANSFER';
                 return (
                   <div
                     key={a.id}
@@ -318,7 +395,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                   >
                     <div>
                       <div className="font-medium text-[#0c0a09] flex items-center gap-1.5">
-                        <span>{isWastage ? 'ভাঙা/পচা' : 'সৌজন্য'}</span>
+                        <span>{isWastage ? 'ভাঙা/পচা' : isTransfer ? 'শাখা স্থানান্তর' : 'সৌজন্য'}</span>
                         <span className="text-[#a8a29e]">•</span>
                         <span>{cat?.name_bn}</span>
                       </div>

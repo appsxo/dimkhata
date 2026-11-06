@@ -51,10 +51,12 @@ export const App: React.FC = () => {
   const [selectedBranchId, setSelectedBranchId] = useState<string>(DimKhataStore.getSelectedBranchId());
 
   // Data collections
+  const [company, setCompany] = useState(DimKhataStore.getCompany());
   const [branches, setBranches] = useState<Branch[]>(DimKhataStore.getBranches());
   const [categories, setCategories] = useState<EggCategory[]>(DimKhataStore.getCategories());
   const [rates, setRates] = useState<DailyMarketRate[]>(DimKhataStore.getDailyRates());
   const [stocks, setStocks] = useState<InventoryStock[]>(DimKhataStore.getStocks(selectedBranchId));
+  const [allBranchStocks, setAllBranchStocks] = useState<InventoryStock[]>(DimKhataStore.getAllBranchStocks());
   const [customers, setCustomers] = useState<Customer[]>(DimKhataStore.getCustomers());
   const [suppliers, setSuppliers] = useState<Supplier[]>(DimKhataStore.getSuppliers());
   const [employees, setEmployees] = useState<Employee[]>(DimKhataStore.getEmployees());
@@ -76,10 +78,12 @@ export const App: React.FC = () => {
 
   // Reload all state from Store
   const reloadData = () => {
+    setCompany(DimKhataStore.getCompany());
     setBranches(DimKhataStore.getBranches());
     setCategories(DimKhataStore.getCategories());
     setRates(DimKhataStore.getDailyRates());
     setStocks(DimKhataStore.getStocks(selectedBranchId));
+    setAllBranchStocks(DimKhataStore.getAllBranchStocks());
     setCustomers(DimKhataStore.getCustomers());
     setSuppliers(DimKhataStore.getSuppliers());
     setEmployees(DimKhataStore.getEmployees());
@@ -121,7 +125,12 @@ export const App: React.FC = () => {
       DimKhataStore.setActiveUser(staffUser);
       setCurrentUser(staffUser);
       // If current tab was admin only, redirect to dashboard
-      if (currentTab === 'profit-settlement' || currentTab === 'audit-branches') {
+      if (
+        currentTab === 'profit-settlement' ||
+        currentTab === 'audit-branches' ||
+        currentTab === 'cashbook' ||
+        currentTab === 'payroll'
+      ) {
         setCurrentTab('dashboard');
       }
     } else {
@@ -137,10 +146,8 @@ export const App: React.FC = () => {
     }
   };
 
-  const company = DimKhataStore.getCompany();
-
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f5f5f5] text-[#0c0a09] flex flex-col font-sans">
       {/* Top Navbar */}
       <Navbar
         branches={branches}
@@ -170,6 +177,7 @@ export const App: React.FC = () => {
               customers={customers}
               sales={sales}
               accounts={accounts}
+              userRole={currentUser.role}
               onNavigate={setCurrentTab}
               onOpenRateModal={() => setIsDailyRateModalOpen(true)}
               onSelectInvoiceForPrint={setPrintInvoice}
@@ -203,6 +211,7 @@ export const App: React.FC = () => {
               categories={categories}
               rates={rates}
               stocks={stocks}
+              allBranchStocks={allBranchStocks}
               branches={branches}
               accounts={accounts}
               sales={sales}
@@ -216,6 +225,7 @@ export const App: React.FC = () => {
             <WastageCourtesyView
               categories={categories}
               stocks={stocks}
+              allBranchStocks={allBranchStocks}
               branches={branches}
               adjustments={adjustments}
               onRefresh={reloadData}
@@ -232,7 +242,7 @@ export const App: React.FC = () => {
             />
           )}
 
-          {currentTab === 'cashbook' && (
+          {currentTab === 'cashbook' && currentUser.role === 'ADMIN' && (
             <CashbookBankingView
               accounts={accounts}
               cashbook={cashbook}
@@ -241,7 +251,7 @@ export const App: React.FC = () => {
             />
           )}
 
-          {currentTab === 'payroll' && (
+          {currentTab === 'payroll' && currentUser.role === 'ADMIN' && (
             <PayrollHrView
               employees={employees}
               advances={advances}

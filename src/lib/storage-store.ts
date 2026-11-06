@@ -37,7 +37,11 @@ import {
   INITIAL_SUPPLIERS,
   INITIAL_EMPLOYEES,
   INITIAL_ACCOUNTS,
+  INITIAL_PURCHASES,
+  INITIAL_SALES,
+  INITIAL_ADJUSTMENTS,
   INITIAL_EXPENSES,
+  INITIAL_CASHBOOK,
   INITIAL_AUDIT_LOGS,
 } from './mock-data';
 import { calculateWeightedAverageCost } from './egg-units';
@@ -114,18 +118,19 @@ export class DimKhataStore {
   }
 
   // Atomic Sequential Unique ID Generator
-  static getNextCode(prefix: 'EMP' | 'CUST' | 'SUP' | 'INV' | 'CHL' | 'PUR' | 'ADJ' | 'EXP' | 'REC' | 'PAY'): string {
+  static getNextCode(prefix: 'EMP' | 'CUST' | 'SUP' | 'INV' | 'CHL' | 'PUR' | 'ADJ' | 'EXP' | 'REC' | 'PAY' | 'SPAY'): string {
     const seqs = getStored<Record<string, number>>(STORAGE_KEYS.SEQUENCES, {
       EMP: 2,
       CUST: 3,
       SUP: 2,
-      INV: 0,
-      CHL: 0,
-      PUR: 0,
-      ADJ: 0,
+      INV: 3,
+      CHL: 1,
+      PUR: 2,
+      ADJ: 2,
       EXP: 3,
       REC: 0,
       PAY: 0,
+      SPAY: 0,
     });
 
     const currentYear = new Date().getFullYear();
@@ -143,6 +148,7 @@ export class DimKhataStore {
     if (prefix === 'EXP') return `SE-EXP-${currentYear}-${String(nextVal).padStart(4, '0')}`;
     if (prefix === 'REC') return `SE-REC-${currentYear}-${String(nextVal).padStart(4, '0')}`;
     if (prefix === 'PAY') return `SE-PAY-${currentYear}-${String(nextVal).padStart(4, '0')}`;
+    if (prefix === 'SPAY') return `SE-SPAY-${currentYear}-${String(nextVal).padStart(4, '0')}`;
 
     return `SE-${prefix}-${nextVal}`;
   }
@@ -214,7 +220,9 @@ export class DimKhataStore {
   static getDailyRates(dateStr?: string): DailyMarketRate[] {
     const targetDate = dateStr || new Date().toISOString().split('T')[0];
     const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
-    return rates.filter((r) => r.rate_date === targetDate);
+    const todayMatches = rates.filter((r) => r.rate_date === targetDate);
+    if (todayMatches.length > 0) return todayMatches;
+    return INITIAL_DAILY_RATES;
   }
 
   static setDailyRates(newRates: DailyMarketRate[]): void {
@@ -226,12 +234,41 @@ export class DimKhataStore {
     this.logAudit('Daily Market Rates', 'UPDATE', newRates[0]?.rate_date || 'TODAY', 'দৈনিক ডিমের বাজার দর আপডেট করা হয়েছে');
   }
 
+  /**
+   * Raw per-branch stocks stored in LocalStorage
+   */
+  static getAllBranchStocks(): InventoryStock[] {
+    return getStored<InventoryStock[]>(STORAGE_KEYS.STOCKS, INITIAL_INVENTORY_STOCKS);
+  }
+
+  /**
+   * Returns branch-filtered stocks, or category-aggregated stocks when branchId === 'ALL'
+   */
   static getStocks(branchId?: string): InventoryStock[] {
-    const stocks = getStored<InventoryStock[]>(STORAGE_KEYS.STOCKS, INITIAL_INVENTORY_STOCKS);
+    const allStocks = this.getAllBranchStocks();
     if (branchId && branchId !== 'ALL') {
-      return stocks.filter((s) => s.branch_id === branchId);
+      return allStocks.filter((s) => s.branch_id === branchId);
     }
-    return stocks;
+
+    // Aggregate across all branches per category so 'ALL' shows combined stock & weighted WAC
+    const byCat = new Map<string, InventoryStock>();
+    allStocks.forEach((s) => {
+      const existing = byCat.get(s.category_id);
+      if (!existing) {
+        byCat.set(s.category_id, { ...s, branch_id: 'ALL' });
+      } else {
+        const combinedQty = existing.qty_pcs + s.qty_pcs;
+        const combinedWac = calculateWeightedAverageCost(
+          existing.qty_pcs,
+          existing.avg_landed_cost_per_pc,
+          s.qty_pcs,
+          s.avg_landed_cost_per_pc
+        );
+        existing.qty_pcs = combinedQty;
+        existing.avg_landed_cost_per_pc = combinedWac;
+      }
+    });
+    return Array.from(byCat.values());
   }
 
   static getCustomers(): Customer[] {
@@ -289,8 +326,20 @@ export class DimKhataStore {
     return getStored<FinancialAccount[]>(STORAGE_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
   }
 
+  static addAccount(account: Omit<FinancialAccount, 'id'>): FinancialAccount {
+    const accounts = this.getAccounts();
+    const newAcc: FinancialAccount = {
+      ...account,
+      id: `acc-${Date.now()}`,
+    };
+    accounts.push(newAcc);
+    setStored(STORAGE_KEYS.ACCOUNTS, accounts);
+    this.logAudit('Financial Accounts', 'INSERT', newAcc.id, `নতুন ব্যাংক/ক্যাশ একাউন্ট যুক্ত: ${newAcc.name}`);
+    return newAcc;
+  }
+
   static getCashbook(): CashbookTransaction[] {
-    return getStored<CashbookTransaction[]>(STORAGE_KEYS.CASHBOOK, []);
+    return getStored<CashbookTransaction[]>(STORAGE_KEYS.CASHBOOK, INITIAL_CASHBOOK);
   }
 
   static getExpenses(): Expense[] {
@@ -298,15 +347,15 @@ export class DimKhataStore {
   }
 
   static getPurchases(): Purchase[] {
-    return getStored<Purchase[]>(STORAGE_KEYS.PURCHASES, []);
+    return getStored<Purchase[]>(STORAGE_KEYS.PURCHASES, INITIAL_PURCHASES);
   }
 
   static getSales(): SalesInvoice[] {
-    return getStored<SalesInvoice[]>(STORAGE_KEYS.SALES, []);
+    return getStored<SalesInvoice[]>(STORAGE_KEYS.SALES, INITIAL_SALES);
   }
 
   static getAdjustments(): StockAdjustment[] {
-    return getStored<StockAdjustment[]>(STORAGE_KEYS.ADJUSTMENTS, []);
+    return getStored<StockAdjustment[]>(STORAGE_KEYS.ADJUSTMENTS, INITIAL_ADJUSTMENTS);
   }
 
   static getDueCollections(): CustomerDueCollection[] {
@@ -384,8 +433,8 @@ export class DimKhataStore {
     purchases.unshift(purchase);
     setStored(STORAGE_KEYS.PURCHASES, purchases);
 
-    // 2. Update stock & WAC for each item
-    const stocks = this.getStocks();
+    // 2. Update stock & WAC for each item in raw branch stocks
+    const stocks = this.getAllBranchStocks();
     purchase.items.forEach((item) => {
       let stock = stocks.find((s) => s.branch_id === purchase.branch_id && s.category_id === item.category_id);
       if (!stock) {
@@ -448,8 +497,8 @@ export class DimKhataStore {
     sales.unshift(invoice);
     setStored(STORAGE_KEYS.SALES, sales);
 
-    // 2. Deduct inventory stock
-    const stocks = this.getStocks();
+    // 2. Deduct inventory stock from specific branch
+    const stocks = this.getAllBranchStocks();
     invoice.items.forEach((item) => {
       const stock = stocks.find((s) => s.branch_id === invoice.branch_id && s.category_id === item.category_id);
       if (stock) {
@@ -486,7 +535,7 @@ export class DimKhataStore {
   }
 
   /**
-   * Process Stock Adjustments (Req 7: Wastage & Req 8: Courtesy)
+   * Process Stock Adjustments (Req 7: Wastage, Req 8: Courtesy, Req 3: Branch Transfer)
    */
   static recordStockAdjustment(adj: StockAdjustment): void {
     const adjustments = this.getAdjustments();
@@ -494,14 +543,14 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.ADJUSTMENTS, adjustments);
 
     // Deduct stock from origin branch
-    const stocks = this.getStocks();
+    const stocks = this.getAllBranchStocks();
     const sourceStock = stocks.find((s) => s.branch_id === adj.branch_id && s.category_id === adj.category_id);
     if (sourceStock) {
       sourceStock.qty_pcs = Math.max(0, sourceStock.qty_pcs - adj.qty_pcs);
       sourceStock.updated_at = new Date().toISOString();
     }
 
-    // If branch transfer, add to target branch
+    // If branch transfer, add to target branch with weighted WAC
     if (adj.adjustment_type === 'BRANCH_TRANSFER' && adj.target_branch_id) {
       let targetStock = stocks.find((s) => s.branch_id === adj.target_branch_id && s.category_id === adj.category_id);
       if (!targetStock) {
@@ -515,7 +564,14 @@ export class DimKhataStore {
         };
         stocks.push(targetStock);
       }
+      const newTargetWac = calculateWeightedAverageCost(
+        targetStock.qty_pcs,
+        targetStock.avg_landed_cost_per_pc,
+        adj.qty_pcs,
+        adj.unit_landed_cost
+      );
       targetStock.qty_pcs += adj.qty_pcs;
+      targetStock.avg_landed_cost_per_pc = newTargetWac;
       targetStock.updated_at = new Date().toISOString();
     }
     setStored(STORAGE_KEYS.STOCKS, stocks);
@@ -563,6 +619,38 @@ export class DimKhataStore {
     );
 
     this.logAudit('Due Collections', 'INSERT', collection.receipt_code, `বকেয়া আদায়: ${cust?.name} থেকে ৳${collection.amount}`);
+  }
+
+  /**
+   * Pay Supplier Payable (Req 9)
+   */
+  static recordSupplierPayment(
+    supplierId: string,
+    amount: number,
+    accountId: string,
+    branchId: string,
+    note?: string
+  ): string {
+    const paymentCode = this.getNextCode('SPAY');
+    const suppliers = this.getSuppliers();
+    const sup = suppliers.find((s) => s.id === supplierId);
+    if (sup) {
+      sup.current_payable = Math.max(0, sup.current_payable - amount);
+      setStored(STORAGE_KEYS.SUPPLIERS, suppliers);
+    }
+
+    this.postCashbook(
+      accountId,
+      branchId,
+      'CASH_OUT',
+      'PURCHASE_PAYMENT',
+      amount,
+      paymentCode,
+      note || `মহাজন বকেয়া পরিশোধ: ${sup?.name || ''} (${paymentCode})`
+    );
+
+    this.logAudit('Supplier Payments', 'INSERT', paymentCode, `মহাজন পেমেন্ট: ${sup?.name} কে ৳${amount} পরিশোধ`);
+    return paymentCode;
   }
 
   /**
@@ -619,15 +707,17 @@ export class DimKhataStore {
 
     const emp = this.getEmployees().find((e) => e.id === record.employee_id);
 
-    this.postCashbook(
-      accountId,
-      branchId,
-      'CASH_OUT',
-      'SALARY',
-      record.net_payable,
-      record.payroll_code,
-      `মাসিক বেতন পরিশোধ (${record.salary_month}): ${emp?.full_name || ''}`
-    );
+    if (record.net_payable > 0) {
+      this.postCashbook(
+        accountId,
+        branchId,
+        'CASH_OUT',
+        'SALARY',
+        record.net_payable,
+        record.payroll_code,
+        `মাসিক বেতন পরিশোধ (${record.salary_month}): ${emp?.full_name || ''}`
+      );
+    }
 
     this.logAudit('Payroll', 'INSERT', record.payroll_code, `বেতন পরিশোধ: ${emp?.full_name} (মাস: ${record.salary_month}, নীট: ৳${record.net_payable})`);
   }
@@ -695,9 +785,16 @@ export class DimKhataStore {
     const expenses = this.getExpenses().filter((e) => e.expense_date.startsWith(targetMonth) && !e.is_capital_asset);
     const totalOperatingExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-    // 3. Salaries paid this month
+    // 3. Salaries paid this month (finalized payrolls + mid-month advances for unsettled employees)
     const payrolls = this.getPayrolls().filter((p) => p.salary_month === targetMonth);
-    const totalSalaries = payrolls.reduce((sum, p) => sum + p.net_payable + p.advances_deducted, 0);
+    const settledEmployeeIds = new Set(payrolls.map((p) => p.employee_id));
+    const settledPayrollCost = payrolls.reduce((sum, p) => sum + p.net_payable + p.advances_deducted, 0);
+
+    const unsettledAdvancesCost = this.getSalaryAdvances()
+      .filter((a) => a.advance_date.startsWith(targetMonth) && !settledEmployeeIds.has(a.employee_id))
+      .reduce((sum, a) => sum + a.amount, 0);
+
+    const totalSalaries = settledPayrollCost + unsettledAdvancesCost;
 
     // 4. Wastage & Courtesy losses
     const adjustments = this.getAdjustments().filter((a) => a.adjustment_date.startsWith(targetMonth));
@@ -791,8 +888,13 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.SUPPLIERS, INITIAL_SUPPLIERS);
     setStored(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES);
     setStored(STORAGE_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
+    setStored(STORAGE_KEYS.PURCHASES, INITIAL_PURCHASES);
+    setStored(STORAGE_KEYS.SALES, INITIAL_SALES);
+    setStored(STORAGE_KEYS.ADJUSTMENTS, INITIAL_ADJUSTMENTS);
     setStored(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
+    setStored(STORAGE_KEYS.CASHBOOK, INITIAL_CASHBOOK);
     setStored(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
     window.dispatchEvent(new Event('dimkhata_storage_change'));
   }
 }
+

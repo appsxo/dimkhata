@@ -2,7 +2,7 @@
 // DIMKHATA (ডিমখাতা) — Sales POS & Delivery Challan (ElevenLabs Design)
 // ====================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Receipt,
   Plus,
@@ -33,6 +33,7 @@ interface SalesPosViewProps {
   categories: EggCategory[];
   rates: DailyMarketRate[];
   stocks: InventoryStock[];
+  allBranchStocks?: InventoryStock[];
   branches: Branch[];
   accounts: FinancialAccount[];
   sales: SalesInvoice[];
@@ -46,6 +47,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   categories,
   rates,
   stocks,
+  allBranchStocks,
   branches,
   accounts,
   sales,
@@ -53,6 +55,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   onRefresh,
   onSelectInvoiceForPrint,
 }) => {
+  const rawBranchStocks = allBranchStocks || stocks;
   const [customerId, setCustomerId] = useState(customers[0]?.id || '');
   const [branchId, setBranchId] = useState(branches[0]?.id || '');
   const [saleType, setSaleType] = useState<'WHOLESALE' | 'RETAIL'>('WHOLESALE');
@@ -80,6 +83,19 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   const [driverName, setDriverName] = useState('');
   const [driverPhone, setDriverPhone] = useState('');
 
+  // Sync item unit prices if daily market rates are updated from the Navbar modal
+  useEffect(() => {
+    setItems((prev) =>
+      prev.map((item) => {
+        const rateObj = rates.find((r) => r.category_id === item.categoryId);
+        if (!rateObj) return item;
+        const updatedPrice =
+          saleType === 'WHOLESALE' ? rateObj.wholesale_rate_pc : rateObj.retail_rate_pc;
+        return { ...item, unitPrice: updatedPrice };
+      })
+    );
+  }, [rates, saleType]);
+
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
   const getItemPcs = (item: { categoryId: string; inputType: 'CRATE' | 'PCS'; qtyInput: number }) => {
@@ -98,6 +114,27 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
   const newProjectedDue = (selectedCustomer?.current_due || 0) + dueAmount;
   const isCreditExceeded = selectedCustomer && newProjectedDue > selectedCustomer.credit_limit;
+
+  const handlePaymentMethodChange = (method: SalesInvoice['payment_method']) => {
+    setPaymentMethod(method);
+    if (method === 'DUE') {
+      setPaidAmount(0);
+      return;
+    }
+    if (method === 'CASH') {
+      const cashAcc = accounts.find((a) => a.account_type === 'CASH');
+      if (cashAcc) setAccountId(cashAcc.id);
+    } else if (method === 'BKASH') {
+      const bkashAcc = accounts.find((a) => a.name.includes('বিকাশ') || a.name.toLowerCase().includes('bkash'));
+      if (bkashAcc) setAccountId(bkashAcc.id);
+    } else if (method === 'NAGAD') {
+      const nagadAcc = accounts.find((a) => a.name.includes('নগদ') || a.name.toLowerCase().includes('nagad'));
+      if (nagadAcc) setAccountId(nagadAcc.id);
+    } else if (method === 'BANK') {
+      const bankAcc = accounts.find((a) => a.account_type === 'BANK');
+      if (bankAcc) setAccountId(bankAcc.id);
+    }
+  };
 
   const handleAddItem = () => {
     const cat = categories[0];
@@ -166,11 +203,11 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
     for (const item of items) {
       const pcs = getItemPcs(item);
-      const stock = stocks.find((s) => s.category_id === item.categoryId && s.branch_id === branchId);
+      const stock = rawBranchStocks.find((s) => s.category_id === item.categoryId && s.branch_id === branchId);
       const cat = categories.find((c) => c.id === item.categoryId);
       if (!stock || stock.qty_pcs < pcs) {
         const proceed = confirm(
-          `সতর্কবার্তা: "${cat?.name_bn}" এর স্টক ঘাটতি রয়েছে। আপনি কি ঘাটতি সত্ত্বেও বিক্রয় সম্পন্ন করতে চান?`
+          `সতর্কবার্তা: "${cat?.name_bn}" এর স্টক ঘাটতি রয়েছে (বর্তমান মজুদ: ${toBengaliNumber(stock?.qty_pcs || 0)} পিস)। আপনি কি ঘাটতি সত্ত্বেও বিক্রয় সম্পন্ন করতে চান?`
         );
         if (!proceed) return;
       }
@@ -180,7 +217,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
     const salesItems: SalesItem[] = items.map((item, idx) => {
       const pcs = getItemPcs(item);
-      const stock = stocks.find((s) => s.category_id === item.categoryId && s.branch_id === branchId);
+      const stock = rawBranchStocks.find((s) => s.category_id === item.categoryId && s.branch_id === branchId);
       return {
         id: `sitem-${Date.now()}-${idx}`,
         invoice_id: '',
@@ -505,7 +542,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
             </div>
 
             {/* Payment & Discount */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#f0efed]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#f0efed]">
               <div>
                 <label className="block text-xs font-medium text-[#292524] mb-1">
                   বিশেষ ছাড় / ডিসকাউন্ট
@@ -522,9 +559,21 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  নগদ জমা / পেইড
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-[#292524]">
+                    নগদ জমা / পেইড
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaidAmount(netTotal);
+                      if (paymentMethod === 'DUE') handlePaymentMethodChange('CASH');
+                    }}
+                    className="text-[10px] font-semibold text-[#292524] bg-[#f0efed] hover:bg-[#e7e5e4] px-2 py-0.5 rounded-full transition"
+                  >
+                    পূর্ণ বিল
+                  </button>
+                </div>
                 <div className="relative">
                   <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
                   <input
@@ -542,7 +591,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                 </label>
                 <select
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value as any)}
+                  onChange={(e) => handlePaymentMethodChange(e.target.value as any)}
                   className="input-editorial w-full text-xs"
                 >
                   <option value="CASH">ক্যাশ নগদ</option>
@@ -550,6 +599,24 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                   <option value="NAGAD">নগদ (Nagad)</option>
                   <option value="BANK">ব্যাংক একাউন্ট</option>
                   <option value="DUE">সম্পূর্ণ বাকি</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  জমা একাউন্ট (সিঙ্ক)
+                </label>
+                <select
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                  disabled={paymentMethod === 'DUE' || paidAmount <= 0}
+                  className="input-editorial w-full text-xs disabled:opacity-50"
+                >
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

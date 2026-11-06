@@ -23,6 +23,7 @@ import {
   Customer,
   SalesInvoice,
   FinancialAccount,
+  UserRole,
 } from '../types';
 import { formatQuantityPcs, formatTaka, toBengaliNumber } from '../lib/egg-units';
 
@@ -33,6 +34,7 @@ interface DashboardViewProps {
   customers: Customer[];
   sales: SalesInvoice[];
   accounts: FinancialAccount[];
+  userRole?: UserRole;
   onNavigate: (tab: any) => void;
   onOpenRateModal: () => void;
   onSelectInvoiceForPrint: (inv: SalesInvoice) => void;
@@ -45,6 +47,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   customers,
   sales,
   accounts,
+  userRole = 'ADMIN',
   onNavigate,
   onOpenRateModal,
   onSelectInvoiceForPrint,
@@ -53,8 +56,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const totalStockPcs = stocks.reduce((sum, s) => sum + s.qty_pcs, 0);
   const stockBreakdown = formatQuantityPcs(totalStockPcs, 30);
 
-  // Total cash & bank balances
+  // Total cash & bank balances (Admin sees all; Staff sees only Cash Drawer per Req 4)
   const totalLiquidCash = accounts.reduce((sum, a) => sum + a.current_balance, 0);
+  const shopCashDrawerBalance = accounts
+    .filter((a) => a.account_type === 'CASH')
+    .reduce((sum, a) => sum + a.current_balance, 0);
 
   // Total customer dues
   const totalCustomerDues = customers.reduce((sum, c) => sum + c.current_due, 0);
@@ -162,17 +168,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Cash & Bank Balances */}
         <div className="card-editorial flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#777169]">
-            <span className="text-[13px] font-medium tracking-wide">ক্যাশ ও ব্যাংক তহবিল</span>
+            <span className="text-[13px] font-medium tracking-wide">
+              {userRole === 'ADMIN' ? 'ক্যাশ ও ব্যাংক তহবিল' : 'দোকান ক্যাশ ড্রয়ার'}
+            </span>
             <div className="w-8 h-8 rounded-full bg-[#f0efed] text-[#292524] flex items-center justify-center">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
             <div className="font-serif font-light text-2xl sm:text-3xl text-[#0c0a09] tracking-tight">
-              {formatTaka(totalLiquidCash)}
+              {formatTaka(userRole === 'ADMIN' ? totalLiquidCash : shopCashDrawerBalance)}
             </div>
             <div className="text-[12px] text-[#777169] font-normal mt-1">
-              {accounts.length} টি একাউন্টে লাইভ সিঙ্ক
+              {userRole === 'ADMIN'
+                ? `${toBengaliNumber(accounts.length)} টি একাউন্টে লাইভ সিঙ্ক`
+                : 'মূল ব্যাংক হিসাব সংরক্ষিত (অ্যাডমিন)'}
             </div>
           </div>
         </div>

@@ -9,17 +9,21 @@ on:
 jobs:
   keep-alive-and-backup:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
       - name: Ping Supabase Database (Prevent Free-Tier Pausing)
-        if: env.VITE_SUPABASE_URL != ''
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          echo "Pinging Supabase REST endpoint to keep project active..."
-          curl -s -f -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY" \
-            "$VITE_SUPABASE_URL/rest/v1/company_settings?select=id&limit=1" > /dev/null || true
-          echo "Keep-alive ping completed."
+          if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "Pinging Supabase REST endpoint to keep project active..."
+            curl -s -f -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY" \
+              "$VITE_SUPABASE_URL/rest/v1/company_settings?select=id&limit=1" > /dev/null || true
+            echo "Keep-alive ping completed."
+          else
+            echo "Supabase secrets not configured yet; skipping remote ping."
+          fi
 
       - name: Verify Health Check
         run: echo "Nightly health check and scheduled automation completed successfully at $(date -u)"
+

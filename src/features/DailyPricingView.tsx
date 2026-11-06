@@ -2,7 +2,7 @@
 // DIMKHATA (ডিমখাতা) — Daily Market Rates (ElevenLabs Design System)
 // ====================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tag, Sparkles, Save, Info } from 'lucide-react';
 import { EggCategory, DailyMarketRate, InventoryStock } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
@@ -37,6 +37,19 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
     });
     return map;
   });
+
+  useEffect(() => {
+    const map: Record<string, { buying: number; wholesale: number; retail: number }> = {};
+    categories.forEach((cat) => {
+      const existing = rates.find((r) => r.category_id === cat.id);
+      map[cat.id] = {
+        buying: existing?.buying_rate_pc || 10.0,
+        wholesale: existing?.wholesale_rate_pc || 11.0,
+        retail: existing?.retail_rate_pc || 12.0,
+      };
+    });
+    setFormRates(map);
+  }, [rates, categories]);
 
   const [savedSuccess, setSavedSuccess] = useState(false);
 

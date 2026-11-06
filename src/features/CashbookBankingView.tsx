@@ -3,8 +3,8 @@
 // ====================================================================
 
 import React, { useState } from 'react';
-import { Wallet, Plus, RefreshCcw, Building, Smartphone } from 'lucide-react';
-import { FinancialAccount, CashbookTransaction, Branch } from '../types';
+import { Wallet, Plus, RefreshCcw, Building, Smartphone, Settings } from 'lucide-react';
+import { FinancialAccount, CashbookTransaction, Branch, CompanySettings } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
 
@@ -29,11 +29,54 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
   const [toAccount, setToAccount] = useState(accounts[1]?.id || '');
   const [transferAmount, setTransferAmount] = useState<number>(5000);
 
+  // Add New Account Modal State
+  const [isAddAccOpen, setIsAddAccOpen] = useState(false);
+  const [accName, setAccName] = useState('');
+  const [accType, setAccType] = useState<FinancialAccount['account_type']>('BANK');
+  const [accNumber, setAccNumber] = useState('');
+  const [accInitialBalance, setAccInitialBalance] = useState<number>(0);
+
+  // Company Branding Modal State (Requirement 5)
+  const [isCompanyOpen, setIsCompanyOpen] = useState(false);
+  const [companyForm, setCompanyForm] = useState<CompanySettings>(() => DimKhataStore.getCompany());
+
   const filteredTransactions = cashbook.filter((tx) => {
     if (filterAccount !== 'ALL' && tx.account_id !== filterAccount) return false;
     if (filterType !== 'ALL' && tx.transaction_type !== filterType) return false;
     return true;
   });
+
+  const handleAddAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accName) return;
+
+    const newAcc: FinancialAccount = {
+      id: `acc-${Date.now()}`,
+      name: accName,
+      account_type: accType,
+      account_number: accNumber,
+      branch_id: branches[0]?.id || 'br-01',
+      current_balance: accInitialBalance,
+      is_default: false,
+      is_active: true,
+    };
+
+    DimKhataStore.addAccount(newAcc);
+    alert(`সফল! নতুন একাউন্ট "${accName}" যুক্ত করা হয়েছে।`);
+    setIsAddAccOpen(false);
+    setAccName('');
+    setAccNumber('');
+    setAccInitialBalance(0);
+    onRefresh();
+  };
+
+  const handleSaveCompany = (e: React.FormEvent) => {
+    e.preventDefault();
+    DimKhataStore.updateCompany(companyForm);
+    alert('সফল! প্রতিষ্ঠানের ব্র্যান্ডিং ও মেমো তথ্য আপডেট করা হয়েছে।');
+    setIsCompanyOpen(false);
+    onRefresh();
+  };
 
   const handleContraTransfer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,17 +140,38 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             প্রতিষ্ঠান ও ব্যাংক একাউন্ট (Live Cashbook)
           </h2>
           <p className="text-xs text-[#777169] mt-0.5">
-            দোকানের ক্যাশ ড্রয়ার, ব্যাংক ও মোবাইল ব্যাংকিং (বিকাশ/নগদ) লাইভ সিঙ্ক
+            দোকানের ক্যাশ ড্রয়ার, ব্যাংক ও মোবাইল ব্যাংকিং (বিকাশ/নগদ) লাইভ সিঙ্ক ও ব্র্যান্ডিং প্রোফাইল
           </p>
         </div>
 
-        <button
-          onClick={() => setIsContraOpen(true)}
-          className="btn-primary"
-        >
-          <RefreshCcw className="w-4 h-4" />
-          <span>ফান্ড ট্রান্সফার (ক্যাশ ⇄ ব্যাংক/বিকাশ)</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              setCompanyForm(DimKhataStore.getCompany());
+              setIsCompanyOpen(true);
+            }}
+            className="btn-outline text-xs h-9 px-3.5"
+          >
+            <Settings className="w-3.5 h-3.5 text-[#777169]" />
+            <span>প্রতিষ্ঠান ব্র্যান্ডিং</span>
+          </button>
+
+          <button
+            onClick={() => setIsAddAccOpen(true)}
+            className="btn-outline text-xs h-9 px-3.5"
+          >
+            <Plus className="w-3.5 h-3.5 text-[#777169]" />
+            <span>নতুন একাউন্ট যোগ</span>
+          </button>
+
+          <button
+            onClick={() => setIsContraOpen(true)}
+            className="btn-primary text-xs h-9 px-4"
+          >
+            <RefreshCcw className="w-3.5 h-3.5" />
+            <span>ফান্ড ট্রান্সফার</span>
+          </button>
+        </div>
       </div>
 
       {/* Account Balances Grid */}
@@ -308,6 +372,198 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
                   className="btn-primary text-xs h-9 px-5"
                 >
                   ট্রান্সফার সম্পন্ন করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD NEW FINANCIAL ACCOUNT MODAL */}
+      {isAddAccOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-[#e7e5e4]">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
+              নতুন ব্যাংক বা ডিজিটাল একাউন্ট যোগ
+            </h3>
+
+            <form onSubmit={handleAddAccount} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  একাউন্টের নাম
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="যেমন: ডাচ-বাংলা ব্যাংক / রকেট মার্চেন্ট"
+                  value={accName}
+                  onChange={(e) => setAccName(e.target.value)}
+                  className="input-editorial w-full text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    একাউন্টের ধরন
+                  </label>
+                  <select
+                    value={accType}
+                    onChange={(e) => setAccType(e.target.value as any)}
+                    className="input-editorial w-full text-xs"
+                  >
+                    <option value="BANK">ব্যাংক হিসাব</option>
+                    <option value="MFS">মোবাইল ব্যাংকিং (MFS)</option>
+                    <option value="CASH">ক্যাশ ড্রয়ার</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    একাউন্ট / মোবাইল নম্বর
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="হিসাব নম্বর"
+                    value={accNumber}
+                    onChange={(e) => setAccNumber(e.target.value)}
+                    className="input-editorial w-full text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  প্রারম্ভিক ব্যালেন্স (Opening Balance ৳)
+                </label>
+                <input
+                  type="number"
+                  value={accInitialBalance}
+                  onChange={(e) => setAccInitialBalance(Number(e.target.value) || 0)}
+                  className="input-editorial w-full text-sm font-semibold"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddAccOpen(false)}
+                  className="btn-outline text-xs h-9 px-4"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs h-9 px-5"
+                >
+                  সংরক্ষণ করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* COMPANY BRANDING PROFILE MODAL (Requirement 5) */}
+      {isCompanyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-[#e7e5e4]">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
+              প্রতিষ্ঠানের ব্র্যান্ডিং ও মেমো প্রোফাইল (Req 5)
+            </h3>
+
+            <form onSubmit={handleSaveCompany} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    প্রতিষ্ঠানের নাম (বাংলা)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={companyForm.company_name_bn}
+                    onChange={(e) => setCompanyForm({ ...companyForm, company_name_bn: e.target.value })}
+                    className="input-editorial w-full text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    প্রতিষ্ঠানের নাম (English)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={companyForm.company_name_en}
+                    onChange={(e) => setCompanyForm({ ...companyForm, company_name_en: e.target.value })}
+                    className="input-editorial w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  ট্যাগলাইন / স্লোগান
+                </label>
+                <input
+                  type="text"
+                  value={companyForm.tagline}
+                  onChange={(e) => setCompanyForm({ ...companyForm, tagline: e.target.value })}
+                  className="input-editorial w-full text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    মোবাইল নম্বরসমূহ
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm.phone}
+                    onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
+                    className="input-editorial w-full text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                    প্রধান আড়ত ও ঠিকানা
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm.address}
+                    onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
+                    className="input-editorial w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  ইনভয়েস/মেমো ফুটার নোট
+                </label>
+                <input
+                  type="text"
+                  value={companyForm.invoice_footer_note}
+                  onChange={(e) =>
+                    setCompanyForm({ ...companyForm, invoice_footer_note: e.target.value })
+                  }
+                  className="input-editorial w-full text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCompanyOpen(false)}
+                  className="btn-outline text-xs h-9 px-4"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs h-9 px-5"
+                >
+                  ব্র্যান্ডিং আপডেট করুন
                 </button>
               </div>
             </form>

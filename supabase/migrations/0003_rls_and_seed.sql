@@ -112,15 +112,18 @@ VALUES
 ON CONFLICT (code) DO NOTHING;
 
 -- Default Partners with 2:1 Ratio (Req 14: Sharif 2, Eman 1)
-INSERT INTO public.partners (name, phone, share_weight, is_active)
+INSERT INTO public.partners (id, name, phone, share_weight, is_active)
 VALUES 
-    ('শরিফ (Sharif)', '01711-000001', 2.00, TRUE),
-    ('ইমান (Eman)', '01711-000002', 1.00, TRUE);
+    ('00000000-0000-0000-0000-000000000021', 'শরিফ (Sharif)', '01711-000001', 2.00, TRUE),
+    ('00000000-0000-0000-0000-000000000022', 'ইমান (Eman)', '01711-000002', 1.00, TRUE)
+ON CONFLICT (id) DO NOTHING;
 
 -- Default Financial Accounts (Req 5)
-INSERT INTO public.financial_accounts (name, account_type, account_number, current_balance, is_default, is_active)
+INSERT INTO public.financial_accounts (id, name, account_type, account_number, current_balance, is_default, is_active)
 VALUES 
-    ('দোকানের ক্যাশ ড্রয়ার (Main Cash)', 'CASH', 'CASH-01', 50000.00, TRUE, TRUE),
-    ('বিকাশ মার্চেন্ট (bKash)', 'MFS', '01700-112233', 25000.00, FALSE, TRUE),
-    ('নগদ পার্সোনাল (Nagad)', 'MFS', '01700-445566', 15000.00, FALSE, TRUE),
-    ('ইসলামী ব্যাংক বাংলাদেশ (IBBL)', 'BANK', '2050-12345678', 120000.00, FALSE, TRUE);
+    ('00000000-0000-0000-0000-000000000031', 'দোকানের ক্যাশ ড্রয়ার (Main Cash)', 'CASH', 'CASH-01', 50000.00, TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000032', 'বিকাশ মার্চেন্ট (bKash)', 'MFS', '01700-112233', 25000.00, FALSE, TRUE),
+    ('00000000-0000-0000-0000-000000000033', 'নগদ পার্সোনাল (Nagad)', 'MFS', '01700-445566', 15000.00, FALSE, TRUE),
+    ('00000000-0000-0000-0000-000000000034', 'ইসলামী ব্যাংক বাংলাদেশ (IBBL)', 'BANK', '2050-12345678', 120000.00, FALSE, TRUE)
+ON CONFLICT (id) DO NOTHING;
+

@@ -35,47 +35,10 @@ BEGIN
 END;
 $$;
 
--- 2. Trigger: When Purchase is saved -> Calculate WAC & Increase Stock & Update Supplier Payable
+-- 2. Trigger: When Purchase Header is saved -> Update Supplier Payable & Cashbook
 CREATE OR REPLACE FUNCTION public.fn_process_purchase()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
-DECLARE
-    item RECORD;
-    v_existing_qty BIGINT;
-    v_existing_wac NUMERIC;
-    v_new_qty BIGINT;
-    v_new_wac NUMERIC;
 BEGIN
-    -- Loop through each purchase item
-    FOR item IN SELECT * FROM public.purchase_items WHERE purchase_id = NEW.id LOOP
-        -- Get current stock & WAC
-        SELECT COALESCE(qty_pcs, 0), COALESCE(avg_landed_cost_per_pc, 0)
-        INTO v_existing_qty, v_existing_wac
-        FROM public.inventory_stocks
-        WHERE branch_id = NEW.branch_id AND category_id = item.category_id;
-
-        IF NOT FOUND THEN
-            v_existing_qty := 0;
-            v_existing_wac := 0;
-        END IF;
-
-        v_new_qty := v_existing_qty + item.qty_pcs;
-
-        IF v_new_qty > 0 THEN
-            v_new_wac := ((v_existing_qty * v_existing_wac) + (item.qty_pcs * item.effective_landed_cost_per_pc)) / v_new_qty;
-        ELSE
-            v_new_wac := item.effective_landed_cost_per_pc;
-        END IF;
-
-        -- Upsert stock
-        INSERT INTO public.inventory_stocks (branch_id, category_id, qty_pcs, avg_landed_cost_per_pc, updated_at)
-        VALUES (NEW.branch_id, item.category_id, v_new_qty, v_new_wac, NOW())
-        ON CONFLICT (branch_id, category_id)
-        DO UPDATE SET
-            qty_pcs = v_new_qty,
-            avg_landed_cost_per_pc = v_new_wac,
-            updated_at = NOW();
-    END LOOP;
-
     -- Update Supplier Payable if due exists
     IF NEW.due_amount > 0 THEN
         UPDATE public.suppliers
@@ -101,20 +64,55 @@ BEGIN
 END;
 $$;
 
--- 3. Trigger: When Sales Invoice is saved -> Deduct Stock & Update Customer Due & Cashbook
-CREATE OR REPLACE FUNCTION public.fn_process_sales_invoice()
+-- 2b. Trigger: When Purchase Item is saved -> Calculate WAC & Increase Stock
+CREATE OR REPLACE FUNCTION public.fn_process_purchase_item()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
-    item RECORD;
+    v_branch_id UUID;
+    v_existing_qty BIGINT;
+    v_existing_wac NUMERIC;
+    v_new_qty BIGINT;
+    v_new_wac NUMERIC;
 BEGIN
-    -- Loop through each sale item to deduct stock
-    FOR item IN SELECT * FROM public.sales_items WHERE invoice_id = NEW.id LOOP
-        UPDATE public.inventory_stocks
-        SET qty_pcs = qty_pcs - item.qty_pcs,
-            updated_at = NOW()
-        WHERE branch_id = NEW.branch_id AND category_id = item.category_id;
-    END LOOP;
+    SELECT branch_id INTO v_branch_id FROM public.purchases WHERE id = NEW.purchase_id;
+    IF v_branch_id IS NULL THEN
+        RETURN NEW;
+    END IF;
 
+    SELECT COALESCE(qty_pcs, 0), COALESCE(avg_landed_cost_per_pc, 0)
+    INTO v_existing_qty, v_existing_wac
+    FROM public.inventory_stocks
+    WHERE branch_id = v_branch_id AND category_id = NEW.category_id;
+
+    IF NOT FOUND THEN
+        v_existing_qty := 0;
+        v_existing_wac := 0;
+    END IF;
+
+    v_new_qty := v_existing_qty + NEW.qty_pcs;
+
+    IF v_new_qty > 0 THEN
+        v_new_wac := ((v_existing_qty * v_existing_wac) + (NEW.qty_pcs * NEW.effective_landed_cost_per_pc)) / v_new_qty;
+    ELSE
+        v_new_wac := NEW.effective_landed_cost_per_pc;
+    END IF;
+
+    INSERT INTO public.inventory_stocks (branch_id, category_id, qty_pcs, avg_landed_cost_per_pc, updated_at)
+    VALUES (v_branch_id, NEW.category_id, v_new_qty, v_new_wac, NOW())
+    ON CONFLICT (branch_id, category_id)
+    DO UPDATE SET
+        qty_pcs = v_new_qty,
+        avg_landed_cost_per_pc = v_new_wac,
+        updated_at = NOW();
+
+    RETURN NEW;
+END;
+$$;
+
+-- 3. Trigger: When Sales Invoice Header is saved -> Update Customer Due & Cashbook
+CREATE OR REPLACE FUNCTION public.fn_process_sales_invoice()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
     -- Update Customer Due if credit sale
     IF NEW.due_amount > 0 THEN
         UPDATE public.customers
@@ -140,13 +138,31 @@ BEGIN
 END;
 $$;
 
--- 4. Trigger: Stock Adjustments (Wastage / Courtesy) -> Deduct Stock
+-- 3b. Trigger: When Sales Item is saved -> Deduct Stock
+CREATE OR REPLACE FUNCTION public.fn_process_sales_item()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_branch_id UUID;
+BEGIN
+    SELECT branch_id INTO v_branch_id FROM public.sales_invoices WHERE id = NEW.invoice_id;
+    IF v_branch_id IS NOT NULL THEN
+        UPDATE public.inventory_stocks
+        SET qty_pcs = GREATEST(0, qty_pcs - NEW.qty_pcs),
+            updated_at = NOW()
+        WHERE branch_id = v_branch_id AND category_id = NEW.category_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+-- 4. Trigger: Stock Adjustments (Wastage / Courtesy / Transfer) -> Deduct/Transfer Stock
 CREATE OR REPLACE FUNCTION public.fn_process_stock_adjustment()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
     -- Deduct from origin branch
     UPDATE public.inventory_stocks
-    SET qty_pcs = qty_pcs - NEW.qty_pcs,
+    SET qty_pcs = GREATEST(0, qty_pcs - NEW.qty_pcs),
         updated_at = NOW()
     WHERE branch_id = NEW.branch_id AND category_id = NEW.category_id;
 
@@ -169,7 +185,7 @@ CREATE OR REPLACE FUNCTION public.fn_process_due_collection()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
     UPDATE public.customers
-    SET current_due = current_due - NEW.amount
+    SET current_due = GREATEST(0, current_due - NEW.amount)
     WHERE id = NEW.customer_id;
 
     PERFORM public.fn_post_cashbook(
@@ -180,6 +196,29 @@ BEGIN
         NEW.amount,
         NEW.receipt_code,
         'বকেয়া কালেকশন বাবদ জমা',
+        NEW.recorded_by
+    );
+
+    RETURN NEW;
+END;
+$$;
+
+-- 5b. Trigger: Supplier Payment -> Update Payable & Cash Out
+CREATE OR REPLACE FUNCTION public.fn_process_supplier_payment()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE public.suppliers
+    SET current_payable = GREATEST(0, current_payable - NEW.amount)
+    WHERE id = NEW.supplier_id;
+
+    PERFORM public.fn_post_cashbook(
+        NEW.payment_account_id,
+        NEW.branch_id,
+        'CASH_OUT',
+        'PURCHASE_PAYMENT',
+        NEW.amount,
+        NEW.payment_code,
+        'মহাজন বকেয়া পরিশোধ',
         NEW.recorded_by
     );
 
@@ -236,6 +275,58 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.fn_process_payroll()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_def_acc UUID;
+    v_branch UUID;
+BEGIN
+    SELECT branch_id INTO v_branch FROM public.employees WHERE id = NEW.employee_id;
+    SELECT id INTO v_def_acc FROM public.financial_accounts WHERE branch_id = v_branch AND is_default = TRUE LIMIT 1;
+    IF v_def_acc IS NULL THEN
+        SELECT id INTO v_def_acc FROM public.financial_accounts WHERE is_default = TRUE LIMIT 1;
+    END IF;
+
+    IF v_def_acc IS NOT NULL AND NEW.net_payable > 0 THEN
+        PERFORM public.fn_post_cashbook(
+            v_def_acc,
+            COALESCE(v_branch, (SELECT id FROM public.branches WHERE is_main = TRUE LIMIT 1)),
+            'CASH_OUT',
+            'SALARY',
+            NEW.net_payable,
+            NEW.payroll_code,
+            'মাসিক বেতন পরিশোধ (' || NEW.salary_month || ')',
+            NEW.recorded_by
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.fn_process_partner_drawing()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+    v_main_branch UUID;
+BEGIN
+    SELECT id INTO v_main_branch FROM public.branches WHERE is_main = TRUE LIMIT 1;
+    IF v_main_branch IS NOT NULL THEN
+        PERFORM public.fn_post_cashbook(
+            NEW.account_id,
+            v_main_branch,
+            'CASH_OUT',
+            'PARTNER_DRAWING',
+            NEW.amount,
+            'DRAW-' || NEW.id::text,
+            COALESCE(NEW.notes, 'মালিকের ব্যক্তিগত উত্তোলন'),
+            NEW.recorded_by
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
 -- 8. Universal Audit Logger
 CREATE OR REPLACE FUNCTION public.fn_universal_audit_logger()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
@@ -277,16 +368,56 @@ BEGIN
 END;
 $$;
 
--- Attach Audit Triggers to Key Financial Tables
+-- Attach Audit Triggers to Key Financial Tables (Idempotent)
+DROP TRIGGER IF EXISTS trg_audit_sales_invoices ON public.sales_invoices;
 CREATE TRIGGER trg_audit_sales_invoices AFTER INSERT OR UPDATE OR DELETE ON public.sales_invoices FOR EACH ROW EXECUTE FUNCTION public.fn_universal_audit_logger();
+
+DROP TRIGGER IF EXISTS trg_audit_purchases ON public.purchases;
 CREATE TRIGGER trg_audit_purchases AFTER INSERT OR UPDATE OR DELETE ON public.purchases FOR EACH ROW EXECUTE FUNCTION public.fn_universal_audit_logger();
+
+DROP TRIGGER IF EXISTS trg_audit_stock_adjustments ON public.stock_adjustments;
 CREATE TRIGGER trg_audit_stock_adjustments AFTER INSERT OR UPDATE OR DELETE ON public.stock_adjustments FOR EACH ROW EXECUTE FUNCTION public.fn_universal_audit_logger();
+
+DROP TRIGGER IF EXISTS trg_audit_expenses ON public.expenses;
 CREATE TRIGGER trg_audit_expenses AFTER INSERT OR UPDATE OR DELETE ON public.expenses FOR EACH ROW EXECUTE FUNCTION public.fn_universal_audit_logger();
+
+DROP TRIGGER IF EXISTS trg_audit_customers ON public.customers;
 CREATE TRIGGER trg_audit_customers AFTER INSERT OR UPDATE OR DELETE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.fn_universal_audit_logger();
+
+DROP TRIGGER IF EXISTS trg_audit_employees ON public.employees;
 CREATE TRIGGER trg_audit_employees AFTER INSERT OR UPDATE OR DELETE ON public.employees FOR EACH ROW EXECUTE FUNCTION public.fn_universal_audit_logger();
 
--- Attach Business Triggers
+-- Attach Business Triggers (Idempotent)
+DROP TRIGGER IF EXISTS trg_process_purchase ON public.purchases;
+CREATE TRIGGER trg_process_purchase AFTER INSERT ON public.purchases FOR EACH ROW EXECUTE FUNCTION public.fn_process_purchase();
+
+DROP TRIGGER IF EXISTS trg_process_purchase_item ON public.purchase_items;
+CREATE TRIGGER trg_process_purchase_item AFTER INSERT ON public.purchase_items FOR EACH ROW EXECUTE FUNCTION public.fn_process_purchase_item();
+
+DROP TRIGGER IF EXISTS trg_process_sales_invoice ON public.sales_invoices;
+CREATE TRIGGER trg_process_sales_invoice AFTER INSERT ON public.sales_invoices FOR EACH ROW EXECUTE FUNCTION public.fn_process_sales_invoice();
+
+DROP TRIGGER IF EXISTS trg_process_sales_item ON public.sales_items;
+CREATE TRIGGER trg_process_sales_item AFTER INSERT ON public.sales_items FOR EACH ROW EXECUTE FUNCTION public.fn_process_sales_item();
+
+DROP TRIGGER IF EXISTS trg_process_stock_adjustment ON public.stock_adjustments;
 CREATE TRIGGER trg_process_stock_adjustment AFTER INSERT ON public.stock_adjustments FOR EACH ROW EXECUTE FUNCTION public.fn_process_stock_adjustment();
+
+DROP TRIGGER IF EXISTS trg_process_due_collection ON public.customer_due_collections;
 CREATE TRIGGER trg_process_due_collection AFTER INSERT ON public.customer_due_collections FOR EACH ROW EXECUTE FUNCTION public.fn_process_due_collection();
+
+DROP TRIGGER IF EXISTS trg_process_supplier_payment ON public.supplier_payments;
+CREATE TRIGGER trg_process_supplier_payment AFTER INSERT ON public.supplier_payments FOR EACH ROW EXECUTE FUNCTION public.fn_process_supplier_payment();
+
+DROP TRIGGER IF EXISTS trg_process_expense ON public.expenses;
 CREATE TRIGGER trg_process_expense AFTER INSERT ON public.expenses FOR EACH ROW EXECUTE FUNCTION public.fn_process_expense();
+
+DROP TRIGGER IF EXISTS trg_process_salary_advance ON public.salary_advances;
 CREATE TRIGGER trg_process_salary_advance AFTER INSERT ON public.salary_advances FOR EACH ROW EXECUTE FUNCTION public.fn_process_salary_advance();
+
+DROP TRIGGER IF EXISTS trg_process_payroll ON public.payroll_records;
+CREATE TRIGGER trg_process_payroll AFTER INSERT ON public.payroll_records FOR EACH ROW EXECUTE FUNCTION public.fn_process_payroll();
+
+DROP TRIGGER IF EXISTS trg_process_partner_drawing ON public.partner_drawings;
+CREATE TRIGGER trg_process_partner_drawing AFTER INSERT ON public.partner_drawings FOR EACH ROW EXECUTE FUNCTION public.fn_process_partner_drawing();
+
