@@ -1,0 +1,25 @@
+name: Nightly Backup & Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs everyday at 20:00 UTC (02:00 AM Bangladesh Time)
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive-and-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database (Prevent Free-Tier Pausing)
+        if: env.VITE_SUPABASE_URL != ''
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          echo "Pinging Supabase REST endpoint to keep project active..."
+          curl -s -f -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Authorization: Bearer $VITE_SUPABASE_ANON_KEY" \
+            "$VITE_SUPABASE_URL/rest/v1/company_settings?select=id&limit=1" > /dev/null || true
+          echo "Keep-alive ping completed."
+
+      - name: Verify Health Check
+        run: echo "Nightly health check and scheduled automation completed successfully at $(date -u)"

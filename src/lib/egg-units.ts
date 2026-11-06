@@ -1,0 +1,106 @@
+// ====================================================================
+// DIMKHATA (ডিমখাতা) — Egg Unit Calculation Engine & Bengali Formatters
+// ====================================================================
+
+const BENGALI_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+
+export function toBengaliNumber(num: number | string | null | undefined): string {
+  if (num === null || num === undefined || num === '') return '০';
+  const str = String(num);
+  return str.replace(/[0-9]/g, (digit) => BENGALI_DIGITS[parseInt(digit, 10)] || digit);
+}
+
+export function formatTaka(amount: number | null | undefined, includeSymbol = true): string {
+  const val = Number(amount || 0);
+  const formatted = new Intl.NumberFormat('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(val);
+
+  const bnFormatted = toBengaliNumber(formatted);
+  return includeSymbol ? `৳${bnFormatted}` : bnFormatted;
+}
+
+export function formatQuantityPcs(qtyPcs: number, pcsPerCrate = 30): {
+  totalPcs: number;
+  totalPcsBn: string;
+  shoBreakdown: string;
+  crateBreakdown: string;
+  haliBreakdown: string;
+  summaryBadge: string;
+} {
+  const pcs = Math.max(0, Math.floor(qtyPcs || 0));
+  const pcsBn = toBengaliNumber(pcs);
+
+  // Hundred (শ) breakdown
+  const sho = Math.floor(pcs / 100);
+  const remSho = pcs % 100;
+  const shoText = sho > 0 
+    ? `${toBengaliNumber(sho)} শ${remSho > 0 ? ` ${toBengaliNumber(remSho)} পিস` : ''}`
+    : `${pcsBn} পিস`;
+
+  // Crate (খাঁচি) breakdown
+  const crateSize = pcsPerCrate > 0 ? pcsPerCrate : 30;
+  const crates = Math.floor(pcs / crateSize);
+  const remCrates = pcs % crateSize;
+  const crateText = crates > 0
+    ? `${toBengaliNumber(crates)} খাঁচি${remCrates > 0 ? ` + ${toBengaliNumber(remCrates)} পিস` : ''}`
+    : `${pcsBn} পিস`;
+
+  // Hali (হালি) breakdown
+  const hali = Math.floor(pcs / 4);
+  const remHali = pcs % 4;
+  const haliText = hali > 0
+    ? `${toBengaliNumber(hali)} হালি${remHali > 0 ? ` + ${toBengaliNumber(remHali)} পিস` : ''}`
+    : `${pcsBn} পিস`;
+
+  // Summary badge for POS and Cards
+  const summaryBadge = crates > 0
+    ? `${toBengaliNumber(crates)} খাঁচি (${pcsBn} পিস)`
+    : `${pcsBn} পিস`;
+
+  return {
+    totalPcs: pcs,
+    totalPcsBn: pcsBn,
+    shoBreakdown: shoText,
+    crateBreakdown: crateText,
+    haliBreakdown: haliText,
+    summaryBadge,
+  };
+}
+
+/**
+ * Calculates Landed Cost per Egg piece
+ */
+export function calculateLandedCost(
+  rawSubtotal: number,
+  truckFare: number,
+  laborCost: number,
+  otherCost: number,
+  totalPcs: number
+): {
+  totalLandedCost: number;
+  effectiveLandedRatePerPc: number;
+} {
+  const total = (rawSubtotal || 0) + (truckFare || 0) + (laborCost || 0) + (otherCost || 0);
+  const rate = totalPcs > 0 ? total / totalPcs : 0;
+  return {
+    totalLandedCost: Math.round(total * 100) / 100,
+    effectiveLandedRatePerPc: Math.round(rate * 10000) / 10000,
+  };
+}
+
+/**
+ * Calculate Weighted Average Cost (WAC)
+ */
+export function calculateWeightedAverageCost(
+  existingQtyPcs: number,
+  existingWac: number,
+  incomingQtyPcs: number,
+  incomingRate: number
+): number {
+  const totalQty = (existingQtyPcs || 0) + (incomingQtyPcs || 0);
+  if (totalQty <= 0) return incomingRate || 0;
+  const totalVal = ((existingQtyPcs || 0) * (existingWac || 0)) + ((incomingQtyPcs || 0) * (incomingRate || 0));
+  return Math.round((totalVal / totalQty) * 10000) / 10000;
+}
