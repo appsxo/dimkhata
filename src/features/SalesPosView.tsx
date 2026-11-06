@@ -1,5 +1,5 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Sales POS Memo & Delivery Challan Engine (Req 9, 10)
+// DIMKHATA (ডিমখাতা) — Sales POS & Delivery Challan (ElevenLabs Design)
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -11,8 +11,6 @@ import {
   Truck,
   AlertCircle,
   CheckCircle2,
-  ShieldAlert,
-  Search,
 } from 'lucide-react';
 import {
   Customer,
@@ -27,7 +25,7 @@ import {
   CompanySettings,
 } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
-import { formatQuantityPcs, formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { formatTaka, toBengaliNumber } from '../lib/egg-units';
 import { shareInvoiceWhatsApp } from '../lib/whatsapp-share';
 
 interface SalesPosViewProps {
@@ -55,20 +53,18 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   onRefresh,
   onSelectInvoiceForPrint,
 }) => {
-  // Form State
   const [customerId, setCustomerId] = useState(customers[0]?.id || '');
   const [branchId, setBranchId] = useState(branches[0]?.id || '');
   const [saleType, setSaleType] = useState<'WHOLESALE' | 'RETAIL'>('WHOLESALE');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Items
   const [items, setItems] = useState<
     { categoryId: string; inputType: 'CRATE' | 'PCS'; qtyInput: number; unitPrice: number }[]
   >([
     {
       categoryId: categories[0]?.id || '',
       inputType: 'CRATE',
-      qtyInput: 10, // 10 crates = 300 pcs
+      qtyInput: 10,
       unitPrice: rates.find((r) => r.category_id === categories[0]?.id)?.wholesale_rate_pc || 10.80,
     },
   ]);
@@ -79,7 +75,6 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   const [accountId, setAccountId] = useState(accounts[0]?.id || '');
   const [notes, setNotes] = useState('');
 
-  // Delivery Challan toggle & details
   const [includeChallan, setIncludeChallan] = useState(false);
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [driverName, setDriverName] = useState('');
@@ -87,14 +82,12 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
   const selectedCustomer = customers.find((c) => c.id === customerId);
 
-  // Helper to calculate total pieces for an item row
   const getItemPcs = (item: { categoryId: string; inputType: 'CRATE' | 'PCS'; qtyInput: number }) => {
     const cat = categories.find((c) => c.id === item.categoryId);
     const crateSize = cat?.pcs_per_crate || 30;
     return item.inputType === 'CRATE' ? item.qtyInput * crateSize : item.qtyInput;
   };
 
-  // Subtotal calculation
   const subtotal = items.reduce((sum, item) => {
     const pcs = getItemPcs(item);
     return sum + pcs * (Number(item.unitPrice) || 0);
@@ -103,7 +96,6 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   const netTotal = Math.max(0, subtotal - discount);
   const dueAmount = Math.max(0, netTotal - paidAmount);
 
-  // Credit limit calculation & warning
   const newProjectedDue = (selectedCustomer?.current_due || 0) + dueAmount;
   const isCreditExceeded = selectedCustomer && newProjectedDue > selectedCustomer.credit_limit;
 
@@ -148,7 +140,6 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
   const handleSaleTypeChange = (type: 'WHOLESALE' | 'RETAIL') => {
     setSaleType(type);
-    // update rates in all item rows
     setItems((prev) =>
       prev.map((item) => {
         const rate =
@@ -173,7 +164,6 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
       return;
     }
 
-    // Check stock availability
     for (const item of items) {
       const pcs = getItemPcs(item);
       const stock = stocks.find((s) => s.category_id === item.categoryId && s.branch_id === branchId);
@@ -188,7 +178,6 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
     const invoiceCode = DimKhataStore.getNextCode('INV');
 
-    // Build items with Landed Cost snapshot for exact COGS calculation
     const salesItems: SalesItem[] = items.map((item, idx) => {
       const pcs = getItemPcs(item);
       const stock = stocks.find((s) => s.category_id === item.categoryId && s.branch_id === branchId);
@@ -243,11 +232,8 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
     DimKhataStore.recordSalesInvoice(newInvoice);
     onRefresh();
-
-    // Prompt user to print or view invoice
     onSelectInvoiceForPrint(newInvoice);
 
-    // Reset items
     setPaidAmount(0);
     setDiscount(0);
     setNotes('');
@@ -256,26 +242,25 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-amber-700" />
-            <span>বিক্রয় মেমো ও ডেলিভারি চালান (POS System)</span>
+          <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
+            বিক্রয় মেমো ও ডেলিভারি চালান (POS System)
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#777169] mt-0.5">
             পাইকারি ও খুচরা রেটে দ্রুত মেমো তৈরি, বাকির লিমিট সতর্কতা ও ১-ক্লিকে চালান প্রিন্ট
           </p>
         </div>
 
-        {/* Wholesale vs Retail Toggle */}
-        <div className="flex items-center bg-slate-200 p-1 rounded-xl text-xs font-bold">
+        {/* Wholesale vs Retail Toggle (Pill Geometry) */}
+        <div className="flex items-center bg-[#f0efed] p-1 rounded-full text-xs font-medium">
           <button
             type="button"
             onClick={() => handleSaleTypeChange('WHOLESALE')}
-            className={`px-4 py-1.5 rounded-lg transition ${
+            className={`px-4 py-1.5 rounded-full transition ${
               saleType === 'WHOLESALE'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-700 hover:text-slate-900'
+                ? 'bg-[#292524] text-white shadow-xs'
+                : 'text-[#4e4e4e] hover:text-[#0c0a09]'
             }`}
           >
             পাইকারি বিক্রয়
@@ -283,10 +268,10 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
           <button
             type="button"
             onClick={() => handleSaleTypeChange('RETAIL')}
-            className={`px-4 py-1.5 rounded-lg transition ${
+            className={`px-4 py-1.5 rounded-full transition ${
               saleType === 'RETAIL'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-700 hover:text-slate-900'
+                ? 'bg-[#292524] text-white shadow-xs'
+                : 'text-[#4e4e4e] hover:text-[#0c0a09]'
             }`}
           >
             খুচরা বিক্রয়
@@ -296,18 +281,18 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Memo Form (2 Cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-5">
+        <div className="lg:col-span-2 card-editorial space-y-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Customer & Branch */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   কাস্টমার নির্বাচন (SE-CUST)
                 </label>
                 <select
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  className="input-editorial w-full text-xs"
                 >
                   {customers.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -318,13 +303,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   শাখা / গোডাউন
                 </label>
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  className="input-editorial w-full text-xs"
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -335,40 +320,30 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   তারিখ
                 </label>
                 <input
                   type="date"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  className="input-editorial w-full text-xs"
                 />
               </div>
             </div>
 
-            {/* Credit Limit Alert Banner (Req 10) */}
+            {/* Credit Limit Alert Banner */}
             {selectedCustomer && (
-              <div
-                className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
-                  isCreditExceeded
-                    ? 'bg-rose-50 border-rose-300 text-rose-900'
-                    : 'bg-amber-50/60 border-amber-200 text-amber-900'
-                }`}
-              >
+              <div className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl text-xs flex items-center justify-between text-[#4e4e4e]">
                 <div className="flex items-center gap-2">
-                  {isCreditExceeded ? (
-                    <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                  )}
+                  <AlertCircle className="w-4 h-4 text-[#777169] shrink-0" />
                   <span>
-                    বর্তমান বকেয়া: <strong>{formatTaka(selectedCustomer.current_due)}</strong> | বাকির সীমা (Credit Limit): <strong>{formatTaka(selectedCustomer.credit_limit)}</strong>
+                    বর্তমান বকেয়া: <strong className="text-[#0c0a09]">{formatTaka(selectedCustomer.current_due)}</strong> | বাকির সীমা: <strong className="text-[#0c0a09]">{formatTaka(selectedCustomer.credit_limit)}</strong>
                   </span>
                 </div>
                 {isCreditExceeded && (
-                  <span className="font-bold text-rose-700 text-[11px] animate-pulse">
-                    ⚠️ বাকির সীমা অতিক্রম করেছে!
+                  <span className="text-[#dc2626] font-semibold text-[11px]">
+                    ⚠️ বাকির সীমা অতিক্রম
                   </span>
                 )}
               </div>
@@ -377,13 +352,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
             {/* Item Rows */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-800">
+                <label className="text-xs font-medium text-[#0c0a09]">
                   বিক্রয়কৃত ডিমের তালিকা (Egg Items)
                 </label>
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="flex items-center gap-1 text-xs text-amber-700 hover:text-amber-800 font-bold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200"
+                  className="btn-outline text-xs h-8 px-3"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>আইটেম যোগ করুন</span>
@@ -397,13 +372,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                   return (
                     <div
                       key={idx}
-                      className="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
+                      className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
                     >
                       <div className="sm:col-span-4">
                         <select
                           value={item.categoryId}
                           onChange={(e) => handleCategoryChange(idx, e.target.value)}
-                          className="w-full p-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium"
+                          className="input-editorial w-full text-xs py-1.5"
                         >
                           {categories.map((c) => (
                             <option key={c.id} value={c.id}>
@@ -425,7 +400,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                               return copy;
                             });
                           }}
-                          className="w-20 p-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900"
+                          className="input-editorial w-20 text-xs font-semibold py-1.5"
                         />
                         <select
                           value={item.inputType}
@@ -437,12 +412,12 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                               return copy;
                             });
                           }}
-                          className="p-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium"
+                          className="input-editorial text-xs py-1.5"
                         >
                           <option value="CRATE">খাঁচি ({cat?.pcs_per_crate || 30})</option>
                           <option value="PCS">পিস</option>
                         </select>
-                        <span className="text-[11px] text-slate-400 font-mono">
+                        <span className="text-[11px] text-[#777169] font-mono">
                           ={toBengaliNumber(pcs)}
                         </span>
                       </div>
@@ -461,21 +436,21 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                                 return copy;
                               });
                             }}
-                            className="w-full p-1.5 pl-6 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900"
+                            className="input-editorial w-full pl-6 text-xs font-semibold py-1.5"
                           />
-                          <span className="absolute left-2 top-1.5 text-xs text-slate-400">৳</span>
+                          <span className="absolute left-2.5 top-2 text-xs text-[#777169]">৳</span>
                         </div>
                       </div>
 
                       <div className="sm:col-span-2 flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-800">
+                        <span className="text-xs font-medium text-[#0c0a09]">
                           {formatTaka(pcs * item.unitPrice)}
                         </span>
                         {items.length > 1 && (
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(idx)}
-                            className="text-rose-600 hover:text-rose-800 text-xs px-1"
+                            className="text-[#a8a29e] hover:text-[#dc2626] text-xs px-1"
                           >
                             ✕
                           </button>
@@ -487,18 +462,18 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
             </div>
 
-            {/* Challan Section Checkbox (Req 9) */}
-            <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-xl space-y-2">
+            {/* Challan Section Checkbox */}
+            <div className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeChallan}
                   onChange={(e) => setIncludeChallan(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+                  className="rounded text-[#0c0a09] focus:ring-[#0c0a09] w-4 h-4"
                 />
-                <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                  <Truck className="w-4 h-4 text-blue-700" />
-                  <span>এই অর্ডারের জন্য আলাদা ডেলিভারি চালান প্রিন্ট করুন (Challan)</span>
+                <span className="text-xs font-medium text-[#0c0a09] flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-[#777169]" />
+                  <span>আলাদা ডেলিভারি চালান প্রিন্ট করুন (Delivery Challan)</span>
                 </span>
               </label>
 
@@ -509,66 +484,66 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                     placeholder="গাড়ি / ভ্যান নম্বর"
                     value={vehicleNumber}
                     onChange={(e) => setVehicleNumber(e.target.value)}
-                    className="p-1.5 bg-white border border-blue-300 rounded-lg text-xs"
+                    className="input-editorial text-xs py-1.5"
                   />
                   <input
                     type="text"
                     placeholder="ড্রাইভারের নাম"
                     value={driverName}
                     onChange={(e) => setDriverName(e.target.value)}
-                    className="p-1.5 bg-white border border-blue-300 rounded-lg text-xs"
+                    className="input-editorial text-xs py-1.5"
                   />
                   <input
                     type="text"
                     placeholder="ড্রাইভারের ফোন"
                     value={driverPhone}
                     onChange={(e) => setDriverPhone(e.target.value)}
-                    className="p-1.5 bg-white border border-blue-300 rounded-lg text-xs"
+                    className="input-editorial text-xs py-1.5"
                   />
                 </div>
               )}
             </div>
 
             {/* Payment & Discount */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#f0efed]">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   বিশেষ ছাড় / ডিসকাউন্ট
                 </label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-1.5 text-xs text-slate-400">৳</span>
+                  <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
                   <input
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                    className="w-full pl-6 pr-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900"
+                    className="input-editorial w-full pl-6 text-xs font-semibold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   নগদ জমা / পেইড
                 </label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-1.5 text-xs text-slate-400">৳</span>
+                  <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
                   <input
                     type="number"
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
-                    className="w-full pl-6 pr-2 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-black text-emerald-800"
+                    className="input-editorial w-full pl-6 text-xs font-semibold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   পেমেন্ট মাধ্যম
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as any)}
-                  className="w-full p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-medium text-slate-900"
+                  className="input-editorial w-full text-xs"
                 >
                   <option value="CASH">ক্যাশ নগদ</option>
                   <option value="BKASH">বিকাশ (bKash)</option>
@@ -581,7 +556,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2"
+              className="btn-primary w-full h-11"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>মেমো তৈরি করুন ও প্রিন্ট ভিউ দেখুন</span>
@@ -589,33 +564,32 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
           </form>
         </div>
 
-        {/* Right Summary & Recent Invoices List */}
+        {/* Right Summary (Dark-Inverted Surface Card: #0c0a09) */}
         <div className="space-y-4">
-          {/* Bill Summary */}
-          <div className="bg-slate-900 text-white rounded-2xl p-5 shadow-lg space-y-3">
-            <h3 className="font-bold text-base text-amber-300 border-b border-slate-800 pb-2">
+          <div className="bg-[#0c0a09] text-white rounded-2xl p-6 shadow-xl space-y-4">
+            <h3 className="font-serif font-light text-xl text-white border-b border-white/10 pb-3">
               মেমোর মোট বিল হিসাব
             </h3>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between text-slate-300">
+            <div className="space-y-2.5 text-xs text-[#a8a29e]">
+              <div className="flex justify-between">
                 <span>সাবটোটাল:</span>
-                <span className="font-semibold">{formatTaka(subtotal)}</span>
+                <span className="text-white font-medium">{formatTaka(subtotal)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-rose-400">
+                <div className="flex justify-between text-rose-300">
                   <span>ছাড় (Discount):</span>
                   <span>- {formatTaka(discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-bold text-white border-t border-slate-800 pt-2">
+              <div className="flex justify-between text-base font-medium text-white border-t border-white/10 pt-3">
                 <span>মোট বিল:</span>
-                <span className="text-amber-400">{formatTaka(netTotal)}</span>
+                <span className="font-serif font-light text-xl text-white">{formatTaka(netTotal)}</span>
               </div>
-              <div className="flex justify-between text-emerald-400">
+              <div className="flex justify-between text-[#16a34a]">
                 <span>জমা প্রদান:</span>
-                <span>{formatTaka(paidAmount)}</span>
+                <span className="font-medium">{formatTaka(paidAmount)}</span>
               </div>
-              <div className="flex justify-between text-rose-400 font-bold border-t border-slate-800 pt-2 text-sm">
+              <div className="flex justify-between text-white font-medium border-t border-white/10 pt-2 text-sm">
                 <span>চলতি বকেয়া:</span>
                 <span>{formatTaka(dueAmount)}</span>
               </div>
@@ -623,15 +597,15 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
           </div>
 
           {/* Recent Sales List */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
-            <h4 className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-              <Receipt className="w-3.5 h-3.5 text-slate-500" />
+          <div className="card-editorial p-4 space-y-3">
+            <h4 className="text-xs font-medium text-[#777169] uppercase tracking-wider flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5" />
               <span>আজকের মেমো তালিকা</span>
             </h4>
 
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {sales.length === 0 ? (
-                <div className="text-xs text-slate-400 text-center py-4">
+                <div className="text-xs text-[#a8a29e] text-center py-4">
                   কোনো মেমো তৈরি হয়নি
                 </div>
               ) : (
@@ -640,14 +614,14 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                   return (
                     <div
                       key={inv.id}
-                      className="p-2.5 bg-slate-50 hover:bg-amber-50/40 rounded-xl border border-slate-200 text-xs flex justify-between items-center transition"
+                      className="p-3 bg-[#fafafa] rounded-lg border border-[#e7e5e4] hover:border-[#0c0a09] text-xs flex justify-between items-center transition"
                     >
                       <div>
-                        <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                        <div className="font-medium text-[#0c0a09] flex items-center gap-1.5">
                           <span>{inv.invoice_code}</span>
-                          <span className="text-[10px] text-slate-400">({cust?.name})</span>
+                          <span className="text-[#a8a29e]">({cust?.name})</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">
+                        <div className="text-[11px] text-[#777169] mt-0.5">
                           বিল: {formatTaka(inv.net_total)} | বকেয়া: {formatTaka(inv.due_amount)}
                         </div>
                       </div>
@@ -658,14 +632,14 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                             if (cust) shareInvoiceWhatsApp(inv, cust, company);
                           }}
                           title="WhatsApp এ পাঠান"
-                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-white transition"
                         >
                           <Share2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => onSelectInvoiceForPrint(inv)}
                           title="প্রিন্ট করুন"
-                          className="p-1.5 text-slate-600 hover:bg-slate-200 rounded"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-white transition"
                         >
                           <Printer className="w-3.5 h-3.5" />
                         </button>

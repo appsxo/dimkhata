@@ -1,5 +1,6 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Executive Dashboard & Live Stock Board
+// DIMKHATA (ডিমখাতা) — Editorial Dashboard & Live Stock Board
+// Canvas: #f5f5f5 | Display: EB Garamond 300 | Atmospheric Pastel Orbs
 // ====================================================================
 
 import React from 'react';
@@ -11,10 +12,9 @@ import {
   Wallet,
   Users,
   Sparkles,
-  ArrowUpRight,
-  ArrowDownRight,
   AlertCircle,
   PlusCircle,
+  ArrowRight,
 } from 'lucide-react';
 import {
   EggCategory,
@@ -65,146 +65,159 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const todaySalesRevenue = todaySales.reduce((sum, s) => sum + s.net_total, 0);
   const todayCashCollected = todaySales.reduce((sum, s) => sum + s.paid_amount, 0);
 
-  // Customers exceeding credit limit or due
+  // High risk due customers
   const highRiskCustomers = customers.filter(
     (c) => c.current_due > 0 && c.current_due >= c.credit_limit * 0.9
   );
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner & Quick Actions */}
-      <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 rounded-2xl p-4 sm:p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🥚</span>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-              আজকের ব্যবসার সারসংক্ষেপ
-            </h2>
-          </div>
-          <p className="text-xs sm:text-sm text-amber-100/90 mt-1">
-            মোট লাইভ স্টক: <strong className="text-white text-base">{stockBreakdown.crateBreakdown}</strong> ({stockBreakdown.totalPcsBn} পিস)
-          </p>
-        </div>
+    <div className="space-y-8 relative">
+      {/* Editorial Hero Band with Atmospheric Pastel Gradient Orbs */}
+      <div className="relative overflow-hidden bg-white border border-[#e7e5e4] rounded-2xl p-6 sm:p-10 shadow-[0_4px_16px_rgba(0,0,0,0.02)]">
+        {/* Five Signature Pastel Gradient Orbs as Pure Atmosphere */}
+        <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full orb-peach blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute -bottom-20 left-1/4 w-72 h-72 rounded-full orb-mint blur-3xl opacity-50 pointer-events-none" />
+        <div className="absolute top-1/2 -left-12 w-64 h-64 rounded-full orb-lavender blur-3xl opacity-40 pointer-events-none" />
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => onNavigate('sales-pos')}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white text-amber-900 hover:bg-amber-50 font-bold rounded-xl text-xs sm:text-sm transition shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4 text-amber-700" />
-            <span>নতুন বিক্রয় মেমো (POS)</span>
-          </button>
-          <button
-            onClick={() => onNavigate('sourcing')}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-sm"
-          >
-            <Truck className="w-4 h-4" />
-            <span>ডিম কেনা (মহাজন)</span>
-          </button>
-          <button
-            onClick={onOpenRateModal}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-950/60 hover:bg-amber-950/80 text-amber-100 font-semibold rounded-xl text-xs sm:text-sm transition border border-amber-500/40"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>দর আপডেট</span>
-          </button>
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="badge-pill">
+                শরিফ এন্ড ইমান এন্টারপ্রাইজ
+              </span>
+              <span className="text-[12px] text-[#777169]">• লাইভ স্টক ও ক্যাশবুক</span>
+            </div>
+            <h2 className="font-serif font-light text-3xl sm:text-4xl text-[#0c0a09] tracking-tight leading-tight">
+              আজকের সামগ্রিক মজুদ ও ব্যবসায়িক লেনদেন
+            </h2>
+            <p className="text-[15px] text-[#4e4e4e] mt-2 font-normal">
+              বর্তমানে দোকান ও গোডাউনে মোট মজুদ <strong className="text-[#0c0a09] font-medium">{stockBreakdown.crateBreakdown}</strong> ({stockBreakdown.totalPcsBn} পিস ডিম)।
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => onNavigate('sales-pos')}
+              className="btn-primary"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>বিক্রয় মেমো (POS)</span>
+            </button>
+            <button
+              onClick={() => onNavigate('sourcing')}
+              className="btn-outline"
+            >
+              <Truck className="w-4 h-4 text-[#777169]" />
+              <span>ডিম কেনা (মহাজন)</span>
+            </button>
+            <button
+              onClick={onOpenRateModal}
+              className="btn-outline"
+            >
+              <Sparkles className="w-4 h-4 text-[#777169]" />
+              <span>দর আপডেট</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 4 Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* 4 Stat Cards (Surface Card: #ffffff, 16px radius, hairline #e7e5e4) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Today's Sales */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">আজকের মোট বিক্রয়</span>
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+        <div className="card-editorial flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#777169]">
+            <span className="text-[13px] font-medium tracking-wide">আজকের মোট বিক্রয়</span>
+            <div className="w-8 h-8 rounded-full bg-[#f0efed] text-[#292524] flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black text-slate-900">
+          <div className="mt-4">
+            <div className="font-serif font-light text-2xl sm:text-3xl text-[#0c0a09] tracking-tight">
               {formatTaka(todaySalesRevenue)}
             </div>
-            <div className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-0.5">
-              <span>নগদ জমা: {formatTaka(todayCashCollected)}</span>
+            <div className="text-[12px] text-[#777169] font-normal mt-1">
+              নগদ জমা: <span className="text-[#16a34a] font-medium">{formatTaka(todayCashCollected)}</span>
             </div>
           </div>
         </div>
 
-        {/* Live Egg Stock */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">দোকান ও গোডাউনে স্টক</span>
-            <div className="p-2 bg-amber-50 text-amber-600 rounded-xl text-base">
+        {/* Live Stock */}
+        <div className="card-editorial flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#777169]">
+            <span className="text-[13px] font-medium tracking-wide">গোডাউনে লাইভ মজুদ</span>
+            <div className="w-8 h-8 rounded-full bg-[#f0efed] text-[#292524] flex items-center justify-center text-sm">
               🥚
             </div>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black text-amber-900">
-              {stockBreakdown.totalPcsBn} <span className="text-xs font-normal text-slate-500">পিস</span>
+          <div className="mt-4">
+            <div className="font-serif font-light text-2xl sm:text-3xl text-[#0c0a09] tracking-tight">
+              {stockBreakdown.totalPcsBn} <span className="text-base text-[#777169] font-sans">পিস</span>
             </div>
-            <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+            <div className="text-[12px] text-[#4e4e4e] font-normal mt-1">
               {stockBreakdown.crateBreakdown}
             </div>
           </div>
         </div>
 
-        {/* Liquid Cash & Bank */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">ক্যাশ ও ব্যাংক তহবিল</span>
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+        {/* Cash & Bank Balances */}
+        <div className="card-editorial flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#777169]">
+            <span className="text-[13px] font-medium tracking-wide">ক্যাশ ও ব্যাংক তহবিল</span>
+            <div className="w-8 h-8 rounded-full bg-[#f0efed] text-[#292524] flex items-center justify-center">
               <Wallet className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black text-blue-900">
+          <div className="mt-4">
+            <div className="font-serif font-light text-2xl sm:text-3xl text-[#0c0a09] tracking-tight">
               {formatTaka(totalLiquidCash)}
             </div>
-            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
+            <div className="text-[12px] text-[#777169] font-normal mt-1">
               {accounts.length} টি একাউন্টে লাইভ সিঙ্ক
             </div>
           </div>
         </div>
 
         {/* Customer Dues */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">বাজারে মোট কাস্টমার বকেয়া</span>
-            <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
+        <div className="card-editorial flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#777169]">
+            <span className="text-[13px] font-medium tracking-wide">বাজারে কাস্টমার বকেয়া</span>
+            <div className="w-8 h-8 rounded-full bg-[#f0efed] text-[#dc2626] flex items-center justify-center">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black text-rose-700">
+          <div className="mt-4">
+            <div className="font-serif font-light text-2xl sm:text-3xl text-[#0c0a09] tracking-tight">
               {formatTaka(totalCustomerDues)}
             </div>
-            <div className="text-[11px] text-rose-600 font-medium mt-0.5">
-              {highRiskCustomers.length} জন কাস্টমার লিমিটের কাছাকাছি
+            <div className="text-[12px] text-[#777169] font-normal mt-1">
+              {highRiskCustomers.length} জন লিমিট অতিক্রমকারী
             </div>
           </div>
         </div>
       </div>
 
-      {/* 5 Egg Categories Live Cards (Req 6) */}
+      {/* 5 Egg Categories (Editorial Cards) */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
-            <span>🥚 ডিমের ৫টি ক্যাটাগরি ও লাইভ মজুদ</span>
-            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09] tracking-tight">
+              ডিমের ৫টি ক্যাটাগরি ও আজকের বাজার দর
+            </h3>
+            <span className="badge-pill">
               লাইভ স্টক
             </span>
-          </h3>
+          </div>
           <button
             onClick={() => onNavigate('daily-pricing')}
-            className="text-xs text-amber-800 hover:text-amber-900 font-semibold hover:underline"
+            className="text-[14px] text-[#292524] hover:underline font-medium inline-flex items-center gap-1"
           >
-            বিস্তারিত বাজার দর দেখুন ➔
+            <span>সকল দর</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {categories.map((cat) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {categories.map((cat, idx) => {
             const stock = stocks.find((s) => s.category_id === cat.id);
             const rate = rates.find((r) => r.category_id === cat.id);
             const pcs = stock?.qty_pcs || 0;
@@ -213,49 +226,43 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             return (
               <div
                 key={cat.id}
-                className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs hover:border-amber-400 transition space-y-3 relative overflow-hidden"
+                className="bg-white rounded-xl p-5 border border-[#e7e5e4] shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:border-[#d6d3d1] transition space-y-3"
               >
-                <div
-                  className="absolute top-0 left-0 right-0 h-1.5"
-                  style={{ backgroundColor: cat.color_hex }}
-                />
-
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-slate-900">
+                  <span className="font-medium text-[15px] text-[#0c0a09]">
                     {cat.name_bn}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-[10px] font-mono text-[#777169] uppercase">
                     {cat.code}
                   </span>
                 </div>
 
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
-                  <div className="text-xs text-slate-500 font-medium">বর্তমান স্টক</div>
-                  <div className="text-lg font-black text-slate-900 mt-0.5">
-                    {bdown.totalPcsBn} <span className="text-xs font-normal">পিস</span>
+                <div className="bg-[#fafafa] p-3 rounded-lg border border-[#f0efed] text-center">
+                  <div className="text-[11px] text-[#777169]">বর্তমান স্টক</div>
+                  <div className="font-serif font-light text-xl text-[#0c0a09] mt-0.5">
+                    {bdown.totalPcsBn} <span className="text-xs text-[#777169] font-sans">পিস</span>
                   </div>
-                  <div className="text-[11px] text-amber-800 font-semibold mt-0.5">
+                  <div className="text-[11px] text-[#4e4e4e] font-medium mt-0.5">
                     {bdown.crateBreakdown}
                   </div>
                 </div>
 
-                {/* Rates Grid */}
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between text-slate-600">
+                <div className="space-y-1.5 text-xs pt-1 border-t border-[#f0efed]">
+                  <div className="flex justify-between text-[#777169]">
                     <span>কেনা দর:</span>
-                    <span className="font-bold text-slate-800">
+                    <span className="font-medium text-[#0c0a09]">
                       {formatTaka(rate?.buying_rate_pc || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-amber-900 bg-amber-50/70 px-1.5 py-0.5 rounded">
+                  <div className="flex justify-between text-[#0c0a09] bg-[#f0efed] px-2 py-0.5 rounded">
                     <span>পাইকারি দর:</span>
-                    <span className="font-bold">
+                    <span className="font-semibold">
                       {formatTaka(rate?.wholesale_rate_pc || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-emerald-900 bg-emerald-50/70 px-1.5 py-0.5 rounded">
+                  <div className="flex justify-between text-[#4e4e4e]">
                     <span>খুচরা দর:</span>
-                    <span className="font-bold">
+                    <span className="font-medium text-[#0c0a09]">
                       {formatTaka(rate?.retail_rate_pc || 0)}
                     </span>
                   </div>
@@ -266,27 +273,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Lower Row: Due Alerts & Recent Invoices */}
+      {/* Due Alerts & Recent Memos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Credit Limit & Due Alerts (Req 10) */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600" />
-              <span>বকেয়া অ্যালার্ট ও বাকির সীমা অতিক্রম</span>
+        {/* Credit Limit & Due Alerts */}
+        <div className="card-editorial space-y-4">
+          <div className="flex items-center justify-between border-b border-[#f0efed] pb-3">
+            <h3 className="font-serif font-light text-xl text-[#0c0a09] flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-[#dc2626]" />
+              <span>বকেয়া অ্যালার্ট ও ক্রেডিট সীমা</span>
             </h3>
             <button
               onClick={() => onNavigate('parties')}
-              className="text-xs text-amber-800 hover:underline font-semibold"
+              className="text-xs text-[#292524] hover:underline font-medium"
             >
-              সকল কাস্টমার ➔
+              কাস্টমার ডিরেক্টরি ➔
             </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {highRiskCustomers.length === 0 ? (
-              <div className="text-xs text-slate-500 py-6 text-center bg-slate-50 rounded-xl">
-                সকল কাস্টমারের বকেয়া সীমার মধ্যে রয়েছে। কোনো ঝুঁকি নেই।
+              <div className="text-xs text-[#777169] py-8 text-center bg-[#fafafa] rounded-xl border border-[#f0efed]">
+                সকল কাস্টমারের বকেয়া নির্ধারিত ক্রেডিট সীমার মধ্যে রয়েছে।
               </div>
             ) : (
               highRiskCustomers.map((cust) => {
@@ -294,24 +301,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 return (
                   <div
                     key={cust.id}
-                    className="p-3 rounded-xl border border-rose-200 bg-rose-50/40 flex items-center justify-between text-xs"
+                    className="p-3.5 rounded-xl border border-[#e7e5e4] bg-white flex items-center justify-between text-xs"
                   >
                     <div>
-                      <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <div className="font-medium text-[#0c0a09] flex items-center gap-2">
                         <span>{cust.name}</span>
-                        <span className="text-[10px] bg-rose-200 text-rose-800 px-1.5 py-0.2 rounded font-mono font-semibold">
+                        <span className="badge-pill text-[10px] py-0 px-2">
                           {cust.customer_code}
                         </span>
                       </div>
-                      <div className="text-slate-500 text-[11px] mt-0.5">
+                      <div className="text-[#777169] text-[11px] mt-0.5">
                         মোবাইল: {toBengaliNumber(cust.phone)} | বাকির সীমা: {formatTaka(cust.credit_limit)}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-black text-rose-700 text-sm">
+                      <div className="font-serif font-light text-base text-[#0c0a09]">
                         {formatTaka(cust.current_due)}
                       </div>
-                      <span className="text-[10px] text-rose-600 font-bold">
+                      <span className="text-[10px] text-[#dc2626] font-semibold">
                         সীমার {toBengaliNumber(ratio)}% বকেয়া
                       </span>
                     </div>
@@ -323,15 +330,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Recent Sales Memos */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-amber-700" />
-              <span>সাম্প্রতিক বিক্রয় মেমো (Recent Memos)</span>
+        <div className="card-editorial space-y-4">
+          <div className="flex items-center justify-between border-b border-[#f0efed] pb-3">
+            <h3 className="font-serif font-light text-xl text-[#0c0a09] flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-[#777169]" />
+              <span>সাম্প্রতিক বিক্রয় মেমো</span>
             </h3>
             <button
               onClick={() => onNavigate('sales-pos')}
-              className="text-xs text-amber-800 hover:underline font-semibold"
+              className="text-xs text-[#292524] hover:underline font-medium"
             >
               মেমো তালিকা ➔
             </button>
@@ -339,7 +346,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="space-y-2">
             {sales.length === 0 ? (
-              <div className="text-xs text-slate-500 py-6 text-center bg-slate-50 rounded-xl">
+              <div className="text-xs text-[#777169] py-8 text-center bg-[#fafafa] rounded-xl border border-[#f0efed]">
                 এখনো কোনো বিক্রয় মেমো তৈরি করা হয়নি।
               </div>
             ) : (
@@ -349,27 +356,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div
                     key={inv.id}
                     onClick={() => onSelectInvoiceForPrint(inv)}
-                    className="p-3 rounded-xl border border-slate-200 hover:border-amber-400 bg-white hover:bg-amber-50/30 transition cursor-pointer flex items-center justify-between text-xs"
+                    className="p-3 rounded-xl border border-[#e7e5e4] hover:border-[#0c0a09] bg-white transition cursor-pointer flex items-center justify-between text-xs"
                   >
                     <div>
-                      <div className="font-bold text-slate-900 flex items-center gap-2">
-                        <span className="text-amber-800 font-mono">{inv.invoice_code}</span>
-                        <span className="text-slate-400">•</span>
+                      <div className="font-medium text-[#0c0a09] flex items-center gap-2">
+                        <span className="font-mono text-[#292524]">{inv.invoice_code}</span>
+                        <span className="text-[#a8a29e]">•</span>
                         <span>{cust?.name || 'কাস্টমার'}</span>
                       </div>
-                      <div className="text-slate-400 text-[11px] mt-0.5">
+                      <div className="text-[#777169] text-[11px] mt-0.5">
                         {toBengaliNumber(inv.invoice_date)} | {inv.sale_type === 'WHOLESALE' ? 'পাইকারি' : 'খুচরা'} | {toBengaliNumber(inv.items.reduce((s, i) => s + i.qty_pcs, 0))} পিস ডিম
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-black text-slate-900">
+                      <div className="font-serif font-light text-base text-[#0c0a09]">
                         {formatTaka(inv.net_total)}
                       </div>
                       <div className="text-[10px]">
                         {inv.due_amount > 0 ? (
-                          <span className="text-rose-600 font-bold">বকেয়া: {formatTaka(inv.due_amount)}</span>
+                          <span className="text-[#777169] font-medium">বকেয়া: {formatTaka(inv.due_amount)}</span>
                         ) : (
-                          <span className="text-emerald-600 font-bold">পরিশোধিত</span>
+                          <span className="text-[#16a34a] font-medium">পরিশোধিত</span>
                         )}
                       </div>
                     </div>

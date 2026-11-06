@@ -1,19 +1,14 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Monthly Net P&L & 2:1 Partner Distribution (Req 13, 14)
+// DIMKHATA (ডিমখাতা) — Monthly Net P&L & 2:1 Profit Split (ElevenLabs)
 // ====================================================================
 
 import React, { useState } from 'react';
 import {
   PieChart,
   DollarSign,
-  TrendingUp,
   Settings,
   Printer,
   MinusCircle,
-  PlusCircle,
-  HelpCircle,
-  AlertCircle,
-  Lock,
 } from 'lucide-react';
 import { Partner, PartnerDrawing, FinancialAccount } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
@@ -32,21 +27,18 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
   accounts,
   onRefresh,
 }) => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // e.g. '2026-11'
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  // Drawing Modal
   const [isDrawingOpen, setIsDrawingOpen] = useState(false);
   const [drawPartnerId, setDrawPartnerId] = useState(partners[0]?.id || '');
   const [drawAmount, setDrawAmount] = useState<number>(10000);
   const [drawAccountId, setDrawAccountId] = useState(accounts[0]?.id || '');
   const [drawNotes, setDrawNotes] = useState('');
 
-  // Ratio Editor Modal
   const [isRatioOpen, setIsRatioOpen] = useState(false);
   const [sharifWeight, setSharifWeight] = useState(partners.find((p) => p.name.includes('শরিফ'))?.share_weight || 2.0);
   const [emanWeight, setEmanWeight] = useState(partners.find((p) => p.name.includes('ইমান'))?.share_weight || 1.0);
 
-  // 1-Click Monthly Net Profit Calculation Engine
   const settlement = DimKhataStore.calculateMonthlySettlement(selectedMonth);
 
   const handleRecordDrawing = (e: React.FormEvent) => {
@@ -85,68 +77,66 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <PieChart className="w-5 h-5 text-amber-700" />
-            <span>মাস শেষে লাভ-লোকসান ও ২:১ লভ্যাংশ বণ্টন (Req 13, 14)</span>
+          <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
+            মাস শেষে লাভ-লোকসান ও ২:১ লভ্যাংশ বণ্টন (Req 13, 14)
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#777169] mt-0.5">
             ১-ক্লিকে মোট আয়, ল্যান্ডেড কস্ট, পরিচালনা খরচ, ওয়েস্টেজ বাদ দিয়ে শরিফ (৬৬.৬৭%) ও ইমান (৩৩.৩৩%) এর নিট পাওনা
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Month Selector */}
+        <div className="flex items-center gap-2.5 flex-wrap">
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 shadow-xs"
+            className="input-editorial text-xs h-9 py-1"
           />
 
           <button
             onClick={() => setIsDrawingOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-xl text-xs transition"
+            className="btn-outline text-xs h-9 px-3.5"
           >
-            <MinusCircle className="w-4 h-4 text-amber-700" />
+            <MinusCircle className="w-3.5 h-3.5 text-[#777169]" />
             <span>ব্যক্তিগত উত্তোলন</span>
           </button>
 
           <button
             onClick={() => setIsRatioOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+            className="btn-outline text-xs h-9 px-3.5"
           >
-            <Settings className="w-4 h-4 text-slate-500" />
+            <Settings className="w-3.5 h-3.5 text-[#777169]" />
             <span>অনুপাত কনফিগার</span>
           </button>
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-xs"
+            className="btn-primary text-xs h-9 px-4"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">রিপোর্ট প্রিন্ট</span>
           </button>
         </div>
       </div>
 
-      {/* 1-Click Monthly Net Profit Statement (Req 13) */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-md space-y-4 print-card">
-        <div className="border-b border-slate-200 pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+      {/* 1-Click Monthly Net Profit Statement */}
+      <div className="card-editorial space-y-4 print-card">
+        <div className="border-b border-[#f0efed] pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <div>
-            <h3 className="font-black text-lg text-slate-900">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
               মাসিক লাভ-লোকসান বিবরণী (Monthly Income Statement)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#777169]">
               হিসাবের মাস: <strong>{toBengaliNumber(selectedMonth)}</strong> | শরিফ এন্ড ইমান এন্টারপ্রাইজ
             </p>
           </div>
           <div className="text-right">
-            <span className="text-xs text-slate-400 font-medium">প্রকৃত নিট লাভ / লোকসান</span>
+            <span className="text-[11px] text-[#777169] uppercase tracking-wider">প্রকৃত নিট লাভ / লোকসান</span>
             <div
-              className={`text-2xl font-black ${
-                settlement.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
+              className={`font-serif font-light text-3xl mt-0.5 ${
+                settlement.netProfit >= 0 ? 'text-[#0c0a09]' : 'text-[#dc2626]'
               }`}
             >
               {formatTaka(settlement.netProfit)}
@@ -155,64 +145,66 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
         </div>
 
         {/* Detailed Breakdown Lines */}
-        <div className="space-y-2 text-xs divide-y divide-slate-100">
-          <div className="flex justify-between py-1.5">
-            <span className="font-bold text-slate-800">১. মোট ডিম বিক্রয় আয় (Gross Sales Revenue):</span>
-            <span className="font-bold text-slate-900">{formatTaka(settlement.totalSalesRevenue)}</span>
+        <div className="space-y-2 text-xs divide-y divide-[#f0efed]">
+          <div className="flex justify-between py-2 text-[#0c0a09]">
+            <span className="font-medium">১. মোট ডিম বিক্রয় আয় (Gross Sales Revenue):</span>
+            <span className="font-medium">{formatTaka(settlement.totalSalesRevenue)}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 text-slate-600">
+          <div className="flex justify-between py-2 text-[#4e4e4e]">
             <span>২. বিক্রিত ডিমের ল্যান্ডেড কস্ট (Cost of Goods Sold - COGS):</span>
-            <span className="text-rose-700 font-semibold">- {formatTaka(settlement.totalCogs)}</span>
+            <span className="text-[#777169]">- {formatTaka(settlement.totalCogs)}</span>
           </div>
 
-          <div className="flex justify-between py-2 text-sm font-bold bg-amber-50/60 px-3 rounded-lg border border-amber-200">
+          <div className="flex justify-between py-2.5 text-sm font-medium bg-[#fafafa] px-3 rounded-lg border border-[#e7e5e4] text-[#0c0a09]">
             <span>মোট বাণিজ্যিক লাভ (Gross Trading Profit):</span>
-            <span className="text-amber-900">{formatTaka(settlement.grossProfit)}</span>
+            <span>{formatTaka(settlement.grossProfit)}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 text-slate-600">
+          <div className="flex justify-between py-2 text-[#4e4e4e]">
             <span>৩. মোট পরিচালনা খরচ (দোকান ভাড়া, বিদ্যুৎ, আপ্যায়ন, মেরামত ইত্যাদি):</span>
-            <span className="text-rose-700 font-semibold">- {formatTaka(settlement.totalOperatingExpenses)}</span>
+            <span className="text-[#777169]">- {formatTaka(settlement.totalOperatingExpenses)}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 text-slate-600">
+          <div className="flex justify-between py-2 text-[#4e4e4e]">
             <span>৪. কর্মচারীদের বেতন বাবদ খরচ (Monthly Net Payroll):</span>
-            <span className="text-rose-700 font-semibold">- {formatTaka(settlement.totalSalaries)}</span>
+            <span className="text-[#777169]">- {formatTaka(settlement.totalSalaries)}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 text-slate-600">
+          <div className="flex justify-between py-2 text-[#4e4e4e]">
             <span>৫. ভাঙা ও গরমে পচা ডিমের আর্থিক ক্ষতি (Wastage / Expiry Loss):</span>
-            <span className="text-rose-700 font-semibold">- {formatTaka(settlement.totalWastageLoss)}</span>
+            <span className="text-[#777169]">- {formatTaka(settlement.totalWastageLoss)}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 text-slate-600">
+          <div className="flex justify-between py-2 text-[#4e4e4e]">
             <span>৬. সৌজন্যে / গিফটে দেওয়া ডিমের আর্থিক খরচ (Courtesy Stock Loss):</span>
-            <span className="text-rose-700 font-semibold">- {formatTaka(settlement.totalCourtesyLoss)}</span>
+            <span className="text-[#777169]">- {formatTaka(settlement.totalCourtesyLoss)}</span>
           </div>
 
           <div
-            className={`flex justify-between py-3 px-3 rounded-xl border text-base font-black ${
+            className={`flex justify-between py-3 px-3 rounded-xl border text-sm font-medium ${
               settlement.netProfit >= 0
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                : 'bg-rose-50 border-rose-300 text-rose-900'
+                ? 'bg-[#fafafa] border-[#0c0a09] text-[#0c0a09]'
+                : 'bg-white border-[#dc2626] text-[#dc2626]'
             }`}
           >
             <span>মাসের প্রকৃত নীট লাভ / লোকসান (Net Profit):</span>
-            <span className="text-xl">{formatTaka(settlement.netProfit)}</span>
+            <span className="font-serif font-light text-2xl">{formatTaka(settlement.netProfit)}</span>
           </div>
         </div>
       </div>
 
-      {/* 2:1 Partner Distribution Cards (Req 14) */}
-      <div className="space-y-3">
+      {/* 2:1 Partner Distribution Cards */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-            <span>👑 ২:১ রেশিও অনুযায়ী মালিকদের লভ্যাংশ বণ্টন (Partner Distribution)</span>
-            <span className="text-xs bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-bold">
+          <div className="flex items-center gap-2">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
+              মালিকদের ২:১ লভ্যাংশ বণ্টন (Partner Distribution)
+            </h3>
+            <span className="badge-pill">
               কনফিগারযোগ্য
             </span>
-          </h3>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -221,50 +213,42 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
             return (
               <div
                 key={dist.partnerId}
-                className="bg-white rounded-2xl p-5 border-2 border-amber-300 shadow-md space-y-4 relative overflow-hidden"
+                className="card-editorial space-y-4"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                    <span className="badge-pill text-[10px] py-0 px-2">
                       {isSharif ? 'মালিক ১ (২ অংশ)' : 'মালিক ২ (১ অংশ)'}
                     </span>
-                    <h4 className="text-lg font-black text-slate-900 mt-1">
+                    <h4 className="font-serif font-light text-2xl text-[#0c0a09] mt-2">
                       {dist.partnerName}
                     </h4>
-                    <p className="text-xs text-slate-500">
-                      লভ্যাংশ অনুপাত: <strong>{toBengaliNumber(dist.percentage)}%</strong> (শেয়ার ওয়েট: {toBengaliNumber(dist.shareWeight)})
+                    <p className="text-xs text-[#777169] mt-0.5">
+                      প্রাপ্য লভ্যাংশ অনুপাত: <strong>{toBengaliNumber(dist.percentage)}%</strong> (শেয়ার: {toBengaliNumber(dist.shareWeight)})
                     </p>
-                  </div>
-
-                  <div className="text-3xl">
-                    {isSharif ? '👑' : '💼'}
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-600">
+                <div className="bg-[#fafafa] p-3.5 rounded-xl border border-[#e7e5e4] space-y-2 text-xs">
+                  <div className="flex justify-between text-[#4e4e4e]">
                     <span>মোট প্রাপ্য অংশ ({dist.percentage}%):</span>
-                    <span className="font-bold text-slate-900">{formatTaka(dist.grossShare)}</span>
+                    <span className="font-medium text-[#0c0a09]">{formatTaka(dist.grossShare)}</span>
                   </div>
 
-                  <div className="flex justify-between text-rose-700">
+                  <div className="flex justify-between text-[#777169]">
                     <span>চলতি মাসে ব্যক্তিগত উত্তোলন (Drawings):</span>
-                    <span className="font-bold">- {formatTaka(dist.drawingsDeducted)}</span>
+                    <span>- {formatTaka(dist.drawingsDeducted)}</span>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-2 flex justify-between text-sm font-black text-slate-900">
+                  <div className="border-t border-[#e7e5e4] pt-2 flex justify-between text-sm font-medium text-[#0c0a09]">
                     <span>অবশিষ্ট নীট পাওনা / উত্তোলনযোগ্য:</span>
-                    <span
-                      className={`text-base font-black ${
-                        dist.netPayable >= 0 ? 'text-emerald-700' : 'text-rose-700'
-                      }`}
-                    >
+                    <span className="font-serif font-light text-2xl">
                       {formatTaka(dist.netPayable)}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-[#777169]">
                   * ব্যক্তিগত প্রয়োজনে তোলা টাকা মাস শেষে তার প্রাপ্য লভ্যাংশ থেকে সমন্বয় করা হয়েছে।
                 </div>
               </div>
@@ -274,15 +258,15 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
       </div>
 
       {/* Monthly Partner Drawings History */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-        <h4 className="font-bold text-xs text-slate-800">
+      <div className="card-editorial space-y-4">
+        <h4 className="font-serif font-light text-xl text-[#0c0a09]">
           চলতি মাসের মালিকদের ব্যক্তিগত উত্তোলন হিস্ট্রি (Personal Drawings)
         </h4>
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 text-left bg-slate-50">
+              <tr className="border-b border-[#e7e5e4] text-[#777169] text-left bg-[#fafafa]">
                 <th className="py-2.5 px-3">তারিখ</th>
                 <th className="py-2.5 px-3">মালিকের নাম</th>
                 <th className="py-2.5 px-3">টাকার পরিমাণ</th>
@@ -290,10 +274,10 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                 <th className="py-2.5 px-3">বিবরণ / কারণ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#f0efed]">
               {drawings.filter((d) => d.drawing_date.startsWith(selectedMonth)).length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-slate-400">
+                  <td colSpan={5} className="py-8 text-center text-[#a8a29e]">
                     চলতি মাসে কোনো ব্যক্তিগত উত্তোলন নেই।
                   </td>
                 </tr>
@@ -304,20 +288,20 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                     const p = partners.find((pt) => pt.id === draw.partner_id);
                     const acc = accounts.find((a) => a.id === draw.account_id);
                     return (
-                      <tr key={draw.id} className="hover:bg-slate-50/60">
-                        <td className="py-2.5 px-3 text-slate-500">
+                      <tr key={draw.id} className="hover:bg-[#fafafa]">
+                        <td className="py-2.5 px-3 text-[#777169]">
                           {toBengaliNumber(draw.drawing_date)}
                         </td>
-                        <td className="py-2.5 px-3 font-bold text-slate-800">
+                        <td className="py-2.5 px-3 font-medium text-[#0c0a09]">
                           {p?.name}
                         </td>
-                        <td className="py-2.5 px-3 font-black text-rose-700">
+                        <td className="py-2.5 px-3 font-medium text-[#0c0a09]">
                           {formatTaka(draw.amount)}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-600">
+                        <td className="py-2.5 px-3 text-[#777169]">
                           {acc?.name || 'ক্যাশ'}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-500">
+                        <td className="py-2.5 px-3 text-[#777169]">
                           {draw.notes || 'ব্যক্তিগত উত্তোলন'}
                         </td>
                       </tr>
@@ -331,24 +315,24 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
 
       {/* RECORD DRAWING MODAL */}
       {isDrawingOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
-            <h3 className="font-bold text-base text-slate-900">
-              মালিকের ব্যক্তিগত উত্তোলন (Personal Drawing)
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-[#e7e5e4]">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
+              মালিকের ব্যক্তিগত উত্তোলন (Drawing)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#777169]">
               মাস শেষে এই টাকা মালিকের নিট লভ্যাংশ থেকে কর্তন করা হবে
             </p>
 
             <form onSubmit={handleRecordDrawing} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   কোন মালিক টাকা তুলছেন?
                 </label>
                 <select
                   value={drawPartnerId}
                   onChange={(e) => setDrawPartnerId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold"
+                  className="input-editorial w-full text-xs"
                 >
                   {partners.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -359,7 +343,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   টাকার পরিমাণ (৳)
                 </label>
                 <input
@@ -367,18 +351,18 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                   required
                   value={drawAmount}
                   onChange={(e) => setDrawAmount(Number(e.target.value) || 0)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-rose-700"
+                  className="input-editorial w-full text-sm font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  উৎস একাউন্ট (যেখান থেকে টাকা দেওয়া হচ্ছে)
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  উৎস একাউন্ট
                 </label>
                 <select
                   value={drawAccountId}
                   onChange={(e) => setDrawAccountId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -389,7 +373,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   মন্তব্য / কারণ
                 </label>
                 <input
@@ -397,7 +381,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                   placeholder="উদা: ব্যক্তিগত পারিবারিক খরচ"
                   value={drawNotes}
                   onChange={(e) => setDrawNotes(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
+                  className="input-editorial w-full text-xs"
                 />
               </div>
 
@@ -405,13 +389,13 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsDrawingOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="btn-outline text-xs h-9 px-4"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs"
+                  className="btn-primary text-xs h-9 px-5"
                 >
                   উত্তোলন সংরক্ষণ করুন
                 </button>
@@ -423,18 +407,18 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
 
       {/* RATIO CONFIGURATION MODAL */}
       {isRatioOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
-            <h3 className="font-bold text-base text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-[#e7e5e4]">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
               মালিকদের লভ্যাংশ অনুপাত কনফিগার
             </h3>
-            <p className="text-xs text-slate-500">
-              ডিফল্ট অনুপাত ২:১ (শরিফ ২ ভাগ ও ইমান ১ ভাগ)। প্রয়োজনে অনুপাত পরিবর্তন করতে পারেন।
+            <p className="text-xs text-[#777169]">
+              ডিফল্ট অনুপাত ২:১ (শরিফ ২ ভাগ ও ইমান ১ ভাগ)।
             </p>
 
             <form onSubmit={handleSaveWeights} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   শরিফ (Sharif) এর অনুপাত ভাগ
                 </label>
                 <input
@@ -443,12 +427,12 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                   required
                   value={sharifWeight}
                   onChange={(e) => setSharifWeight(Number(e.target.value) || 1)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold"
+                  className="input-editorial w-full text-xs font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   ইমান (Eman) এর অনুপাত ভাগ
                 </label>
                 <input
@@ -457,13 +441,13 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                   required
                   value={emanWeight}
                   onChange={(e) => setEmanWeight(Number(e.target.value) || 1)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold"
+                  className="input-editorial w-full text-xs font-semibold"
                 />
               </div>
 
-              <div className="p-3 bg-amber-50 rounded-xl text-xs text-amber-900 space-y-1">
+              <div className="p-3 bg-[#fafafa] rounded-xl border border-[#e7e5e4] text-xs text-[#4e4e4e] space-y-1">
                 <div>নতুন শতকরা হার:</div>
-                <div className="font-bold">
+                <div className="font-medium text-[#0c0a09]">
                   শরিফ: {((sharifWeight / (sharifWeight + emanWeight)) * 100).toFixed(1)}% | ইমান: {((emanWeight / (sharifWeight + emanWeight)) * 100).toFixed(1)}%
                 </div>
               </div>
@@ -472,13 +456,13 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsRatioOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="btn-outline text-xs h-9 px-4"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs"
+                  className="btn-primary text-xs h-9 px-5"
                 >
                   অনুপাত সংরক্ষণ করুন
                 </button>

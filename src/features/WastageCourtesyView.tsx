@@ -1,9 +1,9 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Wastage Loss & Courtesy Stock Deduction (Req 7, 8)
+// DIMKHATA (ডিমখাতা) — Wastage Loss & Courtesy Eggs (ElevenLabs Design)
 // ====================================================================
 
 import React, { useState } from 'react';
-import { AlertTriangle, Gift, CheckCircle2, History, Trash2, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Gift, CheckCircle2, History } from 'lucide-react';
 import { EggCategory, InventoryStock, Branch, StockAdjustment } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
@@ -27,11 +27,10 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
   const [branchId, setBranchId] = useState(branches[0]?.id || '');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
   const [adjustmentDate, setAdjustmentDate] = useState(new Date().toISOString().split('T')[0]);
-  const [qtyPcs, setQtyPcs] = useState<number>(30); // 1 crate default
+  const [qtyPcs, setQtyPcs] = useState<number>(30);
   const [wastageType, setWastageType] = useState<'WASTAGE_BROKEN' | 'WASTAGE_ROTTEN'>('WASTAGE_BROKEN');
   const [recipientOrReason, setRecipientOrReason] = useState('');
 
-  // Current Landed Cost for valuation
   const currentStock = stocks.find((s) => s.category_id === categoryId && s.branch_id === branchId);
   const currentUnitLandedCost = currentStock?.avg_landed_cost_per_pc || 10.50;
   const totalCostValue = Math.round(qtyPcs * currentUnitLandedCost * 100) / 100;
@@ -68,7 +67,6 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
     setRecipientOrReason('');
   };
 
-  // Calculations for current month's totals
   const currentMonth = new Date().toISOString().slice(0, 7);
   const monthlyWastage = adjustments
     .filter((a) => a.adjustment_date.startsWith(currentMonth) && (a.adjustment_type === 'WASTAGE_BROKEN' || a.adjustment_type === 'WASTAGE_ROTTEN'))
@@ -82,43 +80,42 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
     <div className="space-y-6">
       {/* Title */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-amber-600" />
-          <span>ড্যামেজ, পচা ও সৌজন্যে দেওয়া ডিমের হিসাব (Req 7, 8)</span>
+        <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
+          ড্যামেজ, পচা ও সৌজন্যে দেওয়া ডিমের হিসাব (Req 7, 8)
         </h2>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <p className="text-xs text-[#777169] mt-0.5">
           ভাঙা বা নষ্ট ডিম ও স্থানীয় সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি সরাসরি লাভ-লোকসানে সমন্বয়
         </p>
       </div>
 
       {/* 2 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="card-editorial flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-slate-500">চলতি মাসের মোট ভাঙা/পচা ক্ষতি</div>
-            <div className="text-2xl font-black text-rose-700 mt-1">
+            <div className="text-[13px] font-medium text-[#777169]">চলতি মাসের মোট ভাঙা/পচা ক্ষতি</div>
+            <div className="font-serif font-light text-3xl text-[#0c0a09] mt-1">
               {formatTaka(monthlyWastage)}
             </div>
-            <div className="text-[11px] text-rose-600 mt-0.5">
-              Wastage Loss Expense হিসাবে পিএন্ডএলে বাদ যাবে
+            <div className="text-[11px] text-[#777169] mt-0.5">
+              Wastage Loss Expense হিসাবে বাদ পড়বে
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+          <div className="w-10 h-10 rounded-full bg-[#f0efed] text-[#777169] flex items-center justify-center text-lg">
             💔
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="card-editorial flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-slate-500">চলতি মাসের মোট সৌজন্য ডিমের খরচ</div>
-            <div className="text-2xl font-black text-blue-700 mt-1">
+            <div className="text-[13px] font-medium text-[#777169]">চলতি মাসের মোট সৌজন্য ডিমের খরচ</div>
+            <div className="font-serif font-light text-3xl text-[#0c0a09] mt-1">
               {formatTaka(monthlyCourtesy)}
             </div>
-            <div className="text-[11px] text-blue-600 mt-0.5">
-              Courtesy Promo Expense হিসাবে পিএন্ডএলে বাদ যাবে
+            <div className="text-[11px] text-[#777169] mt-0.5">
+              Courtesy Promo Expense হিসাবে বাদ পড়বে
             </div>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+          <div className="w-10 h-10 rounded-full bg-[#f0efed] text-[#777169] flex items-center justify-center text-lg">
             🎁
           </div>
         </div>
@@ -126,16 +123,16 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form (2 Cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
-          {/* Tab Selector */}
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+        <div className="lg:col-span-2 card-editorial space-y-5">
+          {/* Tab Selector (Pill Geometry) */}
+          <div className="flex bg-[#f0efed] p-1 rounded-full text-xs font-medium">
             <button
               type="button"
               onClick={() => setActiveTab('WASTAGE')}
-              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition ${
+              className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition ${
                 activeTab === 'WASTAGE'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#292524] text-white shadow-xs'
+                  : 'text-[#4e4e4e] hover:text-[#0c0a09]'
               }`}
             >
               <AlertTriangle className="w-4 h-4" />
@@ -144,10 +141,10 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('COURTESY')}
-              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition ${
+              className={`flex-1 py-2 rounded-full flex items-center justify-center gap-2 transition ${
                 activeTab === 'COURTESY'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#292524] text-white shadow-xs'
+                  : 'text-[#4e4e4e] hover:text-[#0c0a09]'
               }`}
             >
               <Gift className="w-4 h-4" />
@@ -158,13 +155,13 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   শাখা / গোডাউন
                 </label>
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -175,13 +172,13 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   ডিমের ক্যাটাগরি
                 </label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -192,30 +189,29 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   তারিখ
                 </label>
                 <input
                   type="date"
                   value={adjustmentDate}
                   onChange={(e) => setAdjustmentDate(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 />
               </div>
             </div>
 
-            {/* If Wastage tab, select broken vs rotten */}
             {activeTab === 'WASTAGE' ? (
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   ড্যামেজের ধরন
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label
-                    className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer text-xs font-medium ${
+                    className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer text-xs font-medium transition ${
                       wastageType === 'WASTAGE_BROKEN'
-                        ? 'bg-rose-50 border-rose-300 text-rose-900 font-bold'
-                        : 'border-slate-200 text-slate-700'
+                        ? 'bg-[#fafafa] border-[#0c0a09] text-[#0c0a09]'
+                        : 'border-[#e7e5e4] text-[#4e4e4e]'
                     }`}
                   >
                     <input
@@ -223,16 +219,16 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                       name="wastageType"
                       checked={wastageType === 'WASTAGE_BROKEN'}
                       onChange={() => setWastageType('WASTAGE_BROKEN')}
-                      className="text-rose-600"
+                      className="text-[#0c0a09] focus:ring-[#0c0a09]"
                     />
-                    <span>পরিবহনে বা নামানোর সময় ভাঙা ডিম</span>
+                    <span>পরিবহনে বা নামানোর সময় ভাঙা</span>
                   </label>
 
                   <label
-                    className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer text-xs font-medium ${
+                    className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer text-xs font-medium transition ${
                       wastageType === 'WASTAGE_ROTTEN'
-                        ? 'bg-rose-50 border-rose-300 text-rose-900 font-bold'
-                        : 'border-slate-200 text-slate-700'
+                        ? 'bg-[#fafafa] border-[#0c0a09] text-[#0c0a09]'
+                        : 'border-[#e7e5e4] text-[#4e4e4e]'
                     }`}
                   >
                     <input
@@ -240,15 +236,15 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                       name="wastageType"
                       checked={wastageType === 'WASTAGE_ROTTEN'}
                       onChange={() => setWastageType('WASTAGE_ROTTEN')}
-                      className="text-rose-600"
+                      className="text-[#0c0a09] focus:ring-[#0c0a09]"
                     />
-                    <span>গরমে নষ্ট / পচা ডিম (Expiry Loss)</span>
+                    <span>গরমে নষ্ট / পচা ডিম (Expiry)</span>
                   </label>
                 </div>
               </div>
             ) : (
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   কাকে সৌজন্যে দেওয়া হলো (প্রাপক / কারণ)
                 </label>
                 <input
@@ -256,34 +252,34 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                   placeholder="উদা: স্থানীয় মেহমান আপ্যায়ন / প্রশাসন / খামারী শুভেচ্ছা"
                   value={recipientOrReason}
                   onChange={(e) => setRecipientOrReason(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
+                  className="input-editorial w-full text-xs"
                 />
               </div>
             )}
 
             {/* Quantity */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#fafafa] p-4 rounded-xl border border-[#e7e5e4]">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   পরিমাণ (পিস)
                 </label>
                 <input
                   type="number"
                   value={qtyPcs}
                   onChange={(e) => setQtyPcs(Number(e.target.value) || 0)}
-                  className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm font-black text-slate-900"
+                  className="input-editorial w-full text-sm font-semibold"
                 />
-                <div className="text-[11px] text-slate-500 mt-1">
-                  মোট: {toBengaliNumber(qtyPcs)} পিস (বা {toBengaliNumber(Math.floor(qtyPcs / 30))} খাঁচি {toBengaliNumber(qtyPcs % 30)} পিস)
+                <div className="text-[11px] text-[#777169] mt-1">
+                  মোট: {toBengaliNumber(qtyPcs)} পিস ({toBengaliNumber(Math.floor(qtyPcs / 30))} খাঁচি {toBengaliNumber(qtyPcs % 30)} পিস)
                 </div>
               </div>
 
               <div>
-                <div className="text-xs text-slate-500 font-medium">আর্থিক ক্ষতির মূল্য (স্বয়ংক্রিয় ল্যান্ডেড দর)</div>
-                <div className="text-xl font-black text-rose-700 mt-1">
+                <div className="text-xs text-[#777169]">আর্থিক ক্ষতির মূল্য (স্বয়ংক্রিয় ল্যান্ডেড দর)</div>
+                <div className="font-serif font-light text-2xl text-[#0c0a09] mt-1">
                   {formatTaka(totalCostValue)}
                 </div>
-                <div className="text-[10px] text-slate-500 mt-1">
+                <div className="text-[10px] text-[#777169] mt-1">
                   (প্রতি পিসের বর্তমান কেনা খরচ: ৳{toBengaliNumber(currentUnitLandedCost.toFixed(2))})
                 </div>
               </div>
@@ -291,11 +287,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
 
             <button
               type="submit"
-              className={`w-full py-3 text-white font-bold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2 ${
-                activeTab === 'WASTAGE'
-                  ? 'bg-rose-600 hover:bg-rose-700'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
+              className="btn-primary w-full h-11"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>স্টক থেকে বাদ দিন ও লাভ-লোকসানে যুক্ত করুন</span>
@@ -303,16 +295,16 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
           </form>
         </div>
 
-        {/* Adjustments History (1 Col) */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
-          <h4 className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-            <History className="w-3.5 h-3.5 text-slate-500" />
-            <span>সাম্প্রতিক নষ্ট ও সৌজন্য রেকর্ড</span>
+        {/* Adjustments History */}
+        <div className="card-editorial p-4 space-y-3">
+          <h4 className="text-xs font-medium text-[#777169] uppercase tracking-wider flex items-center gap-1.5">
+            <History className="w-3.5 h-3.5" />
+            <span>সাম্প্রতিক রেকর্ডসমূহ</span>
           </h4>
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {adjustments.length === 0 ? (
-              <div className="text-xs text-slate-400 text-center py-6">
+              <div className="text-xs text-[#a8a29e] text-center py-6">
                 কোনো রেকর্ড নেই
               </div>
             ) : (
@@ -322,22 +314,20 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                 return (
                   <div
                     key={a.id}
-                    className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex justify-between items-center"
+                    className="p-3 bg-[#fafafa] rounded-lg border border-[#e7e5e4] text-xs flex justify-between items-center"
                   >
                     <div>
-                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                        <span className={isWastage ? 'text-rose-700' : 'text-blue-700'}>
-                          {isWastage ? '💔 ভাঙা/পচা' : '🎁 সৌজন্য'}
-                        </span>
-                        <span className="text-slate-400">•</span>
+                      <div className="font-medium text-[#0c0a09] flex items-center gap-1.5">
+                        <span>{isWastage ? 'ভাঙা/পচা' : 'সৌজন্য'}</span>
+                        <span className="text-[#a8a29e]">•</span>
                         <span>{cat?.name_bn}</span>
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
-                        {toBengaliNumber(a.adjustment_date)} | {toBengaliNumber(a.qty_pcs)} পিস ({a.recipient_or_reason || ''})
+                      <div className="text-[11px] text-[#777169] mt-0.5">
+                        {toBengaliNumber(a.adjustment_date)} | {toBengaliNumber(a.qty_pcs)} পিস
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-black text-rose-700">{formatTaka(a.total_cost_value)}</div>
+                      <div className="font-medium text-[#0c0a09]">{formatTaka(a.total_cost_value)}</div>
                     </div>
                   </div>
                 );

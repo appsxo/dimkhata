@@ -1,9 +1,9 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Payroll & Employee Management (Req 11)
+// DIMKHATA (ডিমখাতা) — Payroll & Employee HR (ElevenLabs Design)
 // ====================================================================
 
 import React, { useState } from 'react';
-import { Briefcase, Plus, DollarSign, Calendar, Printer, UserCheck, ShieldCheck } from 'lucide-react';
+import { Briefcase, Plus, DollarSign, Calendar, Printer } from 'lucide-react';
 import { Employee, SalaryAdvance, PayrollRecord, FinancialAccount, Branch } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
@@ -25,9 +25,8 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   branches,
   onRefresh,
 }) => {
-  const currentMonthStr = new Date().toISOString().slice(0, 7); // '2026-11'
+  const currentMonthStr = new Date().toISOString().slice(0, 7);
 
-  // Add Employee Modal
   const [isAddEmpOpen, setIsAddEmpOpen] = useState(false);
   const [empName, setEmpName] = useState('');
   const [designation, setDesignation] = useState('স্টাফ / বিক্রয়কর্মী');
@@ -35,20 +34,17 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   const [baseSalary, setBaseSalary] = useState(18000);
   const [nidNumber, setNidNumber] = useState('');
 
-  // Salary Advance Modal
   const [isAdvanceOpen, setIsAdvanceOpen] = useState(false);
   const [advEmpId, setAdvEmpId] = useState(employees[0]?.id || '');
   const [advAmount, setAdvAmount] = useState(2000);
   const [advPurpose, setAdvPurpose] = useState('');
   const [advAccountId, setAdvAccountId] = useState(accounts[0]?.id || '');
 
-  // Monthly Payroll Calculation Modal
   const [isPayrollModalOpen, setIsPayrollModalOpen] = useState(false);
   const [selectedEmpForPayroll, setSelectedEmpForPayroll] = useState<Employee | null>(null);
   const [bonus, setBonus] = useState<number>(0);
   const [payrollAccountId, setPayrollAccountId] = useState(accounts[0]?.id || '');
 
-  // Printable Salary Slip
   const [slipRecord, setSlipRecord] = useState<PayrollRecord | null>(null);
 
   const handleCreateEmployee = (e: React.FormEvent) => {
@@ -135,30 +131,29 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-amber-700" />
-            <span>কর্মচারীদের বেতন ও অ্যাডভান্স (Payroll Management - Req 11)</span>
+          <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
+            কর্মচারীদের বেতন ও অ্যাডভান্স (Payroll Management)
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#777169] mt-0.5">
             কর্মচারী আইডি (SE-EMP), মাসিক বেতন, অগ্রিম কর্তন ও বেতন রসিদ প্রিন্ট
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsAdvanceOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-xl text-xs transition"
+            className="btn-outline text-xs h-9 px-4"
           >
-            <DollarSign className="w-4 h-4 text-amber-700" />
-            <span>অগ্রিম বেতন (Advance) এন্ট্রি</span>
+            <DollarSign className="w-3.5 h-3.5 text-[#777169]" />
+            <span>অগ্রিম বেতন (Advance)</span>
           </button>
           <button
             onClick={() => setIsAddEmpOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-sm"
+            className="btn-primary text-xs h-9 px-4"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>নতুন কর্মচারী নিয়োগ</span>
           </button>
         </div>
@@ -167,7 +162,6 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
       {/* Employees Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {employees.map((emp) => {
-          // Calculate this month's advances taken
           const empAdvances = advances.filter(
             (a) => a.employee_id === emp.id && a.advance_date.startsWith(currentMonthStr)
           );
@@ -179,45 +173,45 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
           return (
             <div
               key={emp.id}
-              className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs hover:border-amber-400 transition space-y-3 flex flex-col justify-between"
+              className="card-editorial flex flex-col justify-between space-y-4"
             >
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+                    <span className="badge-pill text-[10px] py-0 px-2">
                       {emp.employee_code}
                     </span>
-                    <h3 className="font-bold text-sm text-slate-900 mt-1">
+                    <h3 className="font-serif font-light text-xl text-[#0c0a09] mt-1.5">
                       {emp.full_name}
                     </h3>
-                    <p className="text-xs text-slate-500 font-medium">
+                    <p className="text-xs text-[#777169]">
                       {emp.designation}
                     </p>
                   </div>
-                  <span className="text-xs bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded-md">
+                  <span className="badge-pill text-[10px] py-0 px-2">
                     {emp.salary_type === 'MONTHLY' ? 'মাসিক' : 'দৈনিক'}
                   </span>
                 </div>
 
-                <div className="mt-3 space-y-1.5 text-xs text-slate-600">
+                <div className="mt-3 space-y-1.5 text-xs text-[#4e4e4e]">
                   <div className="flex justify-between">
-                    <span>মোবাইল:</span>
-                    <span className="font-medium text-slate-800">{toBengaliNumber(emp.phone)}</span>
+                    <span className="text-[#777169]">মোবাইল:</span>
+                    <span>{toBengaliNumber(emp.phone)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>মূল নির্ধারিত বেতন:</span>
-                    <span className="font-bold text-slate-900">{formatTaka(emp.base_salary)}</span>
+                    <span className="text-[#777169]">নির্ধারিত মূল বেতন:</span>
+                    <span className="font-medium text-[#0c0a09]">{formatTaka(emp.base_salary)}</span>
                   </div>
-                  <div className="flex justify-between text-rose-700 bg-rose-50/60 p-1.5 rounded-lg border border-rose-200">
-                    <span>চলতি মাসে নেওয়া অগ্রিম:</span>
-                    <span className="font-bold">- {formatTaka(totalAdvancesTaken)}</span>
+                  <div className="flex justify-between bg-[#fafafa] p-2 rounded-lg border border-[#e7e5e4] text-[#0c0a09]">
+                    <span>চলতি মাসের অগ্রিম:</span>
+                    <span className="font-medium">- {formatTaka(totalAdvancesTaken)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100">
+              <div className="pt-3 border-t border-[#f0efed]">
                 {isPayrollPaid ? (
-                  <div className="py-2 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-xl text-center border border-emerald-200">
+                  <div className="py-2 bg-[#fafafa] text-[#16a34a] text-xs font-medium rounded-full text-center border border-[#e7e5e4]">
                     ✓ চলতি মাসের বেতন পরিশোধিত
                   </div>
                 ) : (
@@ -226,7 +220,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                       setSelectedEmpForPayroll(emp);
                       setIsPayrollModalOpen(true);
                     }}
-                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center gap-1.5"
+                    className="btn-primary w-full text-xs h-9"
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     <span>মাসিক পে-রোল প্রস্তুত ও পরিশোধ</span>
@@ -238,17 +232,17 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
         })}
       </div>
 
-      {/* Recent Salary Slips & History */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-        <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-          <Printer className="w-4 h-4 text-amber-700" />
+      {/* Recent Salary Slips */}
+      <div className="card-editorial space-y-4">
+        <h3 className="font-serif font-light text-2xl text-[#0c0a09] flex items-center gap-2">
+          <Printer className="w-4 h-4 text-[#777169]" />
           <span>পরিশোধিত বেতন রসিদসমূহ (Salary Slips)</span>
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 text-left bg-slate-50">
+              <tr className="border-b border-[#e7e5e4] text-[#777169] text-left bg-[#fafafa]">
                 <th className="py-2.5 px-3">রসিদ কোড</th>
                 <th className="py-2.5 px-3">কর্মচারীর নাম</th>
                 <th className="py-2.5 px-3">বেতন মাস</th>
@@ -258,10 +252,10 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 <th className="py-2.5 px-3 text-center">রসিদ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#f0efed]">
               {payrolls.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-[#a8a29e]">
                     এখনো কোনো বেতন রসিদ তৈরি হয়নি।
                   </td>
                 </tr>
@@ -269,29 +263,29 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 payrolls.map((p) => {
                   const emp = employees.find((e) => e.id === p.employee_id);
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50/60">
-                      <td className="py-2.5 px-3 font-mono font-bold text-amber-800">
+                    <tr key={p.id} className="hover:bg-[#fafafa]">
+                      <td className="py-2.5 px-3 font-mono font-medium text-[#0c0a09]">
                         {p.payroll_code}
                       </td>
-                      <td className="py-2.5 px-3 font-medium text-slate-900">
+                      <td className="py-2.5 px-3 font-medium text-[#0c0a09]">
                         {emp?.full_name}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-600 font-mono">
+                      <td className="py-2.5 px-3 text-[#777169] font-mono">
                         {p.salary_month}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-700">
+                      <td className="py-2.5 px-3 text-[#4e4e4e]">
                         {formatTaka(p.base_salary)}
                       </td>
-                      <td className="py-2.5 px-3 text-rose-700 font-semibold">
+                      <td className="py-2.5 px-3 text-[#777169]">
                         - {formatTaka(p.advances_deducted)}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-black text-emerald-800">
+                      <td className="py-2.5 px-3 text-right font-medium text-[#0c0a09]">
                         {formatTaka(p.net_payable)}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <button
                           onClick={() => setSlipRecord(p)}
-                          className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-md text-[11px] font-bold"
+                          className="btn-outline text-[11px] h-7 px-3"
                         >
                           স্লিপ দেখুন
                         </button>
@@ -307,21 +301,21 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
 
       {/* SALARY ADVANCE MODAL */}
       {isAdvanceOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
-            <h3 className="font-bold text-base text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-[#e7e5e4]">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
               অগ্রিম বেতন (Advance) প্রদান
             </h3>
 
             <form onSubmit={handleSaveAdvance} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   কর্মচারী নির্বাচন
                 </label>
                 <select
                   value={advEmpId}
                   onChange={(e) => setAdvEmpId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 >
                   {employees.map((e) => (
                     <option key={e.id} value={e.id}>
@@ -332,7 +326,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   অগ্রিম টাকার পরিমাণ (৳)
                 </label>
                 <input
@@ -340,18 +334,18 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                   required
                   value={advAmount}
                   onChange={(e) => setAdvAmount(Number(e.target.value) || 0)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900"
+                  className="input-editorial w-full text-sm font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  কোন একাউন্ট থেকে দেওয়া হচ্ছে?
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  উৎস একাউন্ট
                 </label>
                 <select
                   value={advAccountId}
                   onChange={(e) => setAdvAccountId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -362,7 +356,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   কারণ / বিবরণ
                 </label>
                 <input
@@ -370,7 +364,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                   placeholder="উদা: পারিবারিক খরচ / চিকিৎসা"
                   value={advPurpose}
                   onChange={(e) => setAdvPurpose(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs"
+                  className="input-editorial w-full text-xs"
                 />
               </div>
 
@@ -378,13 +372,13 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAdvanceOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="btn-outline text-xs h-9 px-4"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs"
+                  className="btn-primary text-xs h-9 px-5"
                 >
                   অগ্রিম প্রদান করুন
                 </button>
@@ -396,22 +390,22 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
 
       {/* MONTHLY PAYROLL PROCESS MODAL */}
       {isPayrollModalOpen && selectedEmpForPayroll && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4">
-            <h3 className="font-bold text-base text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-[#e7e5e4]">
+            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
               মাসিক বেতন পে-রোল প্রস্তুত ({toBengaliNumber(currentMonthStr)})
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#777169]">
               কর্মচারী: <strong>{selectedEmpForPayroll.full_name}</strong> ({selectedEmpForPayroll.employee_code})
             </p>
 
             <form onSubmit={handleProcessPayroll} className="space-y-3">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">নির্ধারিত মূল বেতন:</span>
-                  <span className="font-bold">{formatTaka(selectedEmpForPayroll.base_salary)}</span>
+              <div className="bg-[#fafafa] p-3.5 rounded-xl border border-[#e7e5e4] space-y-2 text-xs">
+                <div className="flex justify-between text-[#4e4e4e]">
+                  <span>নির্ধারিত মূল বেতন:</span>
+                  <span className="font-medium text-[#0c0a09]">{formatTaka(selectedEmpForPayroll.base_salary)}</span>
                 </div>
-                <div className="flex justify-between text-rose-700 font-medium">
+                <div className="flex justify-between text-[#777169]">
                   <span>চলতি মাসের অগ্রিম কর্তন:</span>
                   <span>
                     - {formatTaka(
@@ -428,25 +422,25 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  বোনাস / বকশিশ (যদি থাকে)
+                <label className="block text-xs font-medium text-[#292524] mb-1">
+                  বোনাস / বকশিশ
                 </label>
                 <input
                   type="number"
                   value={bonus}
                   onChange={(e) => setBonus(Number(e.target.value) || 0)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold"
+                  className="input-editorial w-full text-xs font-semibold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-[#292524] mb-1">
                   পেমেন্ট মাধ্যম (একাউন্ট)
                 </label>
                 <select
                   value={payrollAccountId}
                   onChange={(e) => setPayrollAccountId(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium"
+                  className="input-editorial w-full text-xs"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -456,9 +450,9 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 </select>
               </div>
 
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex justify-between items-center text-sm font-black text-emerald-900">
+              <div className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl flex justify-between items-center text-sm font-medium text-[#0c0a09]">
                 <span>নীট প্রদেয় বেতন:</span>
-                <span>
+                <span className="font-serif font-light text-2xl">
                   {formatTaka(
                     Math.max(
                       0,
@@ -480,13 +474,13 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsPayrollModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  className="btn-outline text-xs h-9 px-4"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs"
+                  className="btn-primary text-xs h-9 px-5"
                 >
                   বেতন পরিশোধ ও রসিদ তৈরি
                 </button>
@@ -498,66 +492,66 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
 
       {/* SALARY SLIP MODAL */}
       {slipRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 print-card">
-            <div className="text-center border-b pb-3 border-slate-200">
-              <h3 className="font-bold text-base text-amber-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-4 print-card border border-[#e7e5e4]">
+            <div className="text-center border-b pb-3 border-[#e7e5e4]">
+              <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
                 শরিফ এন্ড ইমান এন্টারপ্রাইজ
               </h3>
-              <div className="text-xs text-slate-500 font-semibold uppercase">
+              <div className="text-xs text-[#777169] uppercase tracking-wider mt-1">
                 মাসিক বেতন রসিদ (Salary Slip)
               </div>
             </div>
 
-            <div className="text-xs space-y-1.5 py-1">
+            <div className="text-xs space-y-1.5 py-1 text-[#4e4e4e]">
               <div className="flex justify-between">
-                <span className="text-slate-500">রসিদ নম্বর:</span>
-                <span className="font-mono font-bold text-slate-800">{slipRecord.payroll_code}</span>
+                <span className="text-[#777169]">রসিদ নম্বর:</span>
+                <span className="font-mono text-[#0c0a09]">{slipRecord.payroll_code}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">কর্মচারী:</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-[#777169]">কর্মচারী:</span>
+                <span className="font-medium text-[#0c0a09]">
                   {employees.find((e) => e.id === slipRecord.employee_id)?.full_name}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">বেতন মাস:</span>
+                <span className="text-[#777169]">বেতন মাস:</span>
                 <span className="font-medium">{slipRecord.salary_month}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">পরিশোধের তারিখ:</span>
+                <span className="text-[#777169]">পরিশোধের তারিখ:</span>
                 <span>{toBengaliNumber(slipRecord.payment_date)}</span>
               </div>
             </div>
 
-            <div className="border-t border-b border-slate-200 py-3 space-y-1.5 text-xs">
+            <div className="border-t border-b border-[#e7e5e4] py-3 space-y-1.5 text-xs text-[#4e4e4e]">
               <div className="flex justify-between">
                 <span>মূল বেতন:</span>
                 <span>{formatTaka(slipRecord.base_salary)}</span>
               </div>
               {slipRecord.bonus > 0 && (
-                <div className="flex justify-between text-emerald-700">
+                <div className="flex justify-between">
                   <span>বোনাস / ভাতা:</span>
                   <span>+ {formatTaka(slipRecord.bonus)}</span>
                 </div>
               )}
               {slipRecord.advances_deducted > 0 && (
-                <div className="flex justify-between text-rose-700">
-                  <span>অগ্রিম কর্তন (Advance):</span>
+                <div className="flex justify-between text-[#777169]">
+                  <span>অগ্রিম কর্তন:</span>
                   <span>- {formatTaka(slipRecord.advances_deducted)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm font-black text-slate-900 border-t pt-1.5">
+              <div className="flex justify-between text-base font-medium text-[#0c0a09] border-t border-[#e7e5e4] pt-2">
                 <span>নীট প্রাপ্ত বেতন:</span>
-                <span className="text-amber-800">{formatTaka(slipRecord.net_payable)}</span>
+                <span className="font-serif font-light text-2xl">{formatTaka(slipRecord.net_payable)}</span>
               </div>
             </div>
 
-            <div className="flex justify-between text-xs text-center text-slate-500 pt-6">
-              <div className="border-t border-slate-400 w-28 mx-auto">
+            <div className="flex justify-between text-xs text-center text-[#777169] pt-6">
+              <div className="border-t border-[#a8a29e] w-28 mx-auto">
                 কর্মচারীর স্বাক্ষর
               </div>
-              <div className="border-t border-slate-400 w-28 mx-auto">
+              <div className="border-t border-[#a8a29e] w-28 mx-auto">
                 মালিকের স্বাক্ষর
               </div>
             </div>
@@ -565,13 +559,13 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
             <div className="flex justify-end gap-2 pt-4 no-print">
               <button
                 onClick={() => setSlipRecord(null)}
-                className="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="btn-outline text-xs h-9 px-4"
               >
                 বন্ধ করুন
               </button>
               <button
                 onClick={() => window.print()}
-                className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5"
+                className="btn-primary text-xs h-9 px-5"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>প্রিন্ট করুন</span>

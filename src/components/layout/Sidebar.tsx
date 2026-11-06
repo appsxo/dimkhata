@@ -1,5 +1,6 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Sidebar Navigation
+// DIMKHATA (ডিমখাতা) — Editorial Sidebar Navigation (ElevenLabs Design System)
+// Canvas: #f5f5f5 | Hairline: #e7e5e4 | Active: Ink Pill or Elevated Card
 // ====================================================================
 
 import React from 'react';
@@ -15,7 +16,6 @@ import {
   TrendingDown,
   PieChart,
   Shield,
-  HelpCircle,
 } from 'lucide-react';
 import { UserRole } from '../../types';
 
@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'sales-pos',
       label: 'বিক্রয় মেমো ও চালান (POS)',
       icon: Receipt,
-      badge: 'পাইকারি/খুচরা',
+      badge: 'মেমো / চালান',
     },
     {
       id: 'wastage-courtesy',
@@ -118,10 +118,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 no-print">
-      <div className="p-3 border-b border-slate-100 hidden md:block">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          মূল মেনু
+    <aside className="w-full md:w-64 bg-[#f5f5f5] border-r border-[#e7e5e4] flex flex-col shrink-0 no-print">
+      <div className="px-4 py-3 border-b border-[#e7e5e4] hidden md:block">
+        <div className="text-[11px] font-semibold tracking-wider uppercase text-[#777169]">
+          ম্যানেজমেন্ট ডিরেক্টরি
         </div>
       </div>
 
@@ -137,26 +137,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onSelectTab(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition group ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-full text-[14px] font-medium transition-all group ${
                 isActive
-                  ? 'bg-amber-500 text-white shadow-sm font-semibold'
-                  : 'text-slate-600 hover:bg-amber-50 hover:text-amber-800'
+                  ? 'bg-[#292524] text-white shadow-xs'
+                  : 'text-[#4e4e4e] hover:bg-[#f0efed] hover:text-[#0c0a09]'
               }`}
             >
               <div className="flex items-center gap-2.5">
                 <Icon
                   className={`w-4 h-4 shrink-0 transition ${
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-amber-600'
+                    isActive ? 'text-white' : 'text-[#777169] group-hover:text-[#0c0a09]'
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
               </div>
               {item.badge && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold transition ${
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-semibold transition ${
                     isActive
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-slate-100 text-slate-500 group-hover:bg-amber-100 group-hover:text-amber-700'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-[#f0efed] text-[#777169] group-hover:bg-[#e7e5e4] group-hover:text-[#0c0a09]'
                   }`}
                 >
                   {item.badge}
@@ -168,12 +168,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Footer Info */}
-      <div className="mt-auto p-3 bg-slate-50 border-t border-slate-200 text-slate-500 text-[11px] hidden md:block">
+      <div className="mt-auto p-4 bg-[#f5f5f5] border-t border-[#e7e5e4] text-[#777169] text-[12px] hidden md:block">
         <div className="flex items-center justify-between">
-          <span>সংস্করণ: ২.০ (Enterprise)</span>
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>সংস্করণ ২.০ (Editorial)</span>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#16a34a]" />
         </div>
-        <p className="mt-0.5 text-slate-400">ক্লাউড রেডি ও অফলাইন সমর্থিত</p>
+        <p className="mt-0.5 text-[#a8a29e] text-[11px]">শরিফ এন্ড ইমান এন্টারপ্রাইজ</p>
       </div>
     </aside>
   );
