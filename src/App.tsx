@@ -44,7 +44,7 @@ import { SupabaseSetupGateView } from './features/SupabaseSetupGateView';
 import { CloudSyncStatus } from './lib/storage-store';
 
 export const App: React.FC = () => {
-  useLanguage();
+  const { t } = useLanguage();
 
   const [cloudStatus, setCloudStatus] = useState<CloudSyncStatus>(DimKhataStore.getCloudStatus());
   const [authSession, setAuthSession] = useState(DimKhataStore.getAuthSession());
@@ -102,6 +102,7 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    DimKhataStore.initNetworkMonitoring();
     DimKhataStore.syncWithSupabase().then(() => {
       setCloudStatus(DimKhataStore.getCloudStatus());
     });
@@ -138,7 +139,24 @@ export const App: React.FC = () => {
     setCurrentUser(DimKhataStore.getActiveUser());
   };
 
-  // 1. Mandatory Supabase Connection Gate:
+  // 1. Initial Cloud Handshake:
+  if (cloudStatus === 'INITIALIZING') {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] flex flex-col justify-center items-center p-4 font-sans select-none">
+        <div className="w-16 h-16 rounded-2xl bg-[#0066cc]/10 text-[#0066cc] flex items-center justify-center mb-4">
+          <div className="w-8 h-8 border-3 border-[#0066cc]/30 border-t-[#0066cc] rounded-full animate-spin" />
+        </div>
+        <h2 className="text-lg font-bold text-[#1d1d1f] mb-1">
+          {t('ক্লাউড সংযোগ স্থাপন করা হচ্ছে...', 'Connecting to Cloud Database...')}
+        </h2>
+        <p className="text-[13px] text-[#7a7a7a]">
+          {t('রিয়েল-টাইম সিঙ্ক ভেরিফিকেশন চলছে', 'Verifying real-time Supabase synchronization')}
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Mandatory Supabase Connection Gate:
   // The system refuses to operate without a healthy Supabase connection to prevent data loss.
   if (cloudStatus !== 'ONLINE') {
     return (
