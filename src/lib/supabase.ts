@@ -6,8 +6,6 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const DEFAULT_SUPABASE_PROJECT_ID = 'npukembiywekdbgslipn';
-export const DEFAULT_SUPABASE_URL = `https://${DEFAULT_SUPABASE_PROJECT_ID}.supabase.co`;
 export const SUPABASE_CONFIG_STORAGE_KEY = 'dimkhata_supabase_config';
 
 export interface SupabaseConfig {
@@ -41,7 +39,7 @@ export function getStoredSupabaseConfig(): SupabaseConfig {
   ).trim();
 
   return {
-    url: envUrl || DEFAULT_SUPABASE_URL,
+    url: envUrl,
     key: envKey,
   };
 }
@@ -97,7 +95,7 @@ export function clearStoredSupabaseConfig(): void {
   ).trim();
 
   activeConfig = {
-    url: envUrl || DEFAULT_SUPABASE_URL,
+    url: envUrl,
     key: envKey,
   };
 

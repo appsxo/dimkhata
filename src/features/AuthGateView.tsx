@@ -263,18 +263,6 @@ export const AuthGateView: React.FC<AuthGateViewProps> = ({ onLoginSuccess }) =>
               </div>
             </div>
 
-            {/* Default PIN Reference Note */}
-            <div className="p-3 bg-[#f5f5f7] rounded-xl text-[11.5px] text-[#7a7a7a] space-y-1">
-              <div className="font-medium text-[#1d1d1f] flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-[#0066cc]" />
-                <span>{t('ডিফল্ট নিরাপত্তা পিন:', 'Default Security PINs:')}</span>
-              </div>
-              <div className="flex justify-between items-center text-[11px] pt-0.5">
-                <span>{t('মালিক (Sharif / Eman):', 'Admin (Sharif / Eman):')} <strong className="font-mono text-[#0066cc]">1234</strong></span>
-                <span>{t('স্টাফ (Staff):', 'Staff:')} <strong className="font-mono text-[#0066cc]">0000</strong></span>
-              </div>
-            </div>
-
             {/* Submit Action Button */}
             <button
               type="submit"

@@ -17,8 +17,6 @@ import {
 import {
   saveSupabaseConfig,
   getStoredSupabaseConfig,
-  DEFAULT_SUPABASE_PROJECT_ID,
-  DEFAULT_SUPABASE_URL,
 } from '../lib/supabase';
 import { DimKhataStore, CloudSyncStatus } from '../lib/storage-store';
 import { useLanguage } from '../lib/i18n';
@@ -64,12 +62,14 @@ export const SupabaseSetupGateView: React.FC<SupabaseSetupGateViewProps> = ({
   const { lang, toggleLanguage, t } = useLanguage();
   const currentConfig = getStoredSupabaseConfig();
 
-  const [urlInput, setUrlInput] = useState(currentConfig.url || DEFAULT_SUPABASE_URL);
+  const [urlInput, setUrlInput] = useState(currentConfig.url || '');
   const [keyInput, setKeyInput] = useState(currentConfig.key || '');
   const [showKey, setShowKey] = useState(false);
   const [testing, setTesting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedSql, setCopiedSql] = useState(false);
+
+  const projectRef = urlInput.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/i)?.[1];
 
   const handleCopySql = () => {
     navigator.clipboard.writeText(SCHEMA_SQL);
@@ -250,7 +250,11 @@ export const SupabaseSetupGateView: React.FC<SupabaseSetupGateViewProps> = ({
                   {t('২. Supabase SQL Editor খুলুন:', '2. Open Supabase SQL Editor:')}
                 </span>
                 <a
-                  href={`https://supabase.com/dashboard/project/${DEFAULT_SUPABASE_PROJECT_ID}/sql/new`}
+                  href={
+                    projectRef
+                      ? `https://supabase.com/dashboard/project/${projectRef}/sql/new`
+                      : 'https://supabase.com/dashboard'
+                  }
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 font-semibold text-[#0066cc] hover:underline"
@@ -302,7 +306,11 @@ export const SupabaseSetupGateView: React.FC<SupabaseSetupGateViewProps> = ({
                     {t('Supabase Publishable / Anon Key', 'Supabase Publishable / Anon Key')}
                   </label>
                   <a
-                    href={`https://supabase.com/dashboard/project/${DEFAULT_SUPABASE_PROJECT_ID}/settings/api-keys`}
+                    href={
+                      projectRef
+                        ? `https://supabase.com/dashboard/project/${projectRef}/settings/api-keys`
+                        : 'https://supabase.com/dashboard'
+                    }
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0066cc] hover:underline"
@@ -337,8 +345,8 @@ export const SupabaseSetupGateView: React.FC<SupabaseSetupGateViewProps> = ({
                 </div>
                 <p>
                   {t(
-                    `প্রজেক্ট আইডি: ${DEFAULT_SUPABASE_PROJECT_ID}। Supabase Settings → API Keys থেকে আপনার Publishable (বা Anon) কী কপি করে এখানে পেস্ট করুন।`,
-                    `Project ID: ${DEFAULT_SUPABASE_PROJECT_ID}. Copy your Publishable or Anon key from Supabase Settings → API Keys.`
+                    'আপনার Supabase ড্যাশবোর্ডের Settings → API Keys থেকে Project URL এবং Publishable (বা Anon) কী কপি করে এখানে পেস্ট করুন।',
+                    'Copy your Project URL and Publishable or Anon key from Supabase Settings → API Keys and paste them here.'
                   )}
                 </p>
               </div>

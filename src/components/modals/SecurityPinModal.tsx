@@ -60,7 +60,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     const adminUser = await DimKhataStore.verifyAdminPin(pinInput);
     setVerifying(false);
     if (!adminUser) {
-      setErrorMsg(t('ভুল অ্যাডমিন পিন! সঠিক পিন দিন (ডিফল্ট: 1234)', 'Incorrect Admin PIN! (Default: 1234)'));
+      setErrorMsg(t('ভুল অ্যাডমিন পিন! সঠিক পিন দিন', 'Incorrect Admin PIN!'));
       return;
     }
     if (onSuccessUnlockAdmin) onSuccessUnlockAdmin(adminUser);
@@ -79,7 +79,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
 
     const adminUser = await DimKhataStore.verifyAdminPin(currentAdminPin);
     if (!adminUser) {
-      setErrorMsg(t('বর্তমান অ্যাডমিন পিন সঠিক নয়! (ডিফল্ট: 1234)', 'Current Admin PIN is incorrect! (Default: 1234)'));
+      setErrorMsg(t('বর্তমান অ্যাডমিন পিন সঠিক নয়!', 'Current Admin PIN is incorrect!'));
       return;
     }
 
@@ -136,7 +136,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
               autoFocus
               value={pinInput}
               onChange={(e) => setPinInput(e.target.value)}
-              placeholder={t('পিন লিখুন (ডিফল্ট: 1234)', 'Enter PIN (Default: 1234)')}
+              placeholder={t('পিন লিখুন...', 'Enter PIN...')}
               className="input-apple w-full text-center text-[20px] tracking-[0.3em] font-semibold"
               required
             />
@@ -217,7 +217,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
                   inputMode="numeric"
                   value={currentAdminPin}
                   onChange={(e) => setCurrentAdminPin(e.target.value)}
-                  placeholder={t('বর্তমান অ্যাডমিন পিন (ডিফল্ট: 1234)', 'Current Admin PIN (Default: 1234)')}
+                  placeholder={t('বর্তমান অ্যাডমিন পিন লিখুন...', 'Enter current Admin PIN...')}
                   className="input-apple w-full text-[14px]"
                   required
                 />

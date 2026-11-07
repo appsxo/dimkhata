@@ -5,9 +5,7 @@
 
 import { CompanySettings, UserProfile } from '../types';
 
-// Default SHA-256 hashes:
-// '1234' -> 03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
-// '0000' -> 9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0
+// Initial fallback SHA-256 hashes for system roles
 export const DEFAULT_ADMIN_PIN_HASH =
   '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4';
 export const DEFAULT_STAFF_PIN_HASH =

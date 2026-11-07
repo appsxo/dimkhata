@@ -56,10 +56,9 @@
 ## 2. Setup & Deployment Guide (GitHub Pages + Supabase)
 
 ### Step 1: Set Up Supabase Database (2 Minutes)
-Your Supabase Project ID: `npukembiywekdbgslipn`
 
-1. Open your Supabase **SQL Editor**:  
-   [https://supabase.com/dashboard/project/npukembiywekdbgslipn/sql/new](https://supabase.com/dashboard/project/npukembiywekdbgslipn/sql/new)
+1. Open your Supabase **SQL Editor** from your project dashboard:  
+   [https://supabase.com/dashboard](https://supabase.com/dashboard) (or `https://supabase.com/dashboard/project/<your-project-id>/sql/new`)
 2. Paste the contents of [`supabase/schema.sql`](supabase/schema.sql) and click **Run**:
    ```sql
    CREATE TABLE IF NOT EXISTS public.dimkhata_kv_store (
@@ -89,8 +88,7 @@ Your Supabase Project ID: `npukembiywekdbgslipn`
    END $$;
    ```
 3. Copy your API credentials from **Project Settings → API Keys**:  
-   [https://supabase.com/dashboard/project/npukembiywekdbgslipn/settings/api-keys](https://supabase.com/dashboard/project/npukembiywekdbgslipn/settings/api-keys)
-   - **Project URL:** `https://npukembiywekdbgslipn.supabase.co`
+   - **Project URL:** `https://<your-project-id>.supabase.co`
    - **Publishable Key:** `sb_publishable_...` *(or Legacy `anon` `public` key)*
 
 ---
@@ -112,7 +110,7 @@ You can connect Supabase in **either of two easy ways**:
 
 | Secret Name | Secret Value |
 | :--- | :--- |
-| `VITE_SUPABASE_URL` | `https://npukembiywekdbgslipn.supabase.co` |
+| `VITE_SUPABASE_URL` | `https://<your-project-id>.supabase.co` |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase Publishable Key (or `VITE_SUPABASE_ANON_KEY`) |
 
 ---
@@ -135,7 +133,7 @@ npm install
 
 # 2. Create local environment file (.env.local)
 cat << 'EOF' > .env.local
-VITE_SUPABASE_URL=https://npukembiywekdbgslipn.supabase.co
+VITE_SUPABASE_URL=https://<your-project-id>.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key_here
 EOF
 
