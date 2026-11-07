@@ -1,56 +1,60 @@
-# DimKhata (ডিমখাতা) 🥚
+# DimKhata — Cloud ERP & POS for Wholesale/Retail Egg Business
 
-**প্রতিষ্ঠান (Business):** শরিফ এন্ড ইমান এন্টারপ্রাইজ (Sharif & Eman Enterprise)  
-**মালিকদ্বয় (Partners):** শরিফ (৬৬.৬৭% / ২ অংশ) এবং ইমান (৩৩.৩৩% / ১ অংশ)  
-**ধরণ (System Type):** ডিমের পাইকারি ও খুচরা হিসাব, স্টক এবং পজ সফটওয়্যার (Cloud ERP & POS PWA)  
-**লাইভ অ্যাপ (Live URL):** [https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)  
-**গিটহাব রিপোজিটরি:** [https://github.com/appsxo/DimKhata](https://github.com/appsxo/DimKhata)  
-**টেক স্ট্যাক:** React 19 + TypeScript + Tailwind CSS v4 + Vite (PWA) + Supabase + GitHub Pages
-
----
-
-## ১. সিস্টেমটি কীভাবে কাজ করে (How DimKhata Works)
-
-**ডিমখাতা (DimKhata)** একটি সার্ভারলেস রিয়েল-টাইম বিজনেস অ্যাপ্লিকেশন। এতে কোনো পেইড ভিপিএস বা সার্ভারের প্রয়োজন নেই—ফ্রন্টএন্ড **GitHub Pages**-এ এবং ডাটাবেজ **Supabase Cloud**-এ হোস্ট করা।
-
-### ক. মূল ইঞ্জিন ও আর্কিটেকচার (Core Architecture)
-1. **রিয়েল-টাইম ক্লাউড সিঙ্ক (Supabase Source of Truth):**
-   - সিস্টেমে কোনো ডামি বা লোকাল ডাটা নেই। সকল লেনদেন সরাসরি Supabase-এর `public.dimkhata_kv_store` টেবিলে সংরক্ষিত হয় এবং **Supabase Realtime WebSockets**-এর মাধ্যমে মোবাইল ও কম্পিউটারে সাথে সাথে সিঙ্ক হয়।
-2. **দ্বিভাষিক ইন্টারফেস (বাংলা ও English):**
-   - ডিফল্ট ভাষা **বাংলা (`বাংলা`)**। উপরের নেভবার থেকে ১-ক্লিকে **English (`EN`)** ভাষায় পরিবর্তন করা যায়।
-3. **পিন লক ও রোল নিরাপত্তা (SHA-256 PIN Security):**
-   - **মালিক মোড (Admin - শরিফ ও ইমান):** ৪-সংখ্যার SHA-256 পিন দ্বারা সুরক্ষিত (ডিফল্ট পিন: `1234`, সেটিংস থেকে পরিবর্তনযোগ্য)। মালিক মোডে ক্যাশ বুক, ব্যাংক ব্যালেন্স, কর্মচারীদের বেতন, মাসিক নিট লাভ-লোকসান ও ২:১ মুনাফা বণ্টন এবং অডিট লগ দেখা যায়।
-   - **স্টাফ মোড (Staff):** শুধুমাত্র দৈনন্দিন কেনা-বেচা, আজকের বাজার দর, বকেয়া আদায়, ভাঙা ডিম ও দোকানের খরচ এন্ট্রি করতে পারে (লাভ-লোকসান ও ব্যাংক ব্যালেন্স গোপন থাকে)।
-4. **ডিমের ৫টি নির্দিষ্ট ক্যাটাগরি ও একক রূপান্তর:**
-   - **ক্যাটাগরি:** ১. লাল ডিম (ফার্মের), ২. প্যারাগন ডিম, ৩. হাঁসের ডিম, ৪. কোয়েল পাখির ডিম (৫০ পিসে খাঁচি), ৫. দেশি মুরগির ডিম।
-   - **একক (Units):** পিস (`Pcs`), হালি (`৪ পিস`), খাঁচি (`Crate - ৩০/৫০ পিস`) এবং শ (`১০০ পিস`)-এ স্বয়ংক্রিয় স্টক প্রদর্শন।
+**Business Name:** Sharif & Eman Enterprise (`শরিফ এন্ড ইমান এন্টারপ্রাইজ`)  
+**Partners & Profit Ratio:** Sharif (`শরিফ` — 66.67% / 2 Shares) & Eman (`ইমান` — 33.33% / 1 Share)  
+**Live Application:** [https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)  
+**Repository:** [https://github.com/appsxo/DimKhata](https://github.com/appsxo/DimKhata)  
+**Tech Stack:** React 19 + TypeScript + Tailwind CSS v4 + Vite (PWA) + Supabase + GitHub Pages
 
 ---
 
-### খ. দৈনন্দিন ব্যবসার ধাপসমূহ (Daily Business Workflow)
+## 1. How the System Works
 
-| ধাপ | মডিউল | কাজের বিবরণ |
+**DimKhata** is a serverless, real-time ERP and POS Progressive Web Application (PWA). It requires no VPS or backend server—the frontend is hosted on **GitHub Pages** and all application state is persisted and synchronized in real time via **Supabase**.
+
+### A. Core Architecture
+1. **Supabase Real-Time Cloud Sync (Single Source of Truth):**
+   - Zero local dummy data. All records are stored in `public.dimkhata_kv_store` on Supabase and synchronized across all connected mobile and desktop devices in real time via **Supabase Realtime WebSockets**.
+2. **Bilingual Interface (`বাংলা` Default + `EN` Toggle):**
+   - Defaults to Bangla (`বাংলা`) for daily shop floor operation and switches to English (`EN`) with a single click in the top navigation bar.
+3. **Role-Based Access & SHA-256 PIN Security:**
+   - **Admin Mode (Owners — Sharif & Eman):** Protected by a 4-digit **SHA-256 hashed PIN** (Default PIN: `1234`, configurable in Security Settings). Grants full access to Cashbook, Bank Balances, Payroll, Monthly Net P&L, 2:1 Partner Profit Split, and Audit Logs.
+   - **Staff Mode (Cashier / Manager):** Restricted to daily operational modules (Dashboard, POS Sales, Egg Sourcing, Daily Market Rates, Party Due Collection, Wastage, and Shop Expenses). Financial accounts and profit statements remain hidden.
+4. **Product Categories & Egg Unit Conversion Engine:**
+   - **5 Egg Categories:**
+     1. Brown Farm Layer Egg (`লাল ডিম (ফার্মের)`) — 30 pcs/crate
+     2. Paragon Branded Egg (`প্যারাগন ডিম`) — 30 pcs/crate
+     3. Duck Egg (`হাঁসের ডিম`) — 30 pcs/crate
+     4. Quail Egg (`কোয়েল পাখির ডিম`) — 50 pcs/crate
+     5. Indigenous Deshi Hen Egg (`দেশি মুরগির ডিম`) — 30 pcs/crate
+   - **Automatic Unit Breakdowns:** Converts piece quantities into **Crates** (30 or 50 pcs), **Hundreds / Sho** (100 pcs), **Hali** (4 pcs), and **Pieces** (`Pcs`).
+
+---
+
+### B. Daily Business Workflow
+
+| Step | Module | Description |
 | :--- | :--- | :--- |
-| **১. বাজার দর** | **আজকের বাজার দর (`DailyPricingView`)** | প্রতিদিন সকালে ৫টি ডিমের কেনা দর, পাইকারি দর এবং খুচরা বিক্রয় দর সেট করা হয়। |
-| **২. ডিম কেনা (WAC)** | **খামার থেকে ক্রয় (`SourcingPurchasesView`)** | খামারের দর + ট্রাক ভাড়া + লেবার খরচ যোগ করে স্বয়ংক্রিয়ভাবে প্রতি পিস ডিমের **প্রকৃত কেনা খরচ (Weighted Average Landed Cost - WAC)** বের হয় এবং গোডাউন স্টকে যুক্ত হয়। |
-| **৩. বিক্রয় ও চালান** | **বিক্রয় মেমো ও POS (`SalesPosView`)** | পাইকারি বা খুচরা দরে খাঁচি/পিস হিসেবে দ্রুত মেমো তৈরি, কাস্টমারের বাকির সীমা (Credit Limit) সতর্কতা, **A4 / 80mm POS মেমো ও ডেলিভারি চালান প্রিন্ট** এবং ১-ক্লিকে **WhatsApp শেয়ার**। নগদ কাস্টমার (`Walk-in`) এবং নিবন্ধিত পাইকার (`SE-CUST-XXX`) উভয়ই সাপোর্ট করে। |
-| **৪. বাকি ও কেওয়াইসি** | **কাস্টমার ও মহাজন (`PartiesKycView`)** | কাস্টমার (`SE-CUST`) ও খামারী/মহাজন (`SE-SUP`) নিবন্ধন, ক্লায়েন্ট-সাইড কম্প্রেসড (`<60 KB` WebP) NID/ছবি আপলোড, বকেয়া আদায়, মহাজন পেমেন্ট এবং WhatsApp তাগাদা মেসেজ। |
-| **৫. লস ও ট্রান্সফার** | **ভাঙা, সৌজন্য ও স্থানান্তর (`WastageCourtesyView`)** | পরিবহনে ভাঙা/পচা ডিম এবং মেহমানদের সৌজন্য গিফট স্টক থেকে বিয়োগ হয়ে স্বয়ংক্রিয়ভাবে ল্যান্ডেড কস্টে লাভ-লোকসানে ক্ষতি হিসেবে যুক্ত হয়। এক গোডাউন থেকে অন্য গোডাউনে স্টক ট্রান্সফার করা যায়। |
-| **৬. খরচ ও অ্যাসেট** | **দোকান ও গাড়ির খরচ (`ExpensesAssetsView`)** | স্থায়ী খরচ (ভাড়া, বিদ্যুৎ), চলতি খরচ (ভ্যান মেরামত, আপ্যায়ন) এবং স্থায়ী সম্পদ/অ্যাসেট (খাঁচি, ডিজিটাল স্কেল, ফার্নিচার) এন্ট্রি। |
-| **৭. ক্যাশ ও ব্যাংক** | **ক্যাশ বুক ও ব্যাংক (`CashbookBankingView`)** | দোকানের ক্যাশ ড্রয়ার, ইসলামী ব্যাংক (IBBL), বিকাশ মার্চেন্ট ও নগদ একাউন্টের লাইভ ব্যালেন্স এবং কন্ট্রা ট্রান্সফার (ক্যাশ ⇄ ব্যাংক)। |
-| **৮. বেতন ও এইচআর** | **কর্মচারী ও পে-রোল (`PayrollHrView`)** | কর্মচারী নিবন্ধন (`SE-EMP-XXX`), মাসের মাঝখানে অগ্রিম বেতন (Advance) প্রদান এবং মাস শেষে অগ্রিম কেটে নিট বেতন পরিশোধ ও প্রিন্টযোগ্য **বেতন রসিদ (Salary Slip)**। |
-| **৯. ২:১ লভ্যাংশ বণ্টন** | **লাভ-লোকসান ও বণ্টন (`ProfitSettlementView`)** | `মোট বিক্রয় - ল্যান্ডেড কস্ট (COGS) - (দোকান খরচ + বেতন + ভাঙা/পচা লস + সৌজন্য খরচ) = নিট লাভ`। নিট লাভ স্বয়ংক্রিয়ভাবে **২:১ অনুপাতে শরিফ (৬৬.৬৭%) ও ইমান (৩৩.৩৩%)**-এর মধ্যে বণ্টন হয় এবং ব্যক্তিগত উত্তোলন (Drawings) সমন্বয় করে নিট পাওনা দেখায়। |
+| **1. Daily Rates** | `DailyPricingView` | Set daily buying, wholesale, and retail rates per piece/crate for all 5 egg categories. |
+| **2. Sourcing & WAC** | `SourcingPurchasesView` | Record farm/supplier egg purchases (`SE-PUR-YYYY-XXXX`). Automatically adds truck fare, loading labor, and tolls to compute the true **Weighted Average Landed Cost (WAC)** per egg and updates live branch stock. |
+| **3. Sales POS & Challan** | `SalesPosView` | Create Wholesale or Retail sales memos (`SE-INV-YYYY-XXXX`) by Crate or Piece for Walk-in Cash Customers or registered wholesale customers (`SE-CUST-XXX`). Enforces credit limit warnings, prints **A4 / 80mm POS Receipts & Delivery Challans** (`SE-CHL-YYYY-XXXX`), and shares invoices via **WhatsApp**. |
+| **4. Parties & KYC** | `PartiesKycView` | Manage Customers (`SE-CUST-XXX`) and Farm Suppliers (`SE-SUP-XXX`), upload client-side compressed (`<60 KB` WebP) NID/KYC documents, collect customer dues, pay suppliers, and send WhatsApp due reminders. |
+| **5. Wastage & Transfer** | `WastageCourtesyView` | Deduct broken/rotten eggs and courtesy gifts from inventory at current WAC landed cost (automatically expensed in Monthly P&L), or transfer stock between branches/godowns. |
+| **6. Expenses & Assets** | `ExpensesAssetsView` | Record fixed expenses (rent, utilities), variable expenses (transport, maintenance), and capital assets (crates, digital scales, furniture). Only operating expenses are deducted from monthly profit; capital assets are tracked separately. |
+| **7. Cashbook & Banking** | `CashbookBankingView` | Live balance tracking across Main Cash Drawer, Islami Bank Bangladesh (`IBBL`), bKash Merchant, and Nagad, including Contra Transfers (Cash ⇄ Bank/MFS). |
+| **8. HR & Payroll** | `PayrollHrView` | Register staff (`SE-EMP-XXX`), record mid-month salary advances, process month-end net payroll (`Base Salary + Bonus - Advances`), and print salary slips (`SE-PAY-YYYY-XXXX`). |
+| **9. P&L & 2:1 Split** | `ProfitSettlementView` | Automatically calculates `Net Profit = Gross Sales - Landed COGS - (Operating Expenses + Salaries + Wastage Loss + Courtesy Cost)` and splits net profit **2:1** between **Sharif (66.67%)** and **Eman (33.33%)**, deducting personal drawings to show net payable balance. |
 
 ---
 
-## ২. সেটআপ ও ডেপ্লয়মেন্ট গাইড (Setup & Deployment Guide)
+## 2. Setup & Deployment Guide (GitHub Pages + Supabase)
 
-### ধাপ ১: Supabase ডাটাবেজ সেটআপ (২ মিনিট)
-আপনার Supabase প্রজেক্ট আইডি: `knxnmihaflwcavbyivnc`
+### Step 1: Set Up Supabase Database (2 Minutes)
+Your Supabase Project ID: `knxnmihaflwcavbyivnc`
 
-1. আপনার প্রজেক্টের **SQL Editor**-এ যান:  
-   👉 [https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/sql/new](https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/sql/new)
-2. নিচের SQL কোডটি ([`supabase/schema.sql`](supabase/schema.sql)) পেস্ট করে **Run** বাটনে ক্লিক করুন:
+1. Open your Supabase **SQL Editor**:  
+   [https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/sql/new](https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/sql/new)
+2. Paste the contents of [`supabase/schema.sql`](supabase/schema.sql) and click **Run**:
    ```sql
    CREATE TABLE IF NOT EXISTS public.dimkhata_kv_store (
        key TEXT PRIMARY KEY,
@@ -78,81 +82,81 @@
      END IF;
    END $$;
    ```
-3. আপনার Supabase **API Keys** পেজ থেকে কী কপি করুন:  
-   👉 [https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/settings/api-keys](https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/settings/api-keys)
+3. Copy your API credentials from **Project Settings → API Keys**:  
+   [https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/settings/api-keys](https://supabase.com/dashboard/project/knxnmihaflwcavbyivnc/settings/api-keys)
    - **Project URL:** `https://knxnmihaflwcavbyivnc.supabase.co`
-   - **Publishable Key (`sb_publishable_...`)** অথবা **Anon Key (`eyJ...`)**
+   - **Publishable Key:** `sb_publishable_...` *(or Legacy `anon` `public` key)*
 
 ---
 
-### ধাপ ২: GitHub Secrets যুক্ত করা (১ মিনিট)
-1. আপনার গিটহাব রিপোজিটরির **Actions Secrets** পেজে যান:  
-   👉 [https://github.com/appsxo/DimKhata/settings/secrets/actions](https://github.com/appsxo/DimKhata/settings/secrets/actions)
-2. **New repository secret** বাটনে ক্লিক করে নিচের দুটি সিক্রেট যোগ করুন:
+### Step 2: Configure GitHub Actions Secrets (1 Minute)
+1. Open your repository's **Actions Secrets** settings:  
+   [https://github.com/appsxo/DimKhata/settings/secrets/actions](https://github.com/appsxo/DimKhata/settings/secrets/actions)
+2. Click **New repository secret** and add:
 
 | Secret Name | Secret Value |
 | :--- | :--- |
 | `VITE_SUPABASE_URL` | `https://knxnmihaflwcavbyivnc.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | আপনার Supabase Publishable Key (অথবা `VITE_SUPABASE_ANON_KEY`) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase Publishable Key (or `VITE_SUPABASE_ANON_KEY`) |
 
 ---
 
-### ধাপ ৩: GitHub Pages চালু করা (১ মিনিট)
-1. গিটহাব রিপোজিটরির **Pages Settings**-এ যান:  
-   👉 [https://github.com/appsxo/DimKhata/settings/pages](https://github.com/appsxo/DimKhata/settings/pages)
-2. **Build and deployment → Source** ড্রপডাউন থেকে **GitHub Actions** সিলেক্ট করুন।
-3. **Actions** ট্যাবে ([https://github.com/appsxo/DimKhata/actions](https://github.com/appsxo/DimKhata/actions)) গিয়ে **Deploy DimKhata to GitHub Pages** ওয়ার্কফ্লোটি **Run workflow** করুন (অথবা `main` ব্রাঞ্চে পুশ করলে স্বয়ংক্রিয়ভাবে ডিপ্লয় হবে)।
-4. ডিপ্লয় সম্পন্ন হলে আপনার লাইভ অ্যাপ চলবে এখানে:  
-   🌐 **[https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)**
+### Step 3: Enable GitHub Pages (1 Minute)
+1. Go to **Settings → Pages**:  
+   [https://github.com/appsxo/DimKhata/settings/pages](https://github.com/appsxo/DimKhata/settings/pages)
+2. Under **Build and deployment → Source**, select **GitHub Actions**.
+3. Go to the **Actions** tab ([https://github.com/appsxo/DimKhata/actions](https://github.com/appsxo/DimKhata/actions)), select **Deploy DimKhata to GitHub Pages**, and click **Run workflow** (or push any commit to `main`).
+4. Once completed (~45 seconds), your application will be live at:  
+   **[https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)**
 
 ---
 
-## ৩. লোকাল কম্পিউটারে রান করার নিয়ম (Local Development)
+## 3. Local Development
 
 ```bash
-# ১. ডিপেন্ডেন্সি ইন্সটল করুন
+# 1. Install dependencies
 npm install
 
-# ২. লোকাল এনভায়রনমেন্ট ফাইল (.env.local) তৈরি করুন
+# 2. Create local environment file (.env.local)
 cat << 'EOF' > .env.local
 VITE_SUPABASE_URL=https://knxnmihaflwcavbyivnc.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=আপনার_সোপবেস_কী_এখানে_দিন
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key_here
 EOF
 
-# ৩. ডেভেলপমেন্ট সার্ভার চালু করুন
+# 3. Start local development server
 npm run dev
 
-# ৪. প্রোডাকশন বিল্ড যাচাই করুন
+# 4. Run type-check and production build
 npm run build
 ```
 
 ---
 
-## ৪. ফোল্ডার স্ট্রাকচার (Project Structure)
+## 4. Project Structure
 
 ```text
 DimKhata/
 ├── .github/workflows/
-│   ├── deploy-pages.yml          # GitHub Pages অটো-ডেপ্লয়মেন্ট ওয়ার্কফ্লো
-│   └── nightly-backup.yml        # Supabase প্রজেক্ট সচল রাখার প্রাত্যহিক পিং
+│   ├── deploy-pages.yml          # Automated GitHub Pages build & deployment
+│   └── nightly-backup.yml        # Daily Supabase keep-alive ping
 ├── supabase/
-│   └── schema.sql                # Supabase KV Store ও Realtime SQL স্ক্রিপ্ট
+│   └── schema.sql                # Supabase KV Store table, RLS & Realtime setup
 ├── src/
 │   ├── components/
-│   │   ├── layout/               # Navbar (Global 44px + Sub-nav) ও Sidebar (Desktop + Mobile Bar)
+│   │   ├── layout/               # Navbar (Global 44px + Sub-nav) & Sidebar (Desktop + Mobile Bar)
 │   │   ├── modals/               # PrintInvoiceModal, KycUploadModal, SecurityPinModal
-│   │   └── ui/                   # AppleUI রিউজেবল কম্পোনেন্টসমূহ (DESIGN.md)
-│   ├── features/                 # ১০টি মূল বিজনেস মডিউল (Dashboard, POS, Sourcing, P&L ইত্যাদি)
+│   │   └── ui/                   # Reusable Apple Design System UI primitives (DESIGN.md)
+│   ├── features/                 # 10 core ERP feature views (Dashboard, POS, Sourcing, P&L, etc.)
 │   ├── lib/
-│   │   ├── storage-store.ts      # কেন্দ্রীয় স্টোর, WAC ক্যালকুলেশন ও Supabase Realtime Sync
-│   │   ├── egg-units.ts          # খাঁচি/শ/হালি/পিস একক রূপান্তর ও টাকা ফরম্যাটার
-│   │   ├── i18n.ts               # বাংলা (ডিফল্ট) ও ইংরেজি ভাষা ইঞ্জিন
-│   │   ├── security.ts           # SHA-256 পিন হ্যাশিং ও ইনপুট স্যানিটাইজার
-│   │   ├── image-compressor.ts   # নেটিভ HTML5 Canvas WebP কম্প্রেশন (<60 KB)
-│   │   ├── whatsapp-share.ts     # ১-ক্লিক WhatsApp মেমো ও বকেয়া তাগাদা শেয়ার
-│   │   └── supabase.ts           # Supabase ক্লায়েন্ট ইনিশিয়ালাইজার
-│   ├── types/index.ts            # সকল TypeScript ডাটা মডেল
-│   ├── App.tsx                   # প্রধান রাউটিং ও রোল গার্ড
-│   └── index.css                 # Apple Design System টোকেন ও প্রিন্ট স্টাইলশিট
-└── DESIGN.md                     # ডিজাইন সিস্টেম ডকুমেন্টেশন
+│   │   ├── storage-store.ts      # Central store, WAC engine & Supabase Realtime sync
+│   │   ├── egg-units.ts          # Crate/Sho/Hali/Pcs converters & currency formatters
+│   │   ├── i18n.ts               # Bilingual state engine (Bangla default + English toggle)
+│   │   ├── security.ts           # SHA-256 PIN hashing & input sanitization
+│   │   ├── image-compressor.ts   # Native HTML5 Canvas WebP compressor (<60 KB)
+│   │   ├── whatsapp-share.ts     # 1-Click WhatsApp invoice & due reminder generator
+│   │   └── supabase.ts           # Supabase client initializer
+│   ├── types/index.ts            # TypeScript data models
+│   ├── App.tsx                   # Root layout, routing & role access guard
+│   └── index.css                 # Apple Design System tokens & print media rules
+└── DESIGN.md                     # Design system specification
 ```
