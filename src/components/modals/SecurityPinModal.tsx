@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyRound, Cloud, Copy, CheckCircle2, RefreshCw } from 'lucide-react';
+import { KeyRound, Cloud, RefreshCw, ShieldCheck } from 'lucide-react';
 import { DimKhataStore } from '../../lib/storage-store';
 import { verifyRolePin, sha256Hex } from '../../lib/security';
 import { useLanguage } from '../../lib/i18n';
@@ -10,23 +10,6 @@ interface SecurityPinModalProps {
   onClose: () => void;
   onSuccessUnlockAdmin?: (adminUser?: any) => void;
 }
-
-const SUPABASE_KV_SQL = `-- Run once in Supabase SQL Editor
-CREATE TABLE IF NOT EXISTS public.dimkhata_kv_store (
-    key TEXT PRIMARY KEY,
-    value JSONB NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-ALTER TABLE public.dimkhata_kv_store ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow publishable key sync on dimkhata_kv_store" ON public.dimkhata_kv_store;
-CREATE POLICY "Allow publishable key sync on dimkhata_kv_store"
-    ON public.dimkhata_kv_store
-    FOR ALL
-    TO anon, authenticated
-    USING (true)
-    WITH CHECK (true);`;
 
 export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   mode,
@@ -43,14 +26,11 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [verifying, setVerifying] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'PIN' | 'CLOUD'>(
-    cloudStatus === 'NEEDS_SQL' ? 'CLOUD' : 'PIN'
-  );
+  const [activeTab, setActiveTab] = useState<'PIN' | 'CLOUD'>('PIN');
   const [targetUserId, setTargetUserId] = useState<string>(currentUser.id || allUsers[0]?.id || '');
   const [currentAdminPin, setCurrentAdminPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [savedNotice, setSavedNotice] = useState('');
-  const [copiedSql, setCopiedSql] = useState(false);
   const [syncingNow, setSyncingNow] = useState(false);
 
   const handleUnlockSubmit = async (e: React.FormEvent) => {
@@ -104,11 +84,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     );
   };
 
-  const handleCopySql = () => {
-    navigator.clipboard.writeText(SUPABASE_KV_SQL);
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2500);
-  };
+
 
   const handleManualSync = async () => {
     setSyncingNow(true);
@@ -293,30 +269,17 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
                 </button>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[12px] font-semibold text-[#1d1d1f]">Supabase SQL (`supabase/schema.sql`)</span>
-                  <button
-                    type="button"
-                    onClick={handleCopySql}
-                    className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#0066cc] hover:underline"
-                  >
-                    {copiedSql ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#00802b]" />
-                        <span>{t('কপি হয়েছে!', 'Copied!')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>{t('কপি করুন', 'Copy SQL')}</span>
-                      </>
-                    )}
-                  </button>
+              <div className="p-3.5 rounded-[12px] bg-[#f5f5f7] border border-[#e0e0e0] space-y-2">
+                <div className="flex items-center gap-2 text-[12.5px] font-semibold text-[#1d1d1f]">
+                  <ShieldCheck className="w-4 h-4 text-[#0066cc]" />
+                  <span>{t('রিয়েল-টাইম ক্লাউড সুরক্ষা', 'Real-Time Cloud Security')}</span>
                 </div>
-                <pre className="p-3 rounded-[10px] bg-[#1d1d1f] text-[#f5f5f7] text-[11px] overflow-x-auto max-h-40 font-mono leading-relaxed">
-                  {SUPABASE_KV_SQL}
-                </pre>
+                <p className="text-[11.5px] text-[#7a7a7a] leading-relaxed">
+                  {t(
+                    'সকল মেমো, ক্রয়-বিক্রয় ও খাতা হিসাব স্বয়ংক্রিয়ভাবে ক্লাউড ডাটাবেসে সুরক্ষিত থাকে। ডাটাবেসের সংযোগ ও নিরাপত্তা কি GitHub Repository Secrets-এর মাধ্যমে কঠোরভাবে সংরক্ষিত।',
+                    'All transactions, memos, and ledger records are automatically synchronized in real-time. Database credentials and keys are strictly managed via GitHub Repository Secrets.'
+                  )}
+                </p>
               </div>
             </div>
           )}

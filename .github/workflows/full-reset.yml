@@ -1,0 +1,60 @@
+name: Full Database Reset (DimKhata KV Store)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type "CONFIRM_FULL_RESET" to wipe all transactions and reset to clean state'
+        required: true
+        default: ''
+
+jobs:
+  reset-database:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || secrets.SUPABASE_URL }}
+      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID || secrets.SUPABASE_PROJECT_ID }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_KEY }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Validate Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM_FULL_RESET" ]; then
+            echo "::error::Reset cancelled! You must type exact confirmation: CONFIRM_FULL_RESET"
+            exit 1
+          fi
+          echo "Confirmation verified. Proceeding with database wipe..."
+
+      - name: Reset DimKhata KV Store via Supabase REST API
+        run: |
+          URL="${VITE_SUPABASE_URL}"
+          if [ -z "$URL" ] && [ -n "$VITE_SUPABASE_PROJECT_ID" ]; then
+            URL="https://${VITE_SUPABASE_PROJECT_ID}.supabase.co"
+          fi
+          SB_KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_ANON_KEY}"
+
+          if [ -z "$URL" ] || [ -z "$SB_KEY" ]; then
+            echo "::error::Missing Supabase credentials in GitHub Repository Secrets!"
+            exit 1
+          fi
+
+          echo "Connecting to $URL..."
+
+          # Delete all rows from dimkhata_kv_store table
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X DELETE \
+            -H "apikey: $SB_KEY" \
+            -H "Authorization: Bearer $SB_KEY" \
+            -H "Content-Type: application/json" \
+            "$URL/rest/v1/dimkhata_kv_store?key=neq.")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Successfully wiped dimkhata_kv_store! Status: $HTTP_STATUS"
+            echo "On next app launch, DimKhata will initialize with fresh clean production defaults."
+          else
+            echo "::error::Failed to reset database! HTTP Status: $HTTP_STATUS"
+            echo "Response: $BODY"
+            exit 1
+          fi

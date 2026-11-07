@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import {
   UserCheck,
-  RotateCcw,
   Download,
-  Upload,
   ShieldCheck,
   Store,
   Sparkles,
@@ -26,7 +24,7 @@ interface NavbarProps {
   selectedBranchId: string;
   onSelectBranch: (branchId: string) => void;
   currentUser: UserProfile;
-  onToggleUserRole: () => void;
+  onRequestBackup?: () => void;
   onOpenSecurityModal: () => void;
   onLogout: () => void;
   onRefresh: () => void;
@@ -67,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedBranchId,
   onSelectBranch,
   currentUser,
-  onToggleUserRole,
+  onRequestBackup,
   onOpenSecurityModal,
   onLogout,
   onRefresh,
@@ -96,47 +94,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const handleDownloadBackup = () => {
-    const json = DimKhataStore.exportFullBackupJson();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DimKhata_Backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleUploadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      if (DimKhataStore.importFullBackupJson(content)) {
-        alert(t('ব্যাকআপ রিস্টোর সফল হয়েছে!', 'Backup restored successfully!'));
-        onRefresh();
-      } else {
-        alert(t('ভুল ফাইল ফরম্যাট!', 'Invalid JSON backup file!'));
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleResetClean = () => {
-    if (currentUser.role !== 'ADMIN') {
-      onToggleUserRole();
-      return;
-    }
-    if (
-      confirm(
-        t(
-          'সকল লেনদেন মুছে নতুন ফ্রেশ ডাটাবেস শুরু করতে চান?',
-          'Reset all transactions to a clean production state?'
-        )
-      )
-    ) {
-      DimKhataStore.resetToCleanProduction();
-      onRefresh();
+    if (onRequestBackup) {
+      onRequestBackup();
     }
   };
 
@@ -213,11 +172,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={onToggleUserRole}
-              title={t('রোল পরিবর্তন / অ্যাডমিন আনলক', 'Switch Role / Unlock Admin')}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition ${
+            <div
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                 currentUser.role === 'ADMIN' ? 'bg-[#0066cc] text-white' : 'bg-[#272729] text-white'
               }`}
             >
@@ -229,17 +185,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-semibold truncate max-w-[85px] sm:max-w-none">
                 {currentUser.full_name ? currentUser.full_name.split(' ')[0] : (currentUser.role === 'ADMIN' ? t('মালিক', 'Admin') : t('স্টাফ', 'Staff'))}
               </span>
-            </button>
+            </div>
 
             {currentUser.role === 'ADMIN' && (
-              <button
-                type="button"
-                onClick={onOpenSecurityModal}
-                title={t('পিন ও ক্লাউড সেটিংস', 'PIN & Cloud Settings')}
-                className="w-7 h-7 rounded-full bg-[#272729] hover:bg-[#3a3a3c] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
-              >
-                <Lock className="w-3.5 h-3.5" />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={onOpenSecurityModal}
+                  title={t('পিন ও ক্লাউড সেটিংস', 'PIN & Cloud Settings')}
+                  className="w-7 h-7 rounded-full bg-[#272729] hover:bg-[#3a3a3c] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadBackup}
+                  title={t('ব্যাকআপ ডাউনলোড (পিন সুরক্ষিত)', 'Download Backup (PIN Protected)')}
+                  className="hidden md:flex w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white items-center justify-center cursor-pointer active:scale-95 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+              </>
             )}
 
             <button
@@ -251,41 +217,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <LogOut className="w-3 h-3 text-[#ff3b30] shrink-0" />
               <span className="hidden sm:inline">{t('লক', 'Lock')}</span>
             </button>
-
-            <div className="hidden md:flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleDownloadBackup}
-                title={t('ব্যাকআপ ডাউনলোড (JSON)', 'Download Backup (JSON)')}
-                className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
-              >
-                <Download className="w-3.5 h-3.5" />
-              </button>
-              {currentUser.role === 'ADMIN' && (
-                <>
-                  <label
-                    title={t('ব্যাকআপ রিস্টোর', 'Restore Backup')}
-                    className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <input
-                      type="file"
-                      accept=".json"
-                      className="hidden"
-                      onChange={handleUploadBackup}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleResetClean}
-                    title={t('রিসেট', 'Reset')}
-                    className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
-                </>
-              )}
-            </div>
           </div>
         </div>
       </div>

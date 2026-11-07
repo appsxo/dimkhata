@@ -1,0 +1,140 @@
+name: Restore Backup to Supabase Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_json:
+        description: 'Paste raw DimKhata backup JSON string here'
+        required: false
+        default: ''
+      backup_file_path:
+        description: 'Or specify relative file path to backup JSON in repo (e.g. backup.json)'
+        required: false
+        default: ''
+      confirmation:
+        description: 'Type "CONFIRM_RESTORE" to authorize database restoration'
+        required: true
+        default: ''
+
+jobs:
+  restore-backup:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || secrets.SUPABASE_URL }}
+      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID || secrets.SUPABASE_PROJECT_ID }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_KEY }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate and Upload Backup to Supabase
+        run: |
+          node - << 'EOF'
+          const fs = require('fs');
+
+          const confirmation = process.env.INPUT_CONFIRMATION || '';
+          if (confirmation !== 'CONFIRM_RESTORE') {
+            console.error('::error::Restoration cancelled! You must type exact confirmation: CONFIRM_RESTORE');
+            process.exit(1);
+          }
+
+          let rawJson = process.env.INPUT_BACKUP_JSON || '';
+          const filePath = process.env.INPUT_BACKUP_FILE_PATH || '';
+
+          if (!rawJson.trim() && filePath.trim()) {
+            if (fs.existsSync(filePath)) {
+              rawJson = fs.readFileSync(filePath, 'utf8');
+            } else {
+              console.error(`::error::Backup file not found at path: ${filePath}`);
+              process.exit(1);
+            }
+          }
+
+          if (!rawJson.trim()) {
+            console.error('::error::No backup JSON provided! Please paste backup_json or provide backup_file_path.');
+            process.exit(1);
+          }
+
+          let parsed;
+          try {
+            parsed = JSON.parse(rawJson);
+          } catch (err) {
+            console.error('::error::Invalid JSON format in backup input!', err.message);
+            process.exit(1);
+          }
+
+          const rawUrl = process.env.VITE_SUPABASE_URL || '';
+          const projectId = process.env.VITE_SUPABASE_PROJECT_ID || '';
+          const supabaseUrl = rawUrl || (projectId ? `https://${projectId}.supabase.co` : '');
+          const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+
+          if (!supabaseUrl || !supabaseKey) {
+            console.error('::error::Missing Supabase credentials in GitHub Repository Secrets!');
+            process.exit(1);
+          }
+
+          async function restore() {
+            console.log(`Connecting to ${supabaseUrl}...`);
+            const now = new Date().toISOString();
+
+            // Format rows for dimkhata_kv_store
+            let rows = [];
+            if (Array.isArray(parsed)) {
+              rows = parsed;
+            } else if (typeof parsed === 'object' && parsed !== null) {
+              for (const [k, v] of Object.entries(parsed)) {
+                rows.push({
+                  key: k,
+                  value: v,
+                  updated_at: now
+                });
+              }
+            }
+
+            if (rows.length === 0) {
+              console.error('::error::No data records found in backup!');
+              process.exit(1);
+            }
+
+            console.log(`Prepared ${rows.length} records for cloud restoration...`);
+
+            // Upsert into Supabase REST endpoint in chunks
+            const chunkSize = 20;
+            for (let i = 0; i < rows.length; i += chunkSize) {
+              const chunk = rows.slice(i, i + chunkSize);
+              const res = await fetch(`${supabaseUrl}/rest/v1/dimkhata_kv_store`, {
+                method: 'POST',
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'resolution=merge-duplicates'
+                },
+                body: JSON.stringify(chunk)
+              });
+
+              if (!res.ok) {
+                const text = await res.text();
+                console.error(`::error::Failed to upsert chunk ${i} - ${i + chunk.length}: HTTP ${res.status}`, text);
+                process.exit(1);
+              }
+            }
+
+            console.log(`✅ Successfully restored all ${rows.length} records to Supabase dimkhata_kv_store!`);
+          }
+
+          restore().catch((err) => {
+            console.error('::error::Unexpected error during backup restoration:', err);
+            process.exit(1);
+          });
+          EOF
+        env:
+          INPUT_BACKUP_JSON: ${{ github.event.inputs.backup_json }}
+          INPUT_BACKUP_FILE_PATH: ${{ github.event.inputs.backup_file_path }}
+          INPUT_CONFIRMATION: ${{ github.event.inputs.confirmation }}

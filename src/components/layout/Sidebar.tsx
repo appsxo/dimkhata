@@ -44,6 +44,7 @@ interface SidebarProps {
   currentUser?: UserProfile;
   onLogout?: () => void;
   onOpenSecurityModal?: () => void;
+  onRequestBackup?: () => void;
 }
 
 interface NavItem {
@@ -80,6 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentUser,
   onLogout,
   onOpenSecurityModal,
+  onRequestBackup,
 }) => {
   const { lang, toggleLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -89,14 +91,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const adminItems = visibleItems.filter((i) => i.section === 'ADMIN');
 
   const handleDownloadBackup = () => {
-    const json = DimKhataStore.exportFullBackupJson();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DimKhata_Backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (onRequestBackup) {
+      onRequestBackup();
+    }
   };
 
   return (
@@ -292,7 +289,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               })}
             </div>
 
-            <div className="pt-2 border-t border-[#e0e0e0] grid grid-cols-4 gap-1.5">
+            <div className={`pt-2 border-t border-[#e0e0e0] grid ${userRole === 'ADMIN' ? 'grid-cols-4' : 'grid-cols-2'} gap-1.5`}>
               <button
                 type="button"
                 onClick={toggleLanguage}
@@ -301,25 +298,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Globe className="w-4 h-4 text-[#0066cc]" />
                 <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenSecurityModal?.();
-                }}
-                className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
-              >
-                <Lock className="w-4 h-4 text-[#0066cc]" />
-                <span>{t('নিরাপত্তা', 'Security')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadBackup}
-                className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
-              >
-                <Download className="w-4 h-4 text-[#0066cc]" />
-                <span>{t('ব্যাকআপ', 'Backup')}</span>
-              </button>
+              {userRole === 'ADMIN' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenSecurityModal?.();
+                    }}
+                    className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
+                  >
+                    <Lock className="w-4 h-4 text-[#0066cc]" />
+                    <span>{t('নিরাপত্তা', 'Security')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleDownloadBackup();
+                    }}
+                    className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
+                  >
+                    <Download className="w-4 h-4 text-[#0066cc]" />
+                    <span>{t('ব্যাকআপ', 'Backup')}</span>
+                  </button>
+                </>
+              )}
               {onLogout && (
                 <button
                   type="button"

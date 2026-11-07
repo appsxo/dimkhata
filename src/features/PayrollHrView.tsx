@@ -54,12 +54,16 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
     if (!empName || !empPhone) return;
 
     const code = DimKhataStore.getNextCode('EMP');
+    const newEmpId = `emp-${Date.now()}`;
+    const cleanName = sanitizeText(empName, 100);
+    const cleanPhone = sanitizeText(empPhone, 30);
+
     DimKhataStore.saveEmployee({
-      id: `emp-${Date.now()}`,
+      id: newEmpId,
       employee_code: code,
-      full_name: sanitizeText(empName, 100),
+      full_name: cleanName,
       designation: sanitizeText(designation, 80),
-      phone: sanitizeText(empPhone, 30),
+      phone: cleanPhone,
       nid_number: sanitizeText(nidNumber, 40),
       kyc_docs: [],
       joining_date: new Date().toISOString().split('T')[0],
@@ -69,7 +73,18 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
       is_active: true,
       created_at: new Date().toISOString(),
     });
-    alert(t(`কর্মচারী নিবন্ধিত হয়েছেন! আইডি: ${code}`, `Employee registered! ID: ${code}`));
+
+    // Also register as a STAFF user profile for secure login
+    DimKhataStore.saveUser({
+      id: `user-${newEmpId}`,
+      employee_code: code,
+      full_name: cleanName,
+      role: 'STAFF',
+      phone: cleanPhone,
+      is_active: true,
+    });
+
+    alert(t(`কর্মচারী ও স্টাফ আইডি নিবন্ধিত হয়েছেন! আইডি: ${code}`, `Staff employee & login identity registered! ID: ${code}`));
     setIsAddEmpOpen(false);
     setEmpName('');
     setEmpPhone('');

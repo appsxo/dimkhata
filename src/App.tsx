@@ -26,6 +26,7 @@ import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTabId } from './components/layout/Sidebar';
 import { PrintInvoiceModal } from './components/modals/PrintInvoiceModal';
 import { SecurityPinModal } from './components/modals/SecurityPinModal';
+import { AdminBackupModal } from './components/modals/AdminBackupModal';
 
 import { DashboardView } from './features/DashboardView';
 import { DailyPricingView } from './features/DailyPricingView';
@@ -74,6 +75,7 @@ export const App: React.FC = () => {
 
   const [printInvoice, setPrintInvoice] = useState<SalesInvoice | null>(null);
   const [securityModalMode, setSecurityModalMode] = useState<'UNLOCK_ADMIN' | 'MANAGE_SECURITY' | null>(null);
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
 
   const reloadData = () => {
     setCompany(DimKhataStore.getCompany());
@@ -128,42 +130,7 @@ export const App: React.FC = () => {
     setStocks(DimKhataStore.getStocks(bId));
   };
 
-  const activateAdminRole = (adminUser?: UserProfile) => {
-    const userToSet = adminUser || DimKhataStore.getUsers().find((u) => u.role === 'ADMIN') || {
-      id: 'user-sharif',
-      full_name: 'শরিফ (মালিক)',
-      role: 'ADMIN',
-      phone: '01711-000001',
-      is_active: true,
-    };
-    DimKhataStore.setActiveUser(userToSet);
-    setCurrentUser(userToSet);
-  };
 
-  const handleToggleUserRole = () => {
-    if (currentUser.role === 'ADMIN') {
-      const staffUser = DimKhataStore.getUsers().find((u) => u.role === 'STAFF') || {
-        id: 'user-staff',
-        employee_code: 'SE-EMP-001',
-        full_name: 'স্টাফ / ক্যাশিয়ার',
-        role: 'STAFF',
-        phone: '',
-        is_active: true,
-      };
-      DimKhataStore.setActiveUser(staffUser);
-      setCurrentUser(staffUser);
-      if (
-        currentTab === 'profit-settlement' ||
-        currentTab === 'audit-branches' ||
-        currentTab === 'cashbook' ||
-        currentTab === 'payroll'
-      ) {
-        setCurrentTab('dashboard');
-      }
-    } else {
-      setSecurityModalMode('UNLOCK_ADMIN');
-    }
-  };
 
   const handleLogout = () => {
     DimKhataStore.logout();
@@ -205,10 +172,8 @@ export const App: React.FC = () => {
         selectedBranchId={selectedBranchId}
         onSelectBranch={handleSelectBranch}
         currentUser={currentUser}
-        onToggleUserRole={handleToggleUserRole}
-        onOpenSecurityModal={() =>
-          setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
-        }
+        onRequestBackup={() => setIsBackupModalOpen(true)}
+        onOpenSecurityModal={() => setSecurityModalMode('MANAGE_SECURITY')}
         onLogout={handleLogout}
         onRefresh={reloadData}
         currentTab={currentTab}
@@ -222,9 +187,8 @@ export const App: React.FC = () => {
           userRole={currentUser.role}
           currentUser={currentUser}
           onLogout={handleLogout}
-          onOpenSecurityModal={() =>
-            setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
-          }
+          onRequestBackup={() => setIsBackupModalOpen(true)}
+          onOpenSecurityModal={() => setSecurityModalMode('MANAGE_SECURITY')}
         />
 
         <main className="flex-1 p-3 sm:p-5 pb-24 md:pb-8 overflow-y-auto max-w-7xl w-full mx-auto min-w-0">
@@ -363,9 +327,13 @@ export const App: React.FC = () => {
         <SecurityPinModal
           mode={securityModalMode}
           onClose={() => setSecurityModalMode(null)}
-          onSuccessUnlockAdmin={activateAdminRole}
         />
       )}
+
+      <AdminBackupModal
+        isOpen={isBackupModalOpen}
+        onClose={() => setIsBackupModalOpen(false)}
+      />
     </div>
   );
 };

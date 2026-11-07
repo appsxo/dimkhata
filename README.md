@@ -97,25 +97,21 @@
 
 You can connect Supabase in **either of two easy ways**:
 
-#### Option A: Instant In-App Setup Gate (Zero-Build — Recommended for Quick Start)
-1. Open your live application at **[https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)**.
-2. Because DimKhata strictly requires a live Supabase connection to prevent data loss, the **Supabase Setup Gate** will appear automatically.
-3. Paste your Supabase **Publishable Key** (or `anon` key) and click **Connect & Activate Cloud**.
-4. The system immediately connects, verifies `dimkhata_kv_store`, and unlocks the Auth Gate!
+### Step 2: Configure Supabase via GitHub Actions Secrets
 
-#### Option B: GitHub Actions Secrets (For Fully Automated CI/CD Builds)
-1. Open your repository's **Actions Secrets** settings:  
-   [https://github.com/appsxo/DimKhata/settings/secrets/actions](https://github.com/appsxo/DimKhata/settings/secrets/actions)
-2. Click **New repository secret** and add:
+Open your repository's **Actions Secrets** settings:  
+👉 [https://github.com/appsxo/DimKhata/settings/secrets/actions](https://github.com/appsxo/DimKhata/settings/secrets/actions)
+
+Click **New repository secret** and add:
 
 | Secret Name | Secret Value |
 | :--- | :--- |
-| `VITE_SUPABASE_URL` | `https://<your-project-id>.supabase.co` |
+| `VITE_SUPABASE_URL` | `https://<your-project-id>.supabase.co` *(or `VITE_SUPABASE_PROJECT_ID`)* |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase Publishable Key (or `VITE_SUPABASE_ANON_KEY`) |
 
 ---
 
-### Step 3: Enable GitHub Pages (1 Minute)
+### Step 3: Enable GitHub Pages & Deploy (1 Minute)
 1. Go to **Settings → Pages**:  
    [https://github.com/appsxo/DimKhata/settings/pages](https://github.com/appsxo/DimKhata/settings/pages)
 2. Under **Build and deployment → Source**, select **GitHub Actions**.
@@ -125,7 +121,24 @@ You can connect Supabase in **either of two easy ways**:
 
 ---
 
-## 3. Local Development
+## 3. Cloud Database Management Actions
+
+To guarantee absolute data safety and prevent accidental deletion or data manipulation in production, database reset and backup restoration are completely removed from the frontend UI and executed **only** through manual, confirmation-guarded GitHub Actions:
+
+### 1. Full Database Reset (`full-reset.yml`)
+- **Location:** GitHub Actions → **Full Database Reset (DimKhata KV Store)**
+- **Safety Gate:** Requires typing the exact confirmation phrase: `CONFIRM_FULL_RESET`.
+- **Action:** Securely connects to Supabase via repository secrets, wipes `dimkhata_kv_store`, and prepares the cloud for fresh production initialization.
+
+### 2. Restore Backup (`backup-upload.yml`)
+- **Location:** GitHub Actions → **Restore Backup to Supabase Cloud**
+- **Safety Gate:** Requires typing the exact confirmation phrase: `CONFIRM_RESTORE`.
+- **Inputs:** Paste raw DimKhata backup JSON string or point to a backup file in the repository.
+- **Action:** Restores and upserts all tables and entities directly into Supabase.
+
+---
+
+## 4. Local Development
 
 ```bash
 # 1. Install dependencies
@@ -146,31 +159,29 @@ npm run build
 
 ---
 
-## 4. Project Structure
+## 5. Project Structure
 
 ```text
 DimKhata/
 ├── .github/workflows/
 │   ├── deploy-pages.yml          # Automated GitHub Pages build & deployment
-│   └── nightly-backup.yml        # Daily Supabase keep-alive ping
+│   ├── nightly-backup.yml        # Daily Supabase keep-alive ping
+│   ├── full-reset.yml            # Confirmation-guarded cloud database wipe
+│   └── backup-upload.yml         # Confirmation-guarded cloud backup restoration
 ├── supabase/
 │   └── schema.sql                # Supabase KV Store table, RLS & Realtime setup
 ├── src/
 │   ├── components/
-│   │   ├── layout/               # Navbar (Global 44px + Sub-nav) & Sidebar (Desktop + Mobile Bar)
-│   │   ├── modals/               # PrintInvoiceModal, KycUploadModal, SecurityPinModal
-│   │   └── ui/                   # Reusable Apple Design System UI primitives (DESIGN.md)
-│   ├── features/                 # 10 core ERP feature views (Dashboard, POS, Sourcing, P&L, etc.)
+│   │   ├── layout/               # Navbar & Sidebar (Logout-only, no in-UI account switch)
+│   │   ├── modals/               # AdminBackupModal, SecurityPinModal, PrintInvoiceModal
+│   │   └── ui/                   # Apple Design System UI primitives
+│   ├── features/                 # 10 core ERP feature views + AuthGateView
 │   ├── lib/
-│   │   ├── storage-store.ts      # Central store, WAC engine & Supabase Realtime sync
-│   │   ├── egg-units.ts          # Crate/Sho/Hali/Pcs converters & currency formatters
-│   │   ├── i18n.ts               # Bilingual state engine (Bangla default + English toggle)
-│   │   ├── security.ts           # SHA-256 PIN hashing & input sanitization
-│   │   ├── image-compressor.ts   # Native HTML5 Canvas WebP compressor (<60 KB)
-│   │   ├── whatsapp-share.ts     # 1-Click WhatsApp invoice & due reminder generator
+│   │   ├── storage-store.ts      # Central store & Supabase Realtime sync engine
+│   │   ├── egg-units.ts          # Egg unit converters (Crate/Sho/Hali/Pcs)
+│   │   ├── security.ts           # SHA-256 PIN hashing & access guard
 │   │   └── supabase.ts           # Supabase client initializer
-│   ├── types/index.ts            # TypeScript data models
-│   ├── App.tsx                   # Root layout, routing & role access guard
-│   └── index.css                 # Apple Design System tokens & print media rules
+│   ├── App.tsx                   # Strict auth gate & role guard
+│   └── index.css                 # Apple Design System tokens & print styles
 └── DESIGN.md                     # Design system specification
 ```
