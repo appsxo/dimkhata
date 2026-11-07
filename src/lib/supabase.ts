@@ -6,7 +6,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export const DEFAULT_SUPABASE_PROJECT_ID = 'knxnmihaflwcavbyivnc';
+export const DEFAULT_SUPABASE_PROJECT_ID = 'npukembiywekdbgslipn';
 export const DEFAULT_SUPABASE_URL = `https://${DEFAULT_SUPABASE_PROJECT_ID}.supabase.co`;
 export const SUPABASE_CONFIG_STORAGE_KEY = 'dimkhata_supabase_config';
 

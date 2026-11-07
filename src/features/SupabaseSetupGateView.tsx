@@ -337,8 +337,8 @@ export const SupabaseSetupGateView: React.FC<SupabaseSetupGateViewProps> = ({
                 </div>
                 <p>
                   {t(
-                    'প্রজেক্ট আইডি: knxnmihaflwcavbyivnc। Supabase Settings → API Keys থেকে আপনার Publishable (বা Anon) কী কপি করে এখানে পেস্ট করুন।',
-                    'Project ID: knxnmihaflwcavbyivnc. Copy your Publishable or Anon key from Supabase Settings → API Keys.'
+                    `প্রজেক্ট আইডি: ${DEFAULT_SUPABASE_PROJECT_ID}। Supabase Settings → API Keys থেকে আপনার Publishable (বা Anon) কী কপি করে এখানে পেস্ট করুন।`,
+                    `Project ID: ${DEFAULT_SUPABASE_PROJECT_ID}. Copy your Publishable or Anon key from Supabase Settings → API Keys.`
                   )}
                 </p>
               </div>
