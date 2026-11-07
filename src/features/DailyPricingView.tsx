@@ -143,14 +143,14 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
                   <label className="block text-[12px] font-semibold text-[#1d1d1f]">
                     {t('কেনা দর (খামার)', 'Buying Rate (Farm)')}
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-sm text-[#7a7a7a]">৳</span>
+                  <div className="relative flex items-center">
+                    <span className="input-prefix-symbol">৳</span>
                     <input
                       type="number"
                       step="0.05"
                       value={current.buying}
                       onChange={(e) => handleRateChange(cat.id, 'buying', e.target.value)}
-                      className="input-apple w-full pl-7 text-[15px] font-semibold"
+                      className="input-apple input-has-prefix w-full text-[15px] font-semibold"
                     />
                   </div>
                   <div className="flex justify-between text-[11px] text-[#7a7a7a]">
@@ -163,14 +163,14 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
                   <label className="block text-[12px] font-semibold text-[#0066cc]">
                     {t('পাইকারি বিক্রয় দর', 'Wholesale Rate')}
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-sm text-[#0066cc]">৳</span>
+                  <div className="relative flex items-center">
+                    <span className="input-prefix-symbol text-[#0066cc]">৳</span>
                     <input
                       type="number"
                       step="0.05"
                       value={current.wholesale}
                       onChange={(e) => handleRateChange(cat.id, 'wholesale', e.target.value)}
-                      className="input-apple w-full pl-7 text-[15px] font-semibold"
+                      className="input-apple input-has-prefix w-full text-[15px] font-semibold"
                     />
                   </div>
                   <div className="flex justify-between text-[11px] text-[#4e4e4e]">
@@ -183,14 +183,14 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
                   <label className="block text-[12px] font-semibold text-[#1d1d1f]">
                     {t('খুচরা বিক্রয় দর', 'Retail Rate')}
                   </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-sm text-[#7a7a7a]">৳</span>
+                  <div className="relative flex items-center">
+                    <span className="input-prefix-symbol">৳</span>
                     <input
                       type="number"
                       step="0.05"
                       value={current.retail}
                       onChange={(e) => handleRateChange(cat.id, 'retail', e.target.value)}
-                      className="input-apple w-full pl-7 text-[15px] font-semibold"
+                      className="input-apple input-has-prefix w-full text-[15px] font-semibold"
                     />
                   </div>
                   <div className="flex justify-between text-[11px] text-[#7a7a7a]">

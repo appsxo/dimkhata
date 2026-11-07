@@ -334,13 +334,16 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('মাসিক মূল বেতন (৳)', 'Monthly Salary (৳)')}</label>
-              <input
-                type="number"
-                required
-                value={baseSalary}
-                onChange={(e) => setBaseSalary(Number(e.target.value) || 0)}
-                className="input-apple w-full text-[14px] font-semibold"
-              />
+              <div className="relative flex items-center">
+                <span className="input-prefix-symbol">৳</span>
+                <input
+                  type="number"
+                  required
+                  value={baseSalary}
+                  onChange={(e) => setBaseSalary(Number(e.target.value) || 0)}
+                  className="input-apple input-has-prefix w-full text-[14px] font-semibold"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('জাতীয় পরিচয়পত্র (NID)', 'NID Number')}</label>
@@ -381,13 +384,16 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('অগ্রিম টাকার পরিমাণ (৳)', 'Advance Amount (৳)')}</label>
-            <input
-              type="number"
-              required
-              value={advAmount}
-              onChange={(e) => setAdvAmount(Number(e.target.value) || 0)}
-              className="input-apple w-full text-[15px] font-semibold"
-            />
+            <div className="relative flex items-center">
+              <span className="input-prefix-symbol">৳</span>
+              <input
+                type="number"
+                required
+                value={advAmount}
+                onChange={(e) => setAdvAmount(Number(e.target.value) || 0)}
+                className="input-apple input-has-prefix w-full text-[15px] font-semibold"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('উৎস একাউন্ট', 'Account')}</label>
@@ -445,12 +451,15 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
 
             <div>
               <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('বোনাস / ভাতা', 'Bonus')}</label>
-              <input
-                type="number"
-                value={bonus}
-                onChange={(e) => setBonus(Number(e.target.value) || 0)}
-                className="input-apple w-full text-[14px] font-semibold"
-              />
+              <div className="relative flex items-center">
+                <span className="input-prefix-symbol">৳</span>
+                <input
+                  type="number"
+                  value={bonus}
+                  onChange={(e) => setBonus(Number(e.target.value) || 0)}
+                  className="input-apple input-has-prefix w-full text-[14px] font-semibold"
+                />
+              </div>
             </div>
 
             <div>

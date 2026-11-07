@@ -422,13 +422,16 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
           </div>
           {activeTab === 'CUSTOMERS' && (
             <div>
-              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('সর্বোচ্চ বাকির সীমা (৳)', 'Credit Limit (৳)')}</label>
-              <input
-                type="number"
-                value={creditLimit}
-                onChange={(e) => setCreditLimit(Number(e.target.value) || 0)}
-                className="input-apple w-full text-[14px] font-semibold"
-              />
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('সর্বোচ্চ বাকির সীমা', 'Credit Limit')}</label>
+              <div className="relative flex items-center">
+                <span className="input-prefix-symbol">৳</span>
+                <input
+                  type="number"
+                  value={creditLimit}
+                  onChange={(e) => setCreditLimit(Number(e.target.value) || 0)}
+                  className="input-apple input-has-prefix w-full text-[14px] font-semibold"
+                />
+              </div>
             </div>
           )}
           <div>
@@ -462,13 +465,16 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
         <form onSubmit={handleSettleDue} className="space-y-3.5">
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('জমা টাকার পরিমাণ (৳)', 'Collection Amount (৳)')}</label>
-            <input
-              type="number"
-              required
-              value={collectAmount}
-              onChange={(e) => setCollectAmount(Number(e.target.value) || 0)}
-              className="input-apple w-full text-[15px] font-semibold"
-            />
+            <div className="relative flex items-center">
+              <span className="input-prefix-symbol">৳</span>
+              <input
+                type="number"
+                required
+                value={collectAmount}
+                onChange={(e) => setCollectAmount(Number(e.target.value) || 0)}
+                className="input-apple input-has-prefix w-full text-[15px] font-semibold"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('জমা একাউন্ট', 'Deposit Account')}</label>
@@ -499,13 +505,16 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
         <form onSubmit={handlePaySupplier} className="space-y-3.5">
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('পরিশোধ টাকার পরিমাণ (৳)', 'Payment Amount (৳)')}</label>
-            <input
-              type="number"
-              required
-              value={paySupAmount}
-              onChange={(e) => setPaySupAmount(Number(e.target.value) || 0)}
-              className="input-apple w-full text-[15px] font-semibold"
-            />
+            <div className="relative flex items-center">
+              <span className="input-prefix-symbol">৳</span>
+              <input
+                type="number"
+                required
+                value={paySupAmount}
+                onChange={(e) => setPaySupAmount(Number(e.target.value) || 0)}
+                className="input-apple input-has-prefix w-full text-[15px] font-semibold"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('পেমেন্ট একাউন্ট', 'Payment Account')}</label>

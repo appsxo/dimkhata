@@ -285,27 +285,27 @@ export const SourcingPurchasesView: React.FC<SourcingPurchasesViewProps> = ({
                       </select>
                     </div>
 
-                    <div className="sm:col-span-3 relative">
+                    <div className="sm:col-span-3 relative flex items-center">
                       <input
                         type="number"
                         placeholder={t('পরিমাণ (পিস)', 'Qty (Pcs)')}
                         value={item.qtyPcs}
                         onChange={(e) => handleItemChange(idx, 'qtyPcs', e.target.value)}
-                        className="input-apple w-full pr-9 text-[14px] font-semibold"
+                        className="input-apple input-has-suffix w-full text-[14px] font-semibold"
                       />
-                      <span className="absolute right-2.5 top-3 text-[11px] text-[#7a7a7a]">{t('পিস', 'pcs')}</span>
+                      <span className="input-suffix-symbol">{t('পিস', 'pcs')}</span>
                     </div>
 
-                    <div className="sm:col-span-3 relative">
+                    <div className="sm:col-span-3 relative flex items-center">
+                      <span className="input-prefix-symbol">৳</span>
                       <input
                         type="number"
                         step="0.05"
                         placeholder={t('দর (পিস)', 'Rate/Pc')}
                         value={item.rawRate}
                         onChange={(e) => handleItemChange(idx, 'rawRate', e.target.value)}
-                        className="input-apple w-full pl-6 text-[14px] font-semibold"
+                        className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                       />
-                      <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
                     </div>
 
                     <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
@@ -330,39 +330,39 @@ export const SourcingPurchasesView: React.FC<SourcingPurchasesViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-semibold text-[#4e4e4e] mb-1">{t('ট্রাক / পিকআপ ভাড়া', 'Truck Fare')}</label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
+                  <div className="relative flex items-center">
+                    <span className="input-prefix-symbol">৳</span>
                     <input
                       type="number"
                       value={truckFare}
                       onChange={(e) => setTruckFare(Number(e.target.value) || 0)}
-                      className="input-apple w-full pl-6 text-[14px] font-semibold"
+                      className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-[#4e4e4e] mb-1">{t('লোড-আনলোড লেবার', 'Labor Cost')}</label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
+                  <div className="relative flex items-center">
+                    <span className="input-prefix-symbol">৳</span>
                     <input
                       type="number"
                       value={laborCost}
                       onChange={(e) => setLaborCost(Number(e.target.value) || 0)}
-                      className="input-apple w-full pl-6 text-[14px] font-semibold"
+                      className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-[#4e4e4e] mb-1">{t('টোল / অন্যান্য', 'Toll / Other')}</label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
+                  <div className="relative flex items-center">
+                    <span className="input-prefix-symbol">৳</span>
                     <input
                       type="number"
                       value={otherCost}
                       onChange={(e) => setOtherCost(Number(e.target.value) || 0)}
-                      className="input-apple w-full pl-6 text-[14px] font-semibold"
+                      className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                     />
                   </div>
                 </div>
@@ -381,13 +381,13 @@ export const SourcingPurchasesView: React.FC<SourcingPurchasesViewProps> = ({
                     {t('পূর্ণ পরিশোধ', 'Full Paid')}
                   </button>
                 </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-sm text-[#7a7a7a]">৳</span>
+                <div className="relative flex items-center">
+                  <span className="input-prefix-symbol">৳</span>
                   <input
                     type="number"
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
-                    className="input-apple w-full pl-7 text-[15px] font-semibold"
+                    className="input-apple input-has-prefix w-full text-[15px] font-semibold"
                   />
                 </div>
               </div>

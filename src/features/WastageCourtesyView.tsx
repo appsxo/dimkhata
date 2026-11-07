@@ -242,12 +242,15 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   {t('পরিমাণ (পিস)', 'Qty (Pcs)')} | {t('মজুদ:', 'Stock:')} {toBengaliNumber(currentStock?.qty_pcs || 0)}
                 </label>
-                <input
-                  type="number"
-                  value={qtyPcs}
-                  onChange={(e) => setQtyPcs(Number(e.target.value) || 0)}
-                  className="input-apple w-full text-[15px] font-semibold"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="number"
+                    value={qtyPcs}
+                    onChange={(e) => setQtyPcs(Number(e.target.value) || 0)}
+                    className="input-apple input-has-suffix w-full text-[15px] font-semibold"
+                  />
+                  <span className="input-suffix-symbol">{t('পিস', 'pcs')}</span>
+                </div>
                 <div className="text-[11px] text-[#7a7a7a] mt-1">
                   {toBengaliNumber(Math.floor(qtyPcs / crateSize))} {t('খাঁচি', 'crates')} {toBengaliNumber(qtyPcs % crateSize)} {t('পিস', 'pcs')}
                 </div>

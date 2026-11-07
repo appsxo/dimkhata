@@ -321,13 +321,16 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
               {t('টাকার পরিমাণ (৳)', 'Transfer Amount (৳)')}
             </label>
-            <input
-              type="number"
-              required
-              value={transferAmount}
-              onChange={(e) => setTransferAmount(Number(e.target.value) || 0)}
-              className="input-apple w-full text-[15px] font-semibold"
-            />
+            <div className="relative flex items-center">
+              <span className="input-prefix-symbol">৳</span>
+              <input
+                type="number"
+                required
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(Number(e.target.value) || 0)}
+                className="input-apple input-has-prefix w-full text-[15px] font-semibold"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -400,12 +403,15 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
               {t('প্রারম্ভিক ব্যালেন্স (৳)', 'Opening Balance (৳)')}
             </label>
-            <input
-              type="number"
-              value={accInitialBalance}
-              onChange={(e) => setAccInitialBalance(Number(e.target.value) || 0)}
-              className="input-apple w-full text-[15px] font-semibold"
-            />
+            <div className="relative flex items-center">
+              <span className="input-prefix-symbol">৳</span>
+              <input
+                type="number"
+                value={accInitialBalance}
+                onChange={(e) => setAccInitialBalance(Number(e.target.value) || 0)}
+                className="input-apple input-has-prefix w-full text-[15px] font-semibold"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

@@ -447,7 +447,8 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                           </select>
                         </div>
 
-                        <div className="sm:col-span-2 relative">
+                        <div className="sm:col-span-2 relative flex items-center">
+                          <span className="input-prefix-symbol">৳</span>
                           <input
                             type="number"
                             step="0.05"
@@ -460,9 +461,8 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                                 return copy;
                               });
                             }}
-                            className="input-apple w-full pl-6 text-[14px] font-semibold"
+                            className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                           />
-                          <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
                         </div>
 
                         <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
@@ -552,13 +552,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#e0e0e0]">
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('ছাড় / ডিসকাউন্ট', 'Discount')}</label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
+                <div className="relative flex items-center">
+                  <span className="input-prefix-symbol">৳</span>
                   <input
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                    className="input-apple w-full pl-6 text-[14px] font-semibold"
+                    className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                   />
                 </div>
               </div>
@@ -577,13 +577,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                     {t('পূর্ণ বিল জমা', 'Full Paid')}
                   </button>
                 </div>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
+                <div className="relative flex items-center">
+                  <span className="input-prefix-symbol">৳</span>
                   <input
                     type="number"
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
-                    className="input-apple w-full pl-6 text-[14px] font-semibold"
+                    className="input-apple input-has-prefix w-full text-[14px] font-semibold"
                   />
                 </div>
               </div>

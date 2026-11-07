@@ -248,13 +248,16 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('টাকার পরিমাণ (৳)', 'Amount (৳)')}</label>
-            <input
-              type="number"
-              required
-              value={drawAmount}
-              onChange={(e) => setDrawAmount(Number(e.target.value) || 0)}
-              className="input-apple w-full text-[15px] font-semibold"
-            />
+            <div className="relative flex items-center">
+              <span className="input-prefix-symbol">৳</span>
+              <input
+                type="number"
+                required
+                value={drawAmount}
+                onChange={(e) => setDrawAmount(Number(e.target.value) || 0)}
+                className="input-apple input-has-prefix w-full text-[15px] font-semibold"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('উৎস একাউন্ট', 'Account')}</label>

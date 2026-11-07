@@ -248,6 +248,59 @@
   border-color: var(--color-primary-focus);
 }
 
+/* Remove default number spin buttons across browsers */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Guaranteed clearance for prefix & suffix in inputs */
+.input-apple.input-has-prefix,
+.input-has-prefix {
+  padding-left: 38px !important;
+}
+
+.input-apple.input-has-suffix,
+.input-has-suffix {
+  padding-right: 44px !important;
+}
+
+.input-prefix-symbol {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink-muted-48);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-suffix-symbol {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink-muted-48);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .search-apple {
   background-color: var(--color-canvas);
   color: var(--color-ink);
