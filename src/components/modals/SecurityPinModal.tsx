@@ -124,25 +124,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
             </div>
           )}
 
-          <div className="grid grid-cols-4 gap-2 pt-1">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((digit) => (
-              <button
-                key={digit}
-                type="button"
-                onClick={() => setPinInput((prev) => (prev.length < 8 ? prev + digit : prev))}
-                className="h-11 rounded-[10px] bg-[#f5f5f7] hover:bg-[#e8e8ed] active:scale-95 text-[16px] font-semibold text-[#1d1d1f] transition-transform border border-[#e0e0e0]"
-              >
-                {digit}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setPinInput('')}
-              className="col-span-2 h-11 rounded-[10px] bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[13px] font-semibold text-[#bf0013] border border-[#e0e0e0]"
-            >
-              {t('মুছুন (Clear)', 'Clear')}
-            </button>
-          </div>
+
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e0e0e0]">
             <button type="button" onClick={onClose} className="btn-outline text-[13px] px-4">

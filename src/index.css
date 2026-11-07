@@ -50,10 +50,17 @@
   }
 }
 
+header.sticky {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 40 !important;
+}
+
 .apple-global-nav {
   background-color: var(--color-surface-black);
   color: var(--color-on-dark);
-  height: 44px;
+  min-height: 44px;
   font-size: 12px;
   font-weight: 400;
   line-height: 1;

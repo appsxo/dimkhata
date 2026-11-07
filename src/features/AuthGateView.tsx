@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Delete,
   AlertCircle,
   CheckCircle2,
   KeyRound,
@@ -37,19 +36,6 @@ export const AuthGateView: React.FC<AuthGateViewProps> = ({ onLoginSuccess }) =>
       setSelectedUserId(list[0].id);
     }
   }, []);
-
-  const handleKeypadPress = (val: string) => {
-    setErrorMsg('');
-    if (val === 'CLEAR') {
-      setPin('');
-    } else if (val === 'BACKSPACE') {
-      setPin((prev) => prev.slice(0, -1));
-    } else {
-      if (pin.length < 8) {
-        setPin((prev) => prev + val);
-      }
-    }
-  };
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -226,42 +212,7 @@ export const AuthGateView: React.FC<AuthGateViewProps> = ({ onLoginSuccess }) =>
               </div>
             )}
 
-            {/* On-Screen Numeric Keypad for Mobile Touch Ease */}
-            <div className="pt-1">
-              <div className="grid grid-cols-3 gap-2">
-                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-                  <button
-                    key={digit}
-                    type="button"
-                    onClick={() => handleKeypadPress(digit)}
-                    className="h-12 rounded-xl bg-[#f5f5f7] hover:bg-[#ebebee] active:bg-[#e0e0e3] text-[#1d1d1f] text-lg font-semibold transition cursor-pointer active:scale-95 flex items-center justify-center font-mono"
-                  >
-                    {digit}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => handleKeypadPress('CLEAR')}
-                  className="h-12 rounded-xl bg-[#f5f5f7] hover:bg-[#ebebee] active:bg-[#e0e0e3] text-[#ff3b30] text-sm font-semibold transition cursor-pointer active:scale-95 flex items-center justify-center"
-                >
-                  {t('মুছুন', 'Clear')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeypadPress('0')}
-                  className="h-12 rounded-xl bg-[#f5f5f7] hover:bg-[#ebebee] active:bg-[#e0e0e3] text-[#1d1d1f] text-lg font-semibold transition cursor-pointer active:scale-95 flex items-center justify-center font-mono"
-                >
-                  0
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleKeypadPress('BACKSPACE')}
-                  className="h-12 rounded-xl bg-[#f5f5f7] hover:bg-[#ebebee] active:bg-[#e0e0e3] text-[#7a7a7a] hover:text-[#1d1d1f] text-sm font-semibold transition cursor-pointer active:scale-95 flex items-center justify-center"
-                >
-                  <Delete className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+
 
             {/* Submit Action Button */}
             <button

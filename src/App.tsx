@@ -184,7 +184,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans overflow-x-clip">
       <Navbar
         branches={branches}
         selectedBranchId={selectedBranchId}
@@ -209,7 +209,7 @@ export const App: React.FC = () => {
           onOpenSecurityModal={() => setSecurityModalMode('MANAGE_SECURITY')}
         />
 
-        <main className="flex-1 p-3 sm:p-5 pb-24 md:pb-8 overflow-y-auto max-w-7xl w-full mx-auto min-w-0">
+        <main className="flex-1 p-3 sm:p-5 pb-24 md:pb-8 max-w-7xl w-full mx-auto min-w-0">
           {currentTab === 'dashboard' && (
             <DashboardView
               categories={categories}

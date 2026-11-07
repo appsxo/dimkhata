@@ -109,40 +109,7 @@ export const AdminBackupModal: React.FC<AdminBackupModalProps> = ({ isOpen, onCl
           </div>
         )}
 
-        {/* Numeric Keypad for Mobile & Tablet Touch Ease */}
-        <div className="grid grid-cols-3 gap-1.5 pt-1">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-            <button
-              key={digit}
-              type="button"
-              onClick={() => setPinInput((prev) => (prev.length < 8 ? prev + digit : prev))}
-              className="h-10 rounded-xl bg-[#f5f5f7] hover:bg-[#e8e8ed] active:scale-95 text-[15px] font-semibold text-[#1d1d1f] transition border border-[#e0e0e0] font-mono"
-            >
-              {digit}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setPinInput('')}
-            className="h-10 rounded-xl bg-[#f5f5f7] hover:bg-[#e8e8ed] active:scale-95 text-[12px] font-semibold text-[#ff3b30] transition border border-[#e0e0e0]"
-          >
-            {t('মুছুন', 'Clear')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPinInput((prev) => (prev.length < 8 ? prev + '0' : prev))}
-            className="h-10 rounded-xl bg-[#f5f5f7] hover:bg-[#e8e8ed] active:scale-95 text-[15px] font-semibold text-[#1d1d1f] transition border border-[#e0e0e0] font-mono"
-          >
-            0
-          </button>
-          <button
-            type="button"
-            onClick={() => setPinInput((prev) => prev.slice(0, -1))}
-            className="h-10 rounded-xl bg-[#f5f5f7] hover:bg-[#e8e8ed] active:scale-95 text-[12px] font-semibold text-[#7a7a7a] transition border border-[#e0e0e0]"
-          >
-            ⌫
-          </button>
-        </div>
+
 
         <div className="flex justify-end gap-2 pt-2 border-t border-[#e0e0e0]">
           <button type="button" onClick={onClose} className="btn-outline text-[13px] px-4">

@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 no-print select-none">
+    <header className="sticky top-0 z-40 w-full no-print select-none">
       <div className="apple-global-nav px-3 sm:px-6 flex items-center justify-between">
         <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-2">
           <button
