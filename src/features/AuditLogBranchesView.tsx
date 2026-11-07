@@ -101,7 +101,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
                 className="btn-primary text-[13px] px-4"
               >
                 <Plus className="w-4 h-4" />
-                <span>{t('+ নতুন শাখা', '+ Add Branch')}</span>
+                <span>{t('নতুন শাখা', 'Add Branch')}</span>
               </button>
             )}
           </div>

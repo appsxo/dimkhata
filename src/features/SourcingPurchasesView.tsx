@@ -117,7 +117,7 @@ export const SourcingPurchasesView: React.FC<SourcingPurchasesViewProps> = ({
     if (supplierId === 'DIRECT_FARM' && dueAmount > 0) {
       alert(
         t(
-          'মহাজন খাতায় বাকি রাখতে হলে "+ নতুন মহাজন" বাটনে ক্লিক করে মহাজন নির্বাচন করুন অথবা "পূর্ণ পরিশোধ" করুন।',
+          'মহাজন খাতায় বাকি রাখতে হলে "নতুন মহাজন" বাটনে ক্লিক করে মহাজন নির্বাচন করুন অথবা "পূর্ণ পরিশোধ" করুন।',
           'To record supplier credit/payable, please select or add a supplier, or tap "Full Paid".'
         )
       );
@@ -186,7 +186,7 @@ export const SourcingPurchasesView: React.FC<SourcingPurchasesViewProps> = ({
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0066cc] hover:underline"
                   >
                     <UserPlus className="w-3 h-3" />
-                    <span>{t('+ নতুন মহাজন', '+ New Supplier')}</span>
+                    <span>{t('নতুন মহাজন', 'Add Supplier')}</span>
                   </button>
                 </div>
                 <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="input-apple w-full text-[14px]">
@@ -266,7 +266,7 @@ export const SourcingPurchasesView: React.FC<SourcingPurchasesViewProps> = ({
                 </label>
                 <button type="button" onClick={handleAddItem} className="btn-outline text-[12px] py-1 px-2.5 min-h-[34px]">
                   <Plus className="w-3.5 h-3.5" />
-                  <span>{t('+ আইটেম যোগ', '+ Add Item')}</span>
+                  <span>{t('আইটেম যোগ', 'Add Item')}</span>
                 </button>
               </div>
 

@@ -90,7 +90,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="btn-primary col-span-2 sm:col-span-1 py-2.5 px-4 text-[13.5px]"
           >
             <PlusCircle className="w-4 h-4 shrink-0" />
-            <span>{t('+ নতুন বিক্রয় মেমো', '+ New Sales Memo')}</span>
+            <span>{t('নতুন বিক্রয় মেমো', 'New Sales Memo')}</span>
           </button>
           <button
             type="button"

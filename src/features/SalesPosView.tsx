@@ -192,7 +192,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
     if (customerId === 'WALK_IN' && dueAmount > 0) {
       alert(
         t(
-          'নগদ খুচরা কাস্টমারের ক্ষেত্রে বাকি রাখা যাবে না। "পূর্ণ বিল জমা" দিন অথবা "+ নতুন কাস্টমার" যোগ করুন।',
+          'নগদ খুচরা কাস্টমারের ক্ষেত্রে বাকি রাখা যাবে না। "পূর্ণ বিল জমা" দিন অথবা "নতুন কাস্টমার" যোগ করুন।',
           'Walk-in cash sales cannot have a due balance. Tap "Full Paid" or add a registered customer.'
         )
       );
@@ -302,7 +302,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0066cc] hover:underline"
                   >
                     <UserPlus className="w-3 h-3" />
-                    <span>{t('+ নতুন কাস্টমার', '+ New Customer')}</span>
+                    <span>{t('নতুন কাস্টমার', 'Add Customer')}</span>
                   </button>
                 </div>
                 <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="input-apple w-full text-[14px]">
@@ -393,7 +393,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                 <label className="text-[13px] font-semibold text-[#1d1d1f]">{t('বিক্রয়কৃত ডিমের তালিকা', 'Egg Items')}</label>
                 <button type="button" onClick={handleAddItem} className="btn-outline text-[12px] py-1 px-2.5 min-h-[34px]">
                   <Plus className="w-3.5 h-3.5" />
-                  <span>{t('+ আরও ডিম যোগ', '+ Add Item')}</span>
+                  <span>{t('আরও ডিম যোগ', 'Add Item')}</span>
                 </button>
               </div>
 

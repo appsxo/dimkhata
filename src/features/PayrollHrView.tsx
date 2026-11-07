@@ -159,7 +159,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
             )}
             <button onClick={() => setIsAddEmpOpen(true)} className="btn-primary text-[13px] px-4">
               <Plus className="w-4 h-4" />
-              <span>{t('+ কর্মচারী নিয়োগ', '+ Add Employee')}</span>
+              <span>{t('কর্মচারী নিয়োগ', 'Add Employee')}</span>
             </button>
           </>
         }
@@ -175,7 +175,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
           </h3>
           <button type="button" onClick={() => setIsAddEmpOpen(true)} className="btn-primary mx-auto mt-1 text-[13px]">
             <Plus className="w-4 h-4" />
-            <span>{t('+ প্রথম কর্মচারী যোগ করুন', '+ Add First Employee')}</span>
+            <span>{t('প্রথম কর্মচারী যোগ করুন', 'Add First Employee')}</span>
           </button>
         </div>
       ) : (

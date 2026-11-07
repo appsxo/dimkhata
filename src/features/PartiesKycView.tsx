@@ -184,7 +184,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
         actions={
           <button onClick={() => setIsAddOpen(true)} className="btn-primary py-2 px-4 text-[13px]">
             <Plus className="w-4 h-4" />
-            <span>{activeTab === 'CUSTOMERS' ? t('+ নতুন কাস্টমার', '+ Add Customer') : t('+ নতুন মহাজন', '+ Add Supplier')}</span>
+            <span>{activeTab === 'CUSTOMERS' ? t('নতুন কাস্টমার', 'Add Customer') : t('নতুন মহাজন', 'Add Supplier')}</span>
           </button>
         }
       />
@@ -214,7 +214,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
             <h3 className="text-[16px] font-semibold text-[#1d1d1f]">{t('কোনো কাস্টমার পাওয়া যায়নি', 'No Customers Found')}</h3>
             <button type="button" onClick={() => setIsAddOpen(true)} className="btn-primary mx-auto mt-1 text-[13px]">
               <Plus className="w-4 h-4" />
-              <span>{t('+ নতুন কাস্টমার নিবন্ধন', '+ Add Customer')}</span>
+              <span>{t('নতুন কাস্টমার নিবন্ধন', 'Add Customer')}</span>
             </button>
           </div>
         ) : (
@@ -302,7 +302,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
           <h3 className="text-[16px] font-semibold text-[#1d1d1f]">{t('কোনো মহাজন পাওয়া যায়নি', 'No Suppliers Found')}</h3>
           <button type="button" onClick={() => setIsAddOpen(true)} className="btn-primary mx-auto mt-1 text-[13px]">
             <Plus className="w-4 h-4" />
-            <span>{t('+ নতুন মহাজন নিবন্ধন', '+ Add Supplier')}</span>
+            <span>{t('নতুন মহাজন নিবন্ধন', 'Add Supplier')}</span>
           </button>
         </div>
       ) : (

@@ -78,7 +78,7 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
             className="btn-primary py-2 px-4 text-[13.5px]"
           >
             <Plus className="w-4 h-4" />
-            <span>{t('+ নতুন খরচ', '+ Add Expense')}</span>
+            <span>{t('নতুন খরচ', 'Add Expense')}</span>
           </button>
         }
       />

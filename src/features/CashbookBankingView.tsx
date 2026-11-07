@@ -139,7 +139,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
               className="btn-outline text-[13px] px-3.5"
             >
               <Plus className="w-4 h-4" />
-              <span>{t('+ নতুন একাউন্ট', '+ Account')}</span>
+              <span>{t('নতুন একাউন্ট', 'Add Account')}</span>
             </button>
 
             <button
