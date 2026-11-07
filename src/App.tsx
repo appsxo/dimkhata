@@ -39,10 +39,13 @@ import { ExpensesAssetsView } from './features/ExpensesAssetsView';
 import { ProfitSettlementView } from './features/ProfitSettlementView';
 import { AuditLogBranchesView } from './features/AuditLogBranchesView';
 import { AuthGateView } from './features/AuthGateView';
+import { SupabaseSetupGateView } from './features/SupabaseSetupGateView';
+import { CloudSyncStatus } from './lib/storage-store';
 
 export const App: React.FC = () => {
   useLanguage();
 
+  const [cloudStatus, setCloudStatus] = useState<CloudSyncStatus>(DimKhataStore.getCloudStatus());
   const [authSession, setAuthSession] = useState(DimKhataStore.getAuthSession());
   const [currentUser, setCurrentUser] = useState<UserProfile>(DimKhataStore.getActiveUser());
   const [currentTab, setCurrentTab] = useState<NavTabId>('dashboard');
@@ -93,10 +96,13 @@ export const App: React.FC = () => {
     setAuditLogs(DimKhataStore.getAuditLogs());
     setPayrolls(DimKhataStore.getPayrolls());
     setAdvances(DimKhataStore.getSalaryAdvances());
+    setCloudStatus(DimKhataStore.getCloudStatus());
   };
 
   useEffect(() => {
-    DimKhataStore.syncWithSupabase();
+    DimKhataStore.syncWithSupabase().then(() => {
+      setCloudStatus(DimKhataStore.getCloudStatus());
+    });
   }, []);
 
   useEffect(() => {
@@ -165,6 +171,21 @@ export const App: React.FC = () => {
     setCurrentUser(DimKhataStore.getActiveUser());
   };
 
+  // 1. Mandatory Supabase Connection Gate:
+  // The system refuses to operate without a healthy Supabase connection to prevent data loss.
+  if (cloudStatus !== 'ONLINE') {
+    return (
+      <SupabaseSetupGateView
+        status={cloudStatus}
+        onConnected={() => {
+          setCloudStatus(DimKhataStore.getCloudStatus());
+          reloadData();
+        }}
+      />
+    );
+  }
+
+  // 2. Zero-Trust User Secret Authentication Gate:
   if (!authSession.isAuthenticated || !authSession.user) {
     return (
       <AuthGateView

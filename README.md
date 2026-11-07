@@ -95,7 +95,17 @@ Your Supabase Project ID: `knxnmihaflwcavbyivnc`
 
 ---
 
-### Step 2: Configure GitHub Actions Secrets (1 Minute)
+### Step 2: Configure Supabase Connection
+
+You can connect Supabase in **either of two easy ways**:
+
+#### Option A: Instant In-App Setup Gate (Zero-Build — Recommended for Quick Start)
+1. Open your live application at **[https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)**.
+2. Because DimKhata strictly requires a live Supabase connection to prevent data loss, the **Supabase Setup Gate** will appear automatically.
+3. Paste your Supabase **Publishable Key** (or `anon` key) and click **Connect & Activate Cloud**.
+4. The system immediately connects, verifies `dimkhata_kv_store`, and unlocks the Auth Gate!
+
+#### Option B: GitHub Actions Secrets (For Fully Automated CI/CD Builds)
 1. Open your repository's **Actions Secrets** settings:  
    [https://github.com/appsxo/DimKhata/settings/secrets/actions](https://github.com/appsxo/DimKhata/settings/secrets/actions)
 2. Click **New repository secret** and add:

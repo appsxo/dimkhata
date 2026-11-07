@@ -81,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [syncDone, setSyncDone] = useState(false);
 
   const handleCloudSync = async () => {
-    if (!isSupabaseConfigured || cloudStatus === 'NEEDS_SQL') {
+    if (!isSupabaseConfigured() || cloudStatus === 'NEEDS_SQL' || cloudStatus === 'NOT_CONFIGURED') {
       onOpenSecurityModal();
       return;
     }
@@ -197,16 +197,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Cloud
                   className={`w-3 h-3 ${
                     cloudStatus === 'ONLINE' ? 'text-[#30d158]' : 'text-[#2997ff]'
-                  } ${syncing || cloudStatus === 'SYNCING' ? 'animate-pulse' : ''}`}
+                  } ${syncing || cloudStatus === 'INITIALIZING' ? 'animate-pulse' : ''}`}
                 />
               )}
               <span className="hidden md:inline">
-                {syncing || cloudStatus === 'SYNCING'
+                {syncing || cloudStatus === 'INITIALIZING'
                   ? t('সিঙ্ক...', 'Syncing...')
                   : cloudStatus === 'ONLINE'
                   ? t('লাইভ সিঙ্ক', 'Live Sync')
                   : cloudStatus === 'NEEDS_SQL'
                   ? t('SQL সেটআপ', 'Setup SQL')
+                  : cloudStatus === 'NOT_CONFIGURED'
+                  ? t('সেটআপ', 'Setup')
                   : t('ক্লাউড', 'Cloud')}
               </span>
             </button>

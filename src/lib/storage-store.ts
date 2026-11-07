@@ -30,7 +30,12 @@ import {
   DEFAULT_STAFF_PIN_HASH,
 } from './security';
 
-export type CloudSyncStatus = 'SYNCING' | 'ONLINE' | 'NEEDS_SQL' | 'OFFLINE';
+export type CloudSyncStatus =
+  | 'INITIALIZING'
+  | 'NOT_CONFIGURED'
+  | 'NEEDS_SQL'
+  | 'ONLINE'
+  | 'OFFLINE';
 
 const todayStr = new Date().toISOString().split('T')[0];
 
@@ -180,19 +185,26 @@ function getStored<T>(key: string, defaultValue: T): T {
 }
 
 function pushKeyToSupabase(key: string, value: unknown): void {
-  if (!isSupabaseConfigured || !supabase || SESSION_ONLY_KEYS.has(key)) return;
+  if (!isSupabaseConfigured() || !supabase || SESSION_ONLY_KEYS.has(key)) return;
   supabase
     .from('dimkhata_kv_store')
     .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
-    .then(({ error }) => {
-      if (error) {
-        if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
-          DimKhataStore.setCloudStatus('NEEDS_SQL');
+    .then(
+      ({ error }) => {
+        if (error) {
+          if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
+            DimKhataStore.setCloudStatus('NEEDS_SQL');
+          } else {
+            DimKhataStore.setCloudStatus('OFFLINE');
+          }
+        } else {
+          DimKhataStore.setCloudStatus('ONLINE');
         }
-      } else {
-        DimKhataStore.setCloudStatus('ONLINE');
+      },
+      () => {
+        DimKhataStore.setCloudStatus('OFFLINE');
       }
-    });
+    );
 }
 
 function setStored<T>(key: string, value: T): void {
@@ -211,7 +223,7 @@ function setStored<T>(key: string, value: T): void {
 }
 
 export class DimKhataStore {
-  private static cloudStatus: CloudSyncStatus = isSupabaseConfigured ? 'SYNCING' : 'OFFLINE';
+  private static cloudStatus: CloudSyncStatus = isSupabaseConfigured() ? 'INITIALIZING' : 'NOT_CONFIGURED';
   private static lastSyncTimestamp: string | null = null;
   private static realtimeSubscribed = false;
 
@@ -962,23 +974,76 @@ export class DimKhataStore {
     }
   }
 
-  static async syncWithSupabase(): Promise<{ synced: boolean; count: number }> {
-    if (!isSupabaseConfigured || !supabase) {
-      this.setCloudStatus('OFFLINE');
-      return { synced: false, count: 0 };
+  static async checkSupabaseHealth(): Promise<{
+    status: CloudSyncStatus;
+    message?: string;
+  }> {
+    if (!isSupabaseConfigured() || !supabase) {
+      this.setCloudStatus('NOT_CONFIGURED');
+      return { status: 'NOT_CONFIGURED', message: 'Supabase credentials missing' };
     }
 
-    this.setCloudStatus('SYNCING');
+    try {
+      const { error } = await supabase
+        .from('dimkhata_kv_store')
+        .select('key')
+        .limit(1);
+
+      if (error) {
+        if (
+          error.message.includes('dimkhata_kv_store') ||
+          error.code === '42P01' ||
+          error.code === 'PGRST205'
+        ) {
+          this.setCloudStatus('NEEDS_SQL');
+          return { status: 'NEEDS_SQL', message: 'SQL table setup required' };
+        }
+        if (
+          error.code === 'PGRST301' ||
+          error.message.includes('JWT') ||
+          error.message.includes('apikey')
+        ) {
+          this.setCloudStatus('NOT_CONFIGURED');
+          return { status: 'NOT_CONFIGURED', message: 'Invalid Supabase API key' };
+        }
+        this.setCloudStatus('OFFLINE');
+        return { status: 'OFFLINE', message: error.message };
+      }
+
+      this.setCloudStatus('ONLINE');
+      return { status: 'ONLINE' };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Network error';
+      this.setCloudStatus('OFFLINE');
+      return { status: 'OFFLINE', message: errorMsg };
+    }
+  }
+
+  static async syncWithSupabase(): Promise<{
+    synced: boolean;
+    count: number;
+    status: CloudSyncStatus;
+    error?: string;
+  }> {
+    const health = await this.checkSupabaseHealth();
+    if (health.status !== 'ONLINE') {
+      return { synced: false, count: 0, status: health.status, error: health.message };
+    }
+
+    if (!supabase) {
+      this.setCloudStatus('NOT_CONFIGURED');
+      return { synced: false, count: 0, status: 'NOT_CONFIGURED' };
+    }
 
     try {
       const { data, error } = await supabase.from('dimkhata_kv_store').select('key, value');
       if (error) {
         if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
           this.setCloudStatus('NEEDS_SQL');
-        } else {
-          this.setCloudStatus('OFFLINE');
+          return { synced: false, count: 0, status: 'NEEDS_SQL' };
         }
-        return { synced: false, count: 0 };
+        this.setCloudStatus('OFFLINE');
+        return { synced: false, count: 0, status: 'OFFLINE', error: error.message };
       }
 
       if (data && data.length > 0) {
@@ -1017,10 +1082,11 @@ export class DimKhataStore {
           .subscribe();
       }
 
-      return { synced: true, count: data?.length || 19 };
-    } catch {
+      return { synced: true, count: data?.length || 19, status: 'ONLINE' };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Sync network error';
       this.setCloudStatus('OFFLINE');
-      return { synced: false, count: 0 };
+      return { synced: false, count: 0, status: 'OFFLINE', error: errorMsg };
     }
   }
 
@@ -1050,4 +1116,10 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.SEQUENCES, {});
     window.dispatchEvent(new Event('dimkhata_storage_change'));
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('dimkhata_supabase_reconfigured', () => {
+    DimKhataStore.syncWithSupabase();
+  });
 }
