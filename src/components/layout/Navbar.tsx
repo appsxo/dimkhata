@@ -13,6 +13,7 @@ import {
   Lock,
   Globe,
   AlertCircle,
+  LogOut,
 } from 'lucide-react';
 import { DimKhataStore } from '../../lib/storage-store';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -27,6 +28,7 @@ interface NavbarProps {
   currentUser: UserProfile;
   onToggleUserRole: () => void;
   onOpenSecurityModal: () => void;
+  onLogout: () => void;
   onRefresh: () => void;
   currentTab?: NavTabId;
   onSelectTab: (tab: NavTabId) => void;
@@ -67,6 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onToggleUserRole,
   onOpenSecurityModal,
+  onLogout,
   onRefresh,
   currentTab = 'dashboard',
   onSelectTab,
@@ -211,17 +214,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onToggleUserRole}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition ${
+              title={t('রোল পরিবর্তন / অ্যাডমিন আনলক', 'Switch Role / Unlock Admin')}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition ${
                 currentUser.role === 'ADMIN' ? 'bg-[#0066cc] text-white' : 'bg-[#272729] text-white'
               }`}
             >
               {currentUser.role === 'ADMIN' ? (
-                <ShieldCheck className="w-3 h-3 text-white" />
+                <ShieldCheck className="w-3.5 h-3.5 text-white shrink-0" />
               ) : (
-                <UserCheck className="w-3 h-3 text-[#cccccc]" />
+                <UserCheck className="w-3.5 h-3.5 text-[#cccccc] shrink-0" />
               )}
-              <span className="font-semibold">
-                {currentUser.role === 'ADMIN' ? t('মালিক', 'Admin') : t('স্টাফ', 'Staff')}
+              <span className="font-semibold truncate max-w-[85px] sm:max-w-none">
+                {currentUser.full_name ? currentUser.full_name.split(' ')[0] : (currentUser.role === 'ADMIN' ? t('মালিক', 'Admin') : t('স্টাফ', 'Staff'))}
               </span>
             </button>
 
@@ -235,6 +239,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Lock className="w-3.5 h-3.5" />
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={onLogout}
+              title={t('সিস্টেম লক ও প্রস্থান', 'Lock System & Logout')}
+              className="flex items-center gap-1 bg-[#272729] hover:bg-[#ff3b30]/20 text-[#cccccc] hover:text-[#ff3b30] rounded-full px-2.5 py-1 text-[11px] font-semibold cursor-pointer active:scale-95 transition"
+            >
+              <LogOut className="w-3 h-3 text-[#ff3b30] shrink-0" />
+              <span className="hidden sm:inline">{t('লক', 'Lock')}</span>
+            </button>
 
             <div className="hidden md:flex items-center gap-1">
               <button

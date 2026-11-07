@@ -38,10 +38,12 @@ import { PayrollHrView } from './features/PayrollHrView';
 import { ExpensesAssetsView } from './features/ExpensesAssetsView';
 import { ProfitSettlementView } from './features/ProfitSettlementView';
 import { AuditLogBranchesView } from './features/AuditLogBranchesView';
+import { AuthGateView } from './features/AuthGateView';
 
 export const App: React.FC = () => {
   useLanguage();
 
+  const [authSession, setAuthSession] = useState(DimKhataStore.getAuthSession());
   const [currentUser, setCurrentUser] = useState<UserProfile>(DimKhataStore.getActiveUser());
   const [currentTab, setCurrentTab] = useState<NavTabId>('dashboard');
   const [selectedBranchId, setSelectedBranchId] = useState<string>(DimKhataStore.getSelectedBranchId());
@@ -98,6 +100,18 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const handleAuthChange = () => {
+      const session = DimKhataStore.getAuthSession();
+      setAuthSession(session);
+      if (session.isAuthenticated && session.user) {
+        setCurrentUser(session.user);
+      }
+    };
+    window.addEventListener('dimkhata_auth_change', handleAuthChange);
+    return () => window.removeEventListener('dimkhata_auth_change', handleAuthChange);
+  }, []);
+
+  useEffect(() => {
     window.addEventListener('dimkhata_storage_change', reloadData);
     return () => window.removeEventListener('dimkhata_storage_change', reloadData);
   }, [selectedBranchId]);
@@ -108,22 +122,22 @@ export const App: React.FC = () => {
     setStocks(DimKhataStore.getStocks(bId));
   };
 
-  const activateAdminRole = () => {
-    const adminUser: UserProfile = {
-      id: 'admin-sharif',
+  const activateAdminRole = (adminUser?: UserProfile) => {
+    const userToSet = adminUser || DimKhataStore.getUsers().find((u) => u.role === 'ADMIN') || {
+      id: 'user-sharif',
       full_name: 'শরিফ (মালিক)',
       role: 'ADMIN',
-      phone: '01711-100001',
+      phone: '01711-000001',
       is_active: true,
     };
-    DimKhataStore.setActiveUser(adminUser);
-    setCurrentUser(adminUser);
+    DimKhataStore.setActiveUser(userToSet);
+    setCurrentUser(userToSet);
   };
 
   const handleToggleUserRole = () => {
     if (currentUser.role === 'ADMIN') {
-      const staffUser: UserProfile = {
-        id: 'staff-cashier',
+      const staffUser = DimKhataStore.getUsers().find((u) => u.role === 'STAFF') || {
+        id: 'user-staff',
         employee_code: 'SE-EMP-001',
         full_name: 'স্টাফ / ক্যাশিয়ার',
         role: 'STAFF',
@@ -145,6 +159,24 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    DimKhataStore.logout();
+    setAuthSession(DimKhataStore.getAuthSession());
+    setCurrentUser(DimKhataStore.getActiveUser());
+  };
+
+  if (!authSession.isAuthenticated || !authSession.user) {
+    return (
+      <AuthGateView
+        onLoginSuccess={(user) => {
+          setAuthSession(DimKhataStore.getAuthSession());
+          setCurrentUser(user);
+          reloadData();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans overflow-x-hidden">
       <Navbar
@@ -156,6 +188,7 @@ export const App: React.FC = () => {
         onOpenSecurityModal={() =>
           setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
         }
+        onLogout={handleLogout}
         onRefresh={reloadData}
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -166,6 +199,8 @@ export const App: React.FC = () => {
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
           userRole={currentUser.role}
+          currentUser={currentUser}
+          onLogout={handleLogout}
           onOpenSecurityModal={() =>
             setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
           }

@@ -17,9 +17,15 @@
    - Zero local dummy data. All records are stored in `public.dimkhata_kv_store` on Supabase and synchronized across all connected mobile and desktop devices in real time via **Supabase Realtime WebSockets**.
 2. **Bilingual Interface (`বাংলা` Default + `EN` Toggle):**
    - Defaults to Bangla (`বাংলা`) for daily shop floor operation and switches to English (`EN`) with a single click in the top navigation bar.
-3. **Role-Based Access & SHA-256 PIN Security:**
-   - **Admin Mode (Owners — Sharif & Eman):** Protected by a 4-digit **SHA-256 hashed PIN** (Default PIN: `1234`, configurable in Security Settings). Grants full access to Cashbook, Bank Balances, Payroll, Monthly Net P&L, 2:1 Partner Profit Split, and Audit Logs.
-   - **Staff Mode (Cashier / Manager):** Restricted to daily operational modules (Dashboard, POS Sales, Egg Sourcing, Daily Market Rates, Party Due Collection, Wastage, and Shop Expenses). Financial accounts and profit statements remain hidden.
+3. **Zero-Trust URL Auth Gate & SHA-256 Secret Protection:**
+   - **No URL Data Leakage:** Anyone visiting the application URL (`https://appsxo.github.io/DimKhata/`) is immediately stopped at the secure authentication gate. All internal data, tables, financial statements, and customer ledgers remain strictly unmounted until an authenticated user unlocks the session with their secret PIN.
+   - **Independent User Identities & Default Secrets:**
+     - **Sharif (`শরিফ (মালিক)`)** — Co-Owner / Admin (Default PIN: `1234`)
+     - **Eman (`ইমান (মালিক)`)** — Co-Owner / Admin (Default PIN: `1234`)
+     - **Staff Cashier (`স্টাফ / ক্যাশিয়ার`)** — Cashier / Staff (Default PIN: `0000`)
+   - **Independent Audit Attribution:** Every cashbook entry, sales memo, stock adjustment, and system log explicitly attributes `actor_name` and `actor_role` to the individual logged-in user rather than a generic or hardcoded account.
+   - **1-Tap Session Locking & Logout:** A prominent Lock button in both top header and side menu immediately purges the session from browser storage and returns to the Auth Gate.
+   - **Customizable PINs:** Admins can change their secret PIN or reset staff PINs at any time from the Security Modal, with SHA-256 hashes instantly synced to Supabase `dimkhata_kv_store`.
 4. **Product Categories & Egg Unit Conversion Engine:**
    - **5 Egg Categories:**
      1. Brown Farm Layer Egg (`লাল ডিম (ফার্মের)`) — 30 pcs/crate

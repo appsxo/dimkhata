@@ -8,7 +8,7 @@ import { AppleModal, AppleOptionChips } from '../ui/AppleUI';
 interface SecurityPinModalProps {
   mode: 'UNLOCK_ADMIN' | 'MANAGE_SECURITY';
   onClose: () => void;
-  onSuccessUnlockAdmin?: () => void;
+  onSuccessUnlockAdmin?: (adminUser?: any) => void;
 }
 
 const SUPABASE_KV_SQL = `-- Run once in Supabase SQL Editor
@@ -36,6 +36,8 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   const { t } = useLanguage();
   const company = DimKhataStore.getCompany();
   const cloudStatus = DimKhataStore.getCloudStatus();
+  const allUsers = DimKhataStore.getUsers();
+  const currentUser = DimKhataStore.getActiveUser();
 
   const [pinInput, setPinInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -44,9 +46,9 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   const [activeTab, setActiveTab] = useState<'PIN' | 'CLOUD'>(
     cloudStatus === 'NEEDS_SQL' ? 'CLOUD' : 'PIN'
   );
+  const [targetUserId, setTargetUserId] = useState<string>(currentUser.id || allUsers[0]?.id || '');
   const [currentAdminPin, setCurrentAdminPin] = useState('');
-  const [newAdminPin, setNewAdminPin] = useState('');
-  const [newStaffPin, setNewStaffPin] = useState('');
+  const [newPin, setNewPin] = useState('');
   const [savedNotice, setSavedNotice] = useState('');
   const [copiedSql, setCopiedSql] = useState(false);
   const [syncingNow, setSyncingNow] = useState(false);
@@ -55,13 +57,13 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     e.preventDefault();
     setErrorMsg('');
     setVerifying(true);
-    const ok = await verifyRolePin('ADMIN', pinInput, company);
+    const adminUser = await DimKhataStore.verifyAdminPin(pinInput);
     setVerifying(false);
-    if (!ok) {
+    if (!adminUser) {
       setErrorMsg(t('ভুল অ্যাডমিন পিন! সঠিক পিন দিন (ডিফল্ট: 1234)', 'Incorrect Admin PIN! (Default: 1234)'));
       return;
     }
-    if (onSuccessUnlockAdmin) onSuccessUnlockAdmin();
+    if (onSuccessUnlockAdmin) onSuccessUnlockAdmin(adminUser);
     onClose();
   };
 
@@ -70,25 +72,36 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     setErrorMsg('');
     setSavedNotice('');
 
-    const isCurrentValid = await verifyRolePin('ADMIN', currentAdminPin, company);
-    if (!isCurrentValid) {
+    if (newPin.trim().length < 4) {
+      setErrorMsg(t('নতুন পিন কমপক্ষে ৪ সংখ্যার হতে হবে!', 'New PIN must be at least 4 digits!'));
+      return;
+    }
+
+    const adminUser = await DimKhataStore.verifyAdminPin(currentAdminPin);
+    if (!adminUser) {
       setErrorMsg(t('বর্তমান অ্যাডমিন পিন সঠিক নয়! (ডিফল্ট: 1234)', 'Current Admin PIN is incorrect! (Default: 1234)'));
       return;
     }
 
-    const updatedCompany = { ...company };
-    if (newAdminPin.trim().length >= 4) {
-      updatedCompany.admin_pin_hash = await sha256Hex(newAdminPin.trim());
-    }
-    if (newStaffPin.trim().length >= 4) {
-      updatedCompany.staff_pin_hash = await sha256Hex(newStaffPin.trim());
-    }
+    await DimKhataStore.updateUserPin(targetUserId, newPin.trim());
 
+    const updatedUser = allUsers.find((u) => u.id === targetUserId);
+    const updatedCompany = { ...company };
+    if (updatedUser?.role === 'ADMIN') {
+      updatedCompany.admin_pin_hash = await sha256Hex(newPin.trim());
+    } else if (updatedUser?.role === 'STAFF') {
+      updatedCompany.staff_pin_hash = await sha256Hex(newPin.trim());
+    }
     DimKhataStore.updateCompany(updatedCompany);
+
     setCurrentAdminPin('');
-    setNewAdminPin('');
-    setNewStaffPin('');
-    setSavedNotice(t('পিন আপডেট ও ক্লাউডে সংরক্ষিত হয়েছে!', 'PINs updated and synced to Supabase!'));
+    setNewPin('');
+    setSavedNotice(
+      t(
+        `${updatedUser?.full_name || 'ব্যবহারকারী'}-এর পিন সফলভাবে আপডেট ও সেভ হয়েছে!`,
+        `PIN updated and synced for ${updatedUser?.full_name || 'user'}!`
+      )
+    );
   };
 
   const handleCopySql = () => {
@@ -180,42 +193,48 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
             <form onSubmit={handleUpdatePins} className="space-y-3.5">
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  {t('বর্তমান অ্যাডমিন পিন *', 'Current Admin PIN *')}
+                  {t('ব্যবহারকারী নির্বাচন করুন *', 'Select User *')}
+                </label>
+                <select
+                  value={targetUserId}
+                  onChange={(e) => setTargetUserId(e.target.value)}
+                  className="input-apple w-full text-[13.5px] bg-white font-medium cursor-pointer"
+                >
+                  {allUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name} ({u.role === 'ADMIN' ? t('মালিক / Admin', 'Admin') : t('স্টাফ / Staff', 'Staff')})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                  {t('বর্তমান অ্যাডমিন পিন (যাচাইয়ের জন্য) *', 'Current Admin PIN (Verification) *')}
                 </label>
                 <input
                   type="password"
                   inputMode="numeric"
                   value={currentAdminPin}
                   onChange={(e) => setCurrentAdminPin(e.target.value)}
-                  placeholder={t('বর্তমান পিন (ডিফল্ট: 1234)', 'Current PIN (Default: 1234)')}
+                  placeholder={t('বর্তমান অ্যাডমিন পিন (ডিফল্ট: 1234)', 'Current Admin PIN (Default: 1234)')}
                   className="input-apple w-full text-[14px]"
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  {t('নতুন অ্যাডমিন পিন (কমপক্ষে ৪ সংখ্যা)', 'New Admin PIN (Min 4 digits)')}
+                  {t('নতুন সিক্রেট পিন (কমপক্ষে ৪ সংখ্যা) *', 'New Secret PIN (Min 4 digits) *')}
                 </label>
                 <input
                   type="password"
                   inputMode="numeric"
-                  value={newAdminPin}
-                  onChange={(e) => setNewAdminPin(e.target.value)}
-                  placeholder={t('নতুন অ্যাডমিন পিন দিন', 'Enter new Admin PIN')}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value)}
+                  placeholder={t('নতুন ৪ সংখ্যার পিন দিন', 'Enter new 4+ digit PIN')}
                   className="input-apple w-full text-[14px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  {t('নতুন স্টাফ পিন (ঐচ্ছিক)', 'New Staff PIN (Optional)')}
-                </label>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  value={newStaffPin}
-                  onChange={(e) => setNewStaffPin(e.target.value)}
-                  placeholder={t('স্টাফ পিন দিন (ডিফল্ট: 0000)', 'Enter Staff PIN (Default: 0000)')}
-                  className="input-apple w-full text-[14px]"
+                  required
                 />
               </div>
 

@@ -16,8 +16,11 @@ import {
   Download,
   Lock,
   Globe,
+  LogOut,
+  UserCheck,
+  ShieldCheck,
 } from 'lucide-react';
-import { UserRole } from '../../types';
+import { UserRole, UserProfile } from '../../types';
 import { useLanguage } from '../../lib/i18n';
 import { DimKhataStore } from '../../lib/storage-store';
 
@@ -38,6 +41,8 @@ interface SidebarProps {
   currentTab: NavTabId;
   onSelectTab: (tab: NavTabId) => void;
   userRole: UserRole;
+  currentUser?: UserProfile;
+  onLogout?: () => void;
   onOpenSecurityModal?: () => void;
 }
 
@@ -72,6 +77,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
   userRole,
+  currentUser,
+  onLogout,
   onOpenSecurityModal,
 }) => {
   const { lang, toggleLanguage, t } = useLanguage();
@@ -95,41 +102,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       <aside className="hidden md:flex md:w-60 bg-white border-r border-[#e0e0e0] flex-col shrink-0 no-print select-none">
-        <div className="p-3 space-y-4 overflow-y-auto sticky top-[92px] max-h-[calc(100vh-92px)]">
-          <div>
-            <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#7a7a7a]">
-              {t('দৈনন্দিন লেনদেন', 'Daily Operations')}
-            </div>
-            <div className="space-y-0.5">
-              {dailyItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => onSelectTab(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-[13.5px] transition cursor-pointer active:scale-95 ${
-                      isActive
-                        ? 'bg-[#0066cc] text-white font-semibold'
-                        : 'text-[#1d1d1f] hover:bg-[#f5f5f7]'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#0066cc]'}`} />
-                    <span className="truncate">{lang === 'bn' ? item.labelBn : item.labelEn}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {adminItems.length > 0 && (
-            <div className="pt-2.5 border-t border-[#f0f0f0]">
+        <div className="p-3 space-y-4 overflow-y-auto sticky top-[92px] max-h-[calc(100vh-92px)] flex flex-col justify-between h-full">
+          <div className="space-y-4">
+            <div>
               <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#7a7a7a]">
-                {t('মালিক ও একাউন্টস', 'Owner & Accounts')}
+                {t('দৈনন্দিন লেনদেন', 'Daily Operations')}
               </div>
               <div className="space-y-0.5">
-                {adminItems.map((item) => {
+                {dailyItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = currentTab === item.id;
                   return (
@@ -148,6 +128,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {adminItems.length > 0 && (
+              <div className="pt-2.5 border-t border-[#f0f0f0]">
+                <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#7a7a7a]">
+                  {t('মালিক ও একাউন্টস', 'Owner & Accounts')}
+                </div>
+                <div className="space-y-0.5">
+                  {adminItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onSelectTab(item.id)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-[13.5px] transition cursor-pointer active:scale-95 ${
+                          isActive
+                            ? 'bg-[#0066cc] text-white font-semibold'
+                            : 'text-[#1d1d1f] hover:bg-[#f5f5f7]'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#0066cc]'}`} />
+                        <span className="truncate">{lang === 'bn' ? item.labelBn : item.labelEn}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {currentUser && (
+            <div className="pt-3 border-t border-[#f0f0f0]">
+              <div className="p-2.5 rounded-xl bg-[#f5f5f7] border border-[#e0e0e0] flex items-center justify-between">
+                <div className="min-w-0 pr-1">
+                  <div className="text-[12px] font-semibold text-[#1d1d1f] truncate">
+                    {currentUser.full_name}
+                  </div>
+                  <div className="text-[10px] text-[#7a7a7a] font-medium flex items-center gap-1">
+                    {currentUser.role === 'ADMIN' ? (
+                      <span className="text-[#0066cc] font-semibold">● {t('মালিক', 'Admin')}</span>
+                    ) : (
+                      <span>● {t('স্টাফ', 'Staff')}</span>
+                    )}
+                  </div>
+                </div>
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    title={t('লক ও প্রস্থান', 'Lock & Exit')}
+                    className="w-8 h-8 rounded-full bg-white border border-[#e0e0e0] hover:bg-[#ff3b30]/10 text-[#7a7a7a] hover:text-[#ff3b30] flex items-center justify-center cursor-pointer active:scale-95 transition shrink-0"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -254,11 +292,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               })}
             </div>
 
-            <div className="pt-2 border-t border-[#e0e0e0] grid grid-cols-3 gap-2">
+            <div className="pt-2 border-t border-[#e0e0e0] grid grid-cols-4 gap-1.5">
               <button
                 type="button"
                 onClick={toggleLanguage}
-                className="p-2.5 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
+                className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
               >
                 <Globe className="w-4 h-4 text-[#0066cc]" />
                 <span>{lang === 'bn' ? 'English' : 'বাংলা'}</span>
@@ -269,7 +307,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   setMobileMenuOpen(false);
                   onOpenSecurityModal?.();
                 }}
-                className="p-2.5 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
+                className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
               >
                 <Lock className="w-4 h-4 text-[#0066cc]" />
                 <span>{t('নিরাপত্তা', 'Security')}</span>
@@ -277,11 +315,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadBackup}
-                className="p-2.5 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
+                className="p-2 rounded-[12px] bg-white border border-[#e0e0e0] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#1d1d1f] active:scale-95"
               >
                 <Download className="w-4 h-4 text-[#0066cc]" />
                 <span>{t('ব্যাকআপ', 'Backup')}</span>
               </button>
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onLogout();
+                  }}
+                  className="p-2 rounded-[12px] bg-[#fff2f4] border border-[#ffd1d9] flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#bf0013] active:scale-95"
+                >
+                  <LogOut className="w-4 h-4 text-[#bf0013]" />
+                  <span>{t('লক', 'Lock')}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

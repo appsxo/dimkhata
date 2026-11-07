@@ -7,12 +7,14 @@ export type UserRole = 'ADMIN' | 'STAFF';
 
 export interface UserProfile {
   id: string;
+  username?: string;
   employee_code?: string;
   full_name: string;
   role: UserRole;
   branch_id?: string;
   phone?: string;
   is_active: boolean;
+  pin_hash?: string;
 }
 
 export type AppLanguage = 'bn' | 'en';

@@ -23,6 +23,12 @@ import {
 } from '../types';
 import { calculateWeightedAverageCost } from './egg-units';
 import { supabase, isSupabaseConfigured } from './supabase';
+import {
+  verifyUserPin,
+  sha256Hex,
+  DEFAULT_ADMIN_PIN_HASH,
+  DEFAULT_STAFF_PIN_HASH,
+} from './security';
 
 export type CloudSyncStatus = 'SYNCING' | 'ONLINE' | 'NEEDS_SQL' | 'OFFLINE';
 
@@ -87,10 +93,48 @@ const DEFAULT_ACCOUNTS: FinancialAccount[] = [
   { id: 'acc-01', name: 'দোকানের ক্যাশ ড্রয়ার (Main Cash)', account_type: 'CASH', account_number: 'CASH-01', branch_id: 'br-01', current_balance: 0, is_default: true, is_active: true },
   { id: 'acc-02', name: 'বিকাশ মার্চেন্ট (bKash)', account_type: 'MFS', account_number: '01711-223344', branch_id: 'br-01', current_balance: 0, is_default: false, is_active: true },
   { id: 'acc-03', name: 'নগদ পার্সোনাল (Nagad)', account_type: 'MFS', account_number: '01711-223344', branch_id: 'br-01', current_balance: 0, is_default: false, is_active: true },
-  { id: 'acc-04', name: 'ইসলামী ব্যাংক বাংলাদেশ (IBBL)', account_type: 'BANK', account_number: '2050-00000000', branch_id: 'br-01', current_balance: 0, is_default: false, is_active: true },
+];
+
+export interface AuthSession {
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  loginTime: string | null;
+}
+
+export const AUTH_SESSION_KEY = 'dimkhata_auth_session';
+
+export const DEFAULT_USERS: UserProfile[] = [
+  {
+    id: 'user-sharif',
+    username: 'sharif',
+    full_name: 'শরিফ (মালিক)',
+    role: 'ADMIN',
+    phone: '01711-000001',
+    pin_hash: DEFAULT_ADMIN_PIN_HASH,
+    is_active: true,
+  },
+  {
+    id: 'user-eman',
+    username: 'eman',
+    full_name: 'ইমান (মালিক)',
+    role: 'ADMIN',
+    phone: '01711-000002',
+    pin_hash: DEFAULT_ADMIN_PIN_HASH,
+    is_active: true,
+  },
+  {
+    id: 'user-staff',
+    username: 'staff',
+    full_name: 'স্টাফ / ক্যাশিয়ার',
+    role: 'STAFF',
+    phone: '01711-000003',
+    pin_hash: DEFAULT_STAFF_PIN_HASH,
+    is_active: true,
+  },
 ];
 
 const STORAGE_KEYS = {
+  USERS: 'dimkhata_users',
   COMPANY: 'dimkhata_company',
   BRANCHES: 'dimkhata_branches',
   PARTNERS: 'dimkhata_partners',
@@ -188,18 +232,128 @@ export class DimKhataStore {
     }
   }
 
+  static getAuthSession(): AuthSession {
+    if (typeof window === 'undefined') {
+      return { isAuthenticated: false, user: null, loginTime: null };
+    }
+    try {
+      const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+      if (!raw) return { isAuthenticated: false, user: null, loginTime: null };
+      const parsed = JSON.parse(raw) as AuthSession;
+      if (parsed && parsed.isAuthenticated && parsed.user) {
+        return parsed;
+      }
+      return { isAuthenticated: false, user: null, loginTime: null };
+    } catch {
+      return { isAuthenticated: false, user: null, loginTime: null };
+    }
+  }
+
   static getActiveUser(): UserProfile {
-    return getStored<UserProfile>(STORAGE_KEYS.ACTIVE_USER, {
-      id: 'admin-sharif',
-      full_name: 'শরিফ (মালিক)',
-      role: 'ADMIN',
-      phone: '01711-100001',
-      is_active: true,
-    });
+    const session = this.getAuthSession();
+    if (session.isAuthenticated && session.user) {
+      return session.user;
+    }
+    // Return unauthenticated fallback - never auto-elevates to Admin
+    return {
+      id: 'unauthenticated',
+      full_name: 'অননুমোদিত ব্যবহারকারী',
+      role: 'STAFF',
+      is_active: false,
+    };
   }
 
   static setActiveUser(user: UserProfile): void {
-    setStored(STORAGE_KEYS.ACTIVE_USER, user);
+    if (typeof window !== 'undefined') {
+      const session: AuthSession = {
+        isAuthenticated: true,
+        user,
+        loginTime: new Date().toISOString(),
+      };
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      setStored(STORAGE_KEYS.ACTIVE_USER, user);
+      window.dispatchEvent(new Event('dimkhata_auth_change'));
+      window.dispatchEvent(new Event('dimkhata_storage_change'));
+    }
+  }
+
+  static getUsers(): UserProfile[] {
+    return getStored<UserProfile[]>(STORAGE_KEYS.USERS, DEFAULT_USERS);
+  }
+
+  static saveUser(user: UserProfile): void {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === user.id);
+    if (idx >= 0) {
+      users[idx] = { ...users[idx], ...user };
+    } else {
+      users.push(user);
+    }
+    setStored(STORAGE_KEYS.USERS, users);
+    const session = this.getAuthSession();
+    if (session.isAuthenticated && session.user?.id === user.id) {
+      this.setActiveUser({ ...session.user, ...user });
+    }
+  }
+
+  static async updateUserPin(userId: string, newPin: string): Promise<boolean> {
+    const users = this.getUsers();
+    const target = users.find((u) => u.id === userId);
+    if (!target) return false;
+    const pinHash = await sha256Hex(newPin.trim());
+    target.pin_hash = pinHash;
+    this.saveUser(target);
+    this.logAudit('Security', 'UPDATE', userId, `${target.full_name}-এর পিন সিক্রেট পরিবর্তন করা হয়েছে`);
+    return true;
+  }
+
+  static async loginWithPin(
+    userId: string,
+    enteredPin: string
+  ): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
+    const users = this.getUsers();
+    const user = users.find((u) => u.id === userId && u.is_active);
+    if (!user) {
+      return { success: false, error: 'ব্যবহারকারী পাওয়া যায়নি বা নিষ্ক্রিয়' };
+    }
+
+    const isValid = await verifyUserPin(user, enteredPin);
+    if (!isValid) {
+      return { success: false, error: 'ভুল পিন কোড! পুনরায় চেষ্টা করুন' };
+    }
+
+    this.setActiveUser(user);
+    this.logAudit('Auth', 'UPDATE', user.id, `${user.full_name} (${user.role}) সফলভাবে লগইন করেছেন`);
+    return { success: true, user };
+  }
+
+  static logout(): void {
+    if (typeof window !== 'undefined') {
+      const prevUser = this.getActiveUser();
+      if (prevUser && prevUser.id !== 'unauthenticated') {
+        this.logAudit('Auth', 'UPDATE', prevUser.id, `${prevUser.full_name} লগআউট করেছেন`);
+      }
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER);
+      window.dispatchEvent(new Event('dimkhata_auth_change'));
+      window.dispatchEvent(new Event('dimkhata_storage_change'));
+    }
+  }
+
+  static async verifyAdminPin(enteredPin: string): Promise<UserProfile | null> {
+    const users = this.getUsers().filter((u) => u.role === 'ADMIN' && u.is_active);
+    for (const admin of users) {
+      if (await verifyUserPin(admin, enteredPin)) {
+        return admin;
+      }
+    }
+    const company = this.getCompany();
+    const hash = await sha256Hex(enteredPin);
+    const targetHash = company.admin_pin_hash || DEFAULT_ADMIN_PIN_HASH;
+    if (hash === targetHash) {
+      return users[0] || null;
+    }
+    return null;
   }
 
   static getSelectedBranchId(): string {
@@ -786,6 +940,7 @@ export class DimKhataStore {
         PAYROLLS: this.getPayrolls(),
         CASHBOOK: this.getCashbook(),
         AUDIT_LOGS: this.getAuditLogs(),
+        USERS: this.getUsers(),
         SEQUENCES: getStored(STORAGE_KEYS.SEQUENCES, {}),
         SELECTED_BRANCH: this.getSelectedBranchId(),
       },
@@ -862,7 +1017,7 @@ export class DimKhataStore {
           .subscribe();
       }
 
-      return { synced: true, count: data?.length || 18 };
+      return { synced: true, count: data?.length || 19 };
     } catch {
       this.setCloudStatus('OFFLINE');
       return { synced: false, count: 0 };
@@ -871,6 +1026,7 @@ export class DimKhataStore {
 
   static resetToCleanProduction(): void {
     MEMORY_DB.clear();
+    setStored(STORAGE_KEYS.USERS, DEFAULT_USERS);
     setStored(STORAGE_KEYS.COMPANY, DEFAULT_COMPANY);
     setStored(STORAGE_KEYS.BRANCHES, DEFAULT_BRANCHES);
     setStored(STORAGE_KEYS.PARTNERS, DEFAULT_PARTNERS);

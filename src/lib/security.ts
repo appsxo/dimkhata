@@ -3,7 +3,7 @@
 // SHA-256 PIN Hashing, Role Access Verification & Input Sanitization
 // ====================================================================
 
-import { CompanySettings } from '../types';
+import { CompanySettings, UserProfile } from '../types';
 
 // Default SHA-256 hashes:
 // '1234' -> 03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
@@ -30,6 +30,17 @@ export async function sha256Hex(input: string): Promise<string> {
     h = (Math.imul(31, h) + clean.charCodeAt(i)) | 0;
   }
   return String(h >>> 0);
+}
+
+/**
+ * Verifies an entered PIN against an individual UserProfile
+ */
+export async function verifyUserPin(user: UserProfile, enteredPin: string): Promise<boolean> {
+  const hash = await sha256Hex(enteredPin);
+  const targetHash =
+    user.pin_hash ||
+    (user.role === 'ADMIN' ? DEFAULT_ADMIN_PIN_HASH : DEFAULT_STAFF_PIN_HASH);
+  return hash === targetHash;
 }
 
 /**
