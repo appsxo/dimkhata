@@ -11,6 +11,7 @@ import {
 import { Partner, PartnerDrawing, FinancialAccount } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { useLanguage } from '../lib/i18n';
 import { AppleSectionHeader, AppleModal } from '../components/ui/AppleUI';
 
 interface ProfitSettlementViewProps {
@@ -26,6 +27,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
   accounts,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [isDrawingOpen, setIsDrawingOpen] = useState(false);
@@ -50,12 +52,12 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
       drawing_date: new Date().toISOString().split('T')[0],
       amount: drawAmount,
       account_id: drawAccountId,
-      notes: drawNotes || 'মালিকের ব্যক্তিগত উত্তোলন',
+      notes: drawNotes || t('মালিকের ব্যক্তিগত উত্তোলন', 'Partner Drawing'),
       created_at: new Date().toISOString(),
     };
 
     DimKhataStore.recordPartnerDrawing(newDrawing, 'br-01');
-    alert('ব্যক্তিগত উত্তোলন সফলভাবে সংরক্ষিত হয়েছে ও ক্যাশ বুক থেকে কর্তন হয়েছে!');
+    alert(t('ব্যক্তিগত উত্তোলন সফলভাবে সংরক্ষিত হয়েছে ও ক্যাশ বুক থেকে কর্তন হয়েছে!', 'Partner drawing saved and deducted from Cashbook!'));
     setIsDrawingOpen(false);
     onRefresh();
   };
@@ -68,7 +70,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
     if (sharif) DimKhataStore.updatePartnerWeight(sharif.id, Number(sharifWeight) || 2);
     if (eman) DimKhataStore.updatePartnerWeight(eman.id, Number(emanWeight) || 1);
 
-    alert('লভ্যাংশ বণ্টনের অনুপাত সফলভাবে আপডেট হয়েছে!');
+    alert(t('লভ্যাংশ বণ্টনের অনুপাত সফলভাবে আপডেট হয়েছে!', 'Profit distribution ratio updated!'));
     setIsRatioOpen(false);
     onRefresh();
   };
@@ -76,9 +78,12 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="১-ক্লিক অটোমেটিক লাভ-লোকসান"
-        title="মাস শেষে নিট লাভ ও ২:১ লভ্যাংশ বণ্টন"
-        subtitle="মোট আয় থেকে ল্যান্ডেড কস্ট, বেতন, দোকান খরচ, ওয়েস্টেজ বাদ দিয়ে শরিফ (৬৬.৬৭%) ও ইমান (৩৩.৩৩%) এর নিট পাওনা"
+        eyebrow={t('১-ক্লিক অটোমেটিক লাভ-লোকসান', '1-Click Automated Profit & Loss')}
+        title={t('মাস শেষে নিট লাভ ও ২:১ লভ্যাংশ বণ্টন', 'Monthly Net Profit & 2:1 Partner Split')}
+        subtitle={t(
+          'মোট আয় থেকে ল্যান্ডেড কস্ট, বেতন, দোকান খরচ, ওয়েস্টেজ বাদ দিয়ে শরিফ (৬৬.৬৭%) ও ইমান (৩৩.৩৩%) এর নিট পাওনা',
+          'Deducts COGS, salaries, shop expenses & wastage from revenue and splits net profit 2:1 between Sharif (66.67%) & Eman (33.33%)'
+        )}
         actions={
           <>
             <input
@@ -93,7 +98,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
               className="btn-outline text-[13px] px-3.5"
             >
               <MinusCircle className="w-4 h-4" />
-              <span>ব্যক্তিগত উত্তোলন</span>
+              <span>{t('ব্যক্তিগত উত্তোলন', 'Partner Drawing')}</span>
             </button>
 
             <button
@@ -101,7 +106,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
               className="btn-outline text-[13px] px-3.5"
             >
               <Settings className="w-4 h-4" />
-              <span>অনুপাত কনফিগার</span>
+              <span>{t('অনুপাত কনফিগার', 'Ratio Config')}</span>
             </button>
 
             <button
@@ -109,7 +114,7 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
               className="btn-primary text-[13px] px-4"
             >
               <Printer className="w-4 h-4" />
-              <span>রিপোর্ট প্রিন্ট</span>
+              <span>{t('রিপোর্ট প্রিন্ট', 'Print Report')}</span>
             </button>
           </>
         }
@@ -120,14 +125,14 @@ export const ProfitSettlementView: React.FC<ProfitSettlementViewProps> = ({
         <div className="border-b border-[#e0e0e0] pb-3.5 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <div>
             <h3 className="font-semibold text-[22px] text-[#1d1d1f]">
-              মাসিক লাভ-লোকসান বিবরণী (Monthly Income Statement)
+              {t('মাসিক লাভ-লোকসান বিবরণী (Monthly Income Statement)', 'Monthly Income Statement (P&L)')}
             </h3>
             <p className="text-[12px] text-[#7a7a7a]">
-              হিসাবের মাস: <strong>{toBengaliNumber(selectedMonth)}</strong> | শরিফ এন্ড ইমান এন্টারপ্রাইজ
+              {t('হিসাবের মাস:', 'Settlement Month:')} <strong>{toBengaliNumber(selectedMonth)}</strong> | {t('শরিফ এন্ড ইমান এন্টারপ্রাইজ', 'Sharif & Eman Enterprise')}
             </p>
           </div>
           <div className="text-right">
-            <span className="text-[11px] text-[#7a7a7a] uppercase tracking-wider">প্রকৃত নিট লাভ / লোকসান</span>
+            <span className="text-[11px] text-[#7a7a7a] uppercase tracking-wider">{t('প্রকৃত নিট লাভ / লোকসান', 'Net Profit / Loss')}</span>
             <div
               className={`font-semibold text-[28px] mt-0.5 ${
                 settlement.netProfit >= 0 ? 'text-[#0066cc]' : 'text-[#d92916]'

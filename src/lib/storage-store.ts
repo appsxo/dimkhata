@@ -1,6 +1,6 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Universal Enterprise Data & State Management
-// Handles Local Persistence, Auto-Sequences, Accounting Triggers & Audit
+// DIMKHATA (ডিমখাতা) — Universal Enterprise Data & Cloud State Engine
+// Single Source of Truth: Supabase Cloud Database (Zero Local Dummy Data)
 // ====================================================================
 
 import {
@@ -73,37 +73,92 @@ const STORAGE_KEYS = {
   SELECTED_BRANCH: 'dimkhata_selected_branch',
 };
 
-const LOCAL_ONLY_KEYS = new Set<string>([
+const SESSION_ONLY_KEYS = new Set<string>([
   STORAGE_KEYS.ACTIVE_USER,
   STORAGE_KEYS.SELECTED_BRANCH,
 ]);
 
-// Safe LocalStorage + Supabase Cloud Sync helpers
-function getStored<T>(key: string, defaultValue: T): T {
+// Legacy demo IDs from earlier prototype builds — automatically purged if found in cloud
+const LEGACY_DEMO_IDS = new Set<string>([
+  'cust-01', 'cust-02', 'cust-03',
+  'sup-01', 'sup-02',
+  'emp-01', 'emp-02',
+  'pur-01', 'pur-02',
+  'inv-01', 'inv-02', 'inv-03',
+  'adj-01', 'adj-02',
+  'exp-01', 'exp-02', 'exp-03',
+  'tx-01', 'tx-02', 'tx-03', 'tx-04', 'tx-05',
+  'audit-01', 'audit-02', 'audit-03',
+  'br-02',
+  'stock-06', 'stock-07',
+]);
+
+const LEGACY_DEMO_STOCK_QTYS = new Set<number>([14500, 4200, 2100, 3500, 950, 3200, 800]);
+const LEGACY_DEMO_ACCOUNT_BALANCES = new Set<number>([142500, 48200, 21500, 385000, 50000, 25000, 15000, 120000]);
+
+export type CloudSyncStatus = 'SYNCING' | 'ONLINE' | 'NEEDS_SQL' | 'OFFLINE';
+
+// Pure In-Memory Runtime State synced directly with Supabase (Zero localStorage business data)
+const MEMORY_DB = new Map<string, unknown>();
+
+// Purge any legacy localStorage business keys immediately on module load
+(function purgeLegacyLocalStorage() {
+  if (typeof window === 'undefined') return;
   try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (err) {
-    console.error(`Error loading key ${key}:`, err);
-    return defaultValue;
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      if (!SESSION_ONLY_KEYS.has(key)) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch {
+    // ignore storage errors
   }
+})();
+
+function cloneDefault<T>(val: T): T {
+  return JSON.parse(JSON.stringify(val));
+}
+
+function getStored<T>(key: string, defaultValue: T): T {
+  if (SESSION_ONLY_KEYS.has(key)) {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : cloneDefault(defaultValue);
+    } catch {
+      return cloneDefault(defaultValue);
+    }
+  }
+  if (MEMORY_DB.has(key)) {
+    return cloneDefault(MEMORY_DB.get(key) as T);
+  }
+  return cloneDefault(defaultValue);
 }
 
 function pushKeyToSupabase(key: string, value: unknown): void {
-  if (!isSupabaseConfigured || !supabase || LOCAL_ONLY_KEYS.has(key)) return;
+  if (!isSupabaseConfigured || !supabase || SESSION_ONLY_KEYS.has(key)) return;
   supabase
     .from('dimkhata_kv_store')
     .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     .then(({ error }) => {
       if (error) {
         console.warn(`Supabase cloud sync warning for ${key}:`, error.message);
+        if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
+          DimKhataStore.setCloudStatus('NEEDS_SQL');
+        }
+      } else {
+        DimKhataStore.setCloudStatus('ONLINE');
       }
     });
 }
 
 function setStored<T>(key: string, value: T): void {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    if (SESSION_ONLY_KEYS.has(key)) {
+      localStorage.setItem(key, JSON.stringify(value));
+      window.dispatchEvent(new Event('dimkhata_storage_change'));
+      return;
+    }
+    MEMORY_DB.set(key, cloneDefault(value));
     window.dispatchEvent(new Event('dimkhata_storage_change'));
     pushKeyToSupabase(key, value);
   } catch (err) {
@@ -112,6 +167,29 @@ function setStored<T>(key: string, value: T): void {
 }
 
 export class DimKhataStore {
+  private static cloudStatus: CloudSyncStatus = isSupabaseConfigured ? 'SYNCING' : 'OFFLINE';
+  private static lastSyncTimestamp: string | null = null;
+  private static realtimeSubscribed = false;
+
+  static getCloudStatus(): CloudSyncStatus {
+    return this.cloudStatus;
+  }
+
+  static getLastSyncTimestamp(): string | null {
+    return this.lastSyncTimestamp;
+  }
+
+  static setCloudStatus(status: CloudSyncStatus): void {
+    const changed = this.cloudStatus !== status;
+    this.cloudStatus = status;
+    if (status === 'ONLINE') {
+      this.lastSyncTimestamp = new Date().toISOString();
+    }
+    if (changed && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('dimkhata_storage_change'));
+    }
+  }
+
   // Current active user (Admin vs Staff)
   static getActiveUser(): UserProfile {
     return getStored<UserProfile>(STORAGE_KEYS.ACTIVE_USER, {
@@ -136,17 +214,17 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.SELECTED_BRANCH, branchId);
   }
 
-  // Atomic Sequential Unique ID Generator
+  // Atomic Sequential Unique ID Generator (Starts cleanly from 0)
   static getNextCode(prefix: 'EMP' | 'CUST' | 'SUP' | 'INV' | 'CHL' | 'PUR' | 'ADJ' | 'EXP' | 'REC' | 'PAY' | 'SPAY'): string {
     const seqs = getStored<Record<string, number>>(STORAGE_KEYS.SEQUENCES, {
-      EMP: 2,
-      CUST: 3,
-      SUP: 2,
-      INV: 3,
-      CHL: 1,
-      PUR: 2,
-      ADJ: 2,
-      EXP: 3,
+      EMP: 0,
+      CUST: 0,
+      SUP: 0,
+      INV: 0,
+      CHL: 0,
+      PUR: 0,
+      ADJ: 0,
+      EXP: 0,
       REC: 0,
       PAY: 0,
       SPAY: 0,
@@ -241,12 +319,11 @@ export class DimKhataStore {
     const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
     const todayMatches = rates.filter((r) => r.rate_date === targetDate);
     if (todayMatches.length > 0) return todayMatches;
-    return INITIAL_DAILY_RATES;
+    return rates.length > 0 ? rates.slice(0, 5) : INITIAL_DAILY_RATES;
   }
 
   static setDailyRates(newRates: DailyMarketRate[]): void {
     const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
-    // Remove existing for those (date + branch + category)
     const filtered = rates.filter((r) => !newRates.some((nr) => nr.rate_date === r.rate_date && nr.branch_id === r.branch_id && nr.category_id === r.category_id));
     const merged = [...newRates, ...filtered];
     setStored(STORAGE_KEYS.DAILY_RATES, merged);
@@ -254,7 +331,7 @@ export class DimKhataStore {
   }
 
   /**
-   * Raw per-branch stocks stored in LocalStorage
+   * Raw per-branch stocks stored in Cloud Memory
    */
   static getAllBranchStocks(): InventoryStock[] {
     return getStored<InventoryStock[]>(STORAGE_KEYS.STOCKS, INITIAL_INVENTORY_STOCKS);
@@ -269,7 +346,6 @@ export class DimKhataStore {
       return allStocks.filter((s) => s.branch_id === branchId);
     }
 
-    // Aggregate across all branches per category so 'ALL' shows combined stock & weighted WAC
     const byCat = new Map<string, InventoryStock>();
     allStocks.forEach((s) => {
       const existing = byCat.get(s.category_id);
@@ -401,9 +477,6 @@ export class DimKhataStore {
   // ACCOUNTING TRANSACTIONS & BUSINESS TRIGGERS
   // ====================================================================
 
-  /**
-   * Post entry to Cashbook and update account balance
-   */
   static postCashbook(
     accountId: string,
     branchId: string,
@@ -443,16 +516,11 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.CASHBOOK, cashbook);
   }
 
-  /**
-   * Process Purchase (Req 9: Sourcing + Landed Cost + WAC + Stock + Supplier Payable + Cashbook)
-   */
   static recordPurchase(purchase: Purchase): void {
-    // 1. Save purchase record
     const purchases = this.getPurchases();
     purchases.unshift(purchase);
     setStored(STORAGE_KEYS.PURCHASES, purchases);
 
-    // 2. Update stock & WAC for each item in raw branch stocks
     const stocks = this.getAllBranchStocks();
     purchase.items.forEach((item) => {
       let stock = stocks.find((s) => s.branch_id === purchase.branch_id && s.category_id === item.category_id);
@@ -481,7 +549,6 @@ export class DimKhataStore {
     });
     setStored(STORAGE_KEYS.STOCKS, stocks);
 
-    // 3. Update Supplier Payable if due exists
     if (purchase.due_amount > 0) {
       const suppliers = this.getSuppliers();
       const sup = suppliers.find((s) => s.id === purchase.supplier_id);
@@ -491,7 +558,6 @@ export class DimKhataStore {
       }
     }
 
-    // 4. Post Cash Out if paid from account
     if (purchase.paid_amount > 0 && purchase.payment_account_id) {
       this.postCashbook(
         purchase.payment_account_id,
@@ -507,16 +573,11 @@ export class DimKhataStore {
     this.logAudit('Purchases', 'INSERT', purchase.purchase_code, `ডিম কেনা ভাউচার সম্পন্ন: ${purchase.total_eggs_pcs} পিস, মোট ল্যান্ডেড কস্ট: ৳${purchase.total_landed_cost}`);
   }
 
-  /**
-   * Process Sales Invoice (Req 10: POS + Stock Deduction + COGS + Customer Due + Cashbook)
-   */
   static recordSalesInvoice(invoice: SalesInvoice): void {
-    // 1. Save invoice
     const sales = this.getSales();
     sales.unshift(invoice);
     setStored(STORAGE_KEYS.SALES, sales);
 
-    // 2. Deduct inventory stock from specific branch
     const stocks = this.getAllBranchStocks();
     invoice.items.forEach((item) => {
       const stock = stocks.find((s) => s.branch_id === invoice.branch_id && s.category_id === item.category_id);
@@ -527,7 +588,6 @@ export class DimKhataStore {
     });
     setStored(STORAGE_KEYS.STOCKS, stocks);
 
-    // 3. Update Customer Due
     if (invoice.due_amount > 0) {
       const customers = this.getCustomers();
       const cust = customers.find((c) => c.id === invoice.customer_id);
@@ -537,7 +597,6 @@ export class DimKhataStore {
       }
     }
 
-    // 4. Post Cash In if paid amount > 0
     if (invoice.paid_amount > 0 && invoice.payment_account_id) {
       this.postCashbook(
         invoice.payment_account_id,
@@ -553,15 +612,11 @@ export class DimKhataStore {
     this.logAudit('Sales Invoices', 'INSERT', invoice.invoice_code, `বিক্রয় মেমো জেনারেট: বিল ৳${invoice.net_total}, জমা ৳${invoice.paid_amount}, বকেয়া ৳${invoice.due_amount}`);
   }
 
-  /**
-   * Process Stock Adjustments (Req 7: Wastage, Req 8: Courtesy, Req 3: Branch Transfer)
-   */
   static recordStockAdjustment(adj: StockAdjustment): void {
     const adjustments = this.getAdjustments();
     adjustments.unshift(adj);
     setStored(STORAGE_KEYS.ADJUSTMENTS, adjustments);
 
-    // Deduct stock from origin branch
     const stocks = this.getAllBranchStocks();
     const sourceStock = stocks.find((s) => s.branch_id === adj.branch_id && s.category_id === adj.category_id);
     if (sourceStock) {
@@ -569,7 +624,6 @@ export class DimKhataStore {
       sourceStock.updated_at = new Date().toISOString();
     }
 
-    // If branch transfer, add to target branch with weighted WAC
     if (adj.adjustment_type === 'BRANCH_TRANSFER' && adj.target_branch_id) {
       let targetStock = stocks.find((s) => s.branch_id === adj.target_branch_id && s.category_id === adj.category_id);
       if (!targetStock) {
@@ -610,15 +664,11 @@ export class DimKhataStore {
     );
   }
 
-  /**
-   * Collect Customer Due (Req 10)
-   */
   static recordCustomerDueCollection(collection: CustomerDueCollection): void {
     const collections = this.getDueCollections();
     collections.unshift(collection);
     setStored(STORAGE_KEYS.DUE_COLLECTIONS, collections);
 
-    // Deduct due
     const customers = this.getCustomers();
     const cust = customers.find((c) => c.id === collection.customer_id);
     if (cust) {
@@ -626,7 +676,6 @@ export class DimKhataStore {
       setStored(STORAGE_KEYS.CUSTOMERS, customers);
     }
 
-    // Post Cash In
     this.postCashbook(
       collection.payment_account_id,
       collection.branch_id,
@@ -640,9 +689,6 @@ export class DimKhataStore {
     this.logAudit('Due Collections', 'INSERT', collection.receipt_code, `বকেয়া আদায়: ${cust?.name} থেকে ৳${collection.amount}`);
   }
 
-  /**
-   * Pay Supplier Payable (Req 9)
-   */
   static recordSupplierPayment(
     supplierId: string,
     amount: number,
@@ -672,9 +718,6 @@ export class DimKhataStore {
     return paymentCode;
   }
 
-  /**
-   * Record Operational & Asset Expense (Req 12)
-   */
   static recordExpense(expense: Expense): void {
     const expenses = this.getExpenses();
     expenses.unshift(expense);
@@ -693,9 +736,6 @@ export class DimKhataStore {
     this.logAudit('Expenses', 'INSERT', expense.expense_code, `খরচ এন্ট্রি: ${expense.title} (৳${expense.amount})`);
   }
 
-  /**
-   * Record Salary Advance (Req 11)
-   */
   static recordSalaryAdvance(advance: SalaryAdvance, accountId: string, branchId: string): void {
     const advances = this.getSalaryAdvances();
     advances.unshift(advance);
@@ -716,9 +756,6 @@ export class DimKhataStore {
     this.logAudit('Salary Advance', 'INSERT', advance.id, `বেতন অগ্রিম: ${emp?.full_name} কে ৳${advance.amount}`);
   }
 
-  /**
-   * Record Payroll Record (Req 11)
-   */
   static recordPayroll(record: PayrollRecord, accountId: string, branchId: string): void {
     const payrolls = this.getPayrolls();
     payrolls.unshift(record);
@@ -741,9 +778,6 @@ export class DimKhataStore {
     this.logAudit('Payroll', 'INSERT', record.payroll_code, `বেতন পরিশোধ: ${emp?.full_name} (মাস: ${record.salary_month}, নীট: ৳${record.net_payable})`);
   }
 
-  /**
-   * Record Partner Drawing / Withdrawal (Req 14)
-   */
   static recordPartnerDrawing(drawing: PartnerDrawing, branchId: string): void {
     const drawings = this.getPartnerDrawings();
     drawings.unshift(drawing);
@@ -786,7 +820,6 @@ export class DimKhataStore {
       netPayable: number;
     }[];
   } {
-    // 1. Sales & COGS for this month
     const sales = this.getSales().filter((s) => s.invoice_date.startsWith(targetMonth));
     let totalSalesRevenue = 0;
     let totalCogs = 0;
@@ -800,11 +833,9 @@ export class DimKhataStore {
 
     const grossProfit = totalSalesRevenue - totalCogs;
 
-    // 2. Operating Expenses (Excluding Capital Asset purchases from P&L per Req 12)
     const expenses = this.getExpenses().filter((e) => e.expense_date.startsWith(targetMonth) && !e.is_capital_asset);
     const totalOperatingExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-    // 3. Salaries paid this month (finalized payrolls + mid-month advances for unsettled employees)
     const payrolls = this.getPayrolls().filter((p) => p.salary_month === targetMonth);
     const settledEmployeeIds = new Set(payrolls.map((p) => p.employee_id));
     const settledPayrollCost = payrolls.reduce((sum, p) => sum + p.net_payable + p.advances_deducted, 0);
@@ -815,7 +846,6 @@ export class DimKhataStore {
 
     const totalSalaries = settledPayrollCost + unsettledAdvancesCost;
 
-    // 4. Wastage & Courtesy losses
     const adjustments = this.getAdjustments().filter((a) => a.adjustment_date.startsWith(targetMonth));
     const totalWastageLoss = adjustments
       .filter((a) => a.adjustment_type === 'WASTAGE_BROKEN' || a.adjustment_type === 'WASTAGE_ROTTEN')
@@ -825,10 +855,8 @@ export class DimKhataStore {
       .filter((a) => a.adjustment_type === 'COURTESY_GIFT')
       .reduce((sum, a) => sum + a.total_cost_value, 0);
 
-    // 5. Net Profit
     const netProfit = grossProfit - totalOperatingExpenses - totalSalaries - totalWastageLoss - totalCourtesyLoss;
 
-    // 6. Partner Distributions (Configurable 2:1 Ratio & Drawings deduction)
     const partners = this.getPartners().filter((p) => p.is_active);
     const totalWeight = partners.reduce((sum, p) => sum + p.share_weight, 0) || 1;
     const drawings = this.getPartnerDrawings().filter((d) => d.drawing_date.startsWith(targetMonth));
@@ -865,7 +893,7 @@ export class DimKhataStore {
     };
   }
 
-  // Backup & Restore (Always exports complete dataset including default collections)
+  // Backup & Restore
   static exportFullBackupJson(): string {
     const backupData: Record<string, unknown> = {
       COMPANY: this.getCompany(),
@@ -910,13 +938,53 @@ export class DimKhataStore {
     }
   }
 
-  // Two-Way Cloud Sync with Supabase (GitHub Pages + Supabase Free Tier)
-  private static realtimeSubscribed = false;
+  // ====================================================================
+  // SUPABASE CLOUD SYNC (Single Source of Truth + Zero Dummy Data)
+  // ====================================================================
+  private static sanitizeCloudRow(key: string, value: unknown): { cleaned: unknown; modified: boolean } {
+    if (!Array.isArray(value)) return { cleaned: value, modified: false };
+
+    let modified = false;
+    let filtered = value.filter((item: any) => {
+      if (item && typeof item.id === 'string' && LEGACY_DEMO_IDS.has(item.id)) {
+        modified = true;
+        return false;
+      }
+      return true;
+    });
+
+    // Clean legacy demo stock quantities if found
+    if (key === STORAGE_KEYS.STOCKS) {
+      filtered = filtered.map((s: any) => {
+        if (s && typeof s.qty_pcs === 'number' && LEGACY_DEMO_STOCK_QTYS.has(s.qty_pcs)) {
+          modified = true;
+          return { ...s, qty_pcs: 0 };
+        }
+        return s;
+      });
+    }
+
+    // Clean legacy demo account balances if found
+    if (key === STORAGE_KEYS.ACCOUNTS) {
+      filtered = filtered.map((a: any) => {
+        if (a && typeof a.current_balance === 'number' && LEGACY_DEMO_ACCOUNT_BALANCES.has(a.current_balance)) {
+          modified = true;
+          return { ...a, current_balance: 0 };
+        }
+        return a;
+      });
+    }
+
+    return { cleaned: filtered, modified };
+  }
 
   static async syncWithSupabase(): Promise<{ synced: boolean; count: number }> {
     if (!isSupabaseConfigured || !supabase) {
+      this.setCloudStatus('OFFLINE');
       return { synced: false, count: 0 };
     }
+
+    this.setCloudStatus('SYNCING');
 
     try {
       const { data, error } = await supabase
@@ -924,29 +992,61 @@ export class DimKhataStore {
         .select('key, value');
 
       if (error) {
-        console.warn('Supabase sync fetch skipped:', error.message);
+        console.warn('Supabase sync fetch warning:', error.message);
+        if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
+          this.setCloudStatus('NEEDS_SQL');
+        } else {
+          this.setCloudStatus('OFFLINE');
+        }
         return { synced: false, count: 0 };
       }
 
       if (data && data.length > 0) {
+        const sanitizedRowsToPush: { key: string; value: unknown; updated_at: string }[] = [];
+
         data.forEach((row: { key: string; value: unknown }) => {
-          if (row.key && !LOCAL_ONLY_KEYS.has(row.key)) {
-            localStorage.setItem(row.key, JSON.stringify(row.value));
+          if (row.key && !SESSION_ONLY_KEYS.has(row.key)) {
+            const { cleaned, modified } = this.sanitizeCloudRow(row.key, row.value);
+            MEMORY_DB.set(row.key, cleaned);
+            if (modified) {
+              sanitizedRowsToPush.push({
+                key: row.key,
+                value: cleaned,
+                updated_at: new Date().toISOString(),
+              });
+            }
           }
         });
+
+        // If any legacy demo data was found in Supabase, overwrite it in Supabase immediately
+        if (sanitizedRowsToPush.length > 0) {
+          await supabase.from('dimkhata_kv_store').upsert(sanitizedRowsToPush, { onConflict: 'key' });
+        }
+
+        this.setCloudStatus('ONLINE');
         window.dispatchEvent(new Event('dimkhata_storage_change'));
       } else {
-        // Cloud table is empty on first connection — push initial local state to Supabase
+        // Cloud table is empty on first connection — push clean structural defaults to Supabase
         const fullState = JSON.parse(this.exportFullBackupJson()) as Record<string, unknown>;
         const rowsToUpsert = Object.entries(STORAGE_KEYS)
-          .filter(([, key]) => !LOCAL_ONLY_KEYS.has(key))
-          .map(([name, key]) => ({
-            key,
-            value: fullState[name] ?? {},
-            updated_at: new Date().toISOString(),
-          }));
+          .filter(([, key]) => !SESSION_ONLY_KEYS.has(key))
+          .map(([name, key]) => {
+            const val = fullState[name] ?? {};
+            MEMORY_DB.set(key, val);
+            return {
+              key,
+              value: val,
+              updated_at: new Date().toISOString(),
+            };
+          });
 
-        await supabase.from('dimkhata_kv_store').upsert(rowsToUpsert, { onConflict: 'key' });
+        const { error: upsertErr } = await supabase
+          .from('dimkhata_kv_store')
+          .upsert(rowsToUpsert, { onConflict: 'key' });
+
+        if (!upsertErr) {
+          this.setCloudStatus('ONLINE');
+        }
       }
 
       if (!this.realtimeSubscribed) {
@@ -958,8 +1058,10 @@ export class DimKhataStore {
             { event: '*', schema: 'public', table: 'dimkhata_kv_store' },
             (payload: any) => {
               const row = payload.new as { key?: string; value?: unknown };
-              if (row && row.key && !LOCAL_ONLY_KEYS.has(row.key)) {
-                localStorage.setItem(row.key, JSON.stringify(row.value));
+              if (row && row.key && !SESSION_ONLY_KEYS.has(row.key)) {
+                const { cleaned } = this.sanitizeCloudRow(row.key, row.value);
+                MEMORY_DB.set(row.key, cleaned);
+                this.setCloudStatus('ONLINE');
                 window.dispatchEvent(new Event('dimkhata_storage_change'));
               }
             }
@@ -970,30 +1072,54 @@ export class DimKhataStore {
       return { synced: true, count: data?.length || 18 };
     } catch (err) {
       console.warn('Supabase sync exception:', err);
+      this.setCloudStatus('OFFLINE');
       return { synced: false, count: 0 };
     }
   }
 
-  static resetToDemoData(): void {
-    localStorage.clear();
+  /**
+   * Resets all transactional records in Memory and Supabase to a clean, zero-dummy production state.
+   */
+  static resetToCleanProduction(): void {
+    MEMORY_DB.clear();
     setStored(STORAGE_KEYS.COMPANY, INITIAL_COMPANY_SETTINGS);
     setStored(STORAGE_KEYS.BRANCHES, INITIAL_BRANCHES);
     setStored(STORAGE_KEYS.PARTNERS, INITIAL_PARTNERS);
     setStored(STORAGE_KEYS.CATEGORIES, INITIAL_EGG_CATEGORIES);
     setStored(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
     setStored(STORAGE_KEYS.STOCKS, INITIAL_INVENTORY_STOCKS);
-    setStored(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
-    setStored(STORAGE_KEYS.SUPPLIERS, INITIAL_SUPPLIERS);
-    setStored(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES);
+    setStored(STORAGE_KEYS.CUSTOMERS, []);
+    setStored(STORAGE_KEYS.SUPPLIERS, []);
+    setStored(STORAGE_KEYS.EMPLOYEES, []);
     setStored(STORAGE_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
-    setStored(STORAGE_KEYS.PURCHASES, INITIAL_PURCHASES);
-    setStored(STORAGE_KEYS.SALES, INITIAL_SALES);
-    setStored(STORAGE_KEYS.ADJUSTMENTS, INITIAL_ADJUSTMENTS);
-    setStored(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
-    setStored(STORAGE_KEYS.CASHBOOK, INITIAL_CASHBOOK);
-    setStored(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
+    setStored(STORAGE_KEYS.PURCHASES, []);
+    setStored(STORAGE_KEYS.SALES, []);
+    setStored(STORAGE_KEYS.ADJUSTMENTS, []);
+    setStored(STORAGE_KEYS.DUE_COLLECTIONS, []);
+    setStored(STORAGE_KEYS.EXPENSES, []);
+    setStored(STORAGE_KEYS.PARTNER_DRAWINGS, []);
+    setStored(STORAGE_KEYS.SALARY_ADVANCES, []);
+    setStored(STORAGE_KEYS.PAYROLLS, []);
+    setStored(STORAGE_KEYS.CASHBOOK, []);
+    setStored(STORAGE_KEYS.AUDIT_LOGS, []);
+    setStored(STORAGE_KEYS.SEQUENCES, {
+      EMP: 0,
+      CUST: 0,
+      SUP: 0,
+      INV: 0,
+      CHL: 0,
+      PUR: 0,
+      ADJ: 0,
+      EXP: 0,
+      REC: 0,
+      PAY: 0,
+      SPAY: 0,
+    });
     window.dispatchEvent(new Event('dimkhata_storage_change'));
   }
+
+  // Backward-compatible alias
+  static resetToDemoData(): void {
+    this.resetToCleanProduction();
+  }
 }
-
-

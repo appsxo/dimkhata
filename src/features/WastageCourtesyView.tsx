@@ -7,6 +7,7 @@ import { AlertTriangle, Gift, CheckCircle2, History, ArrowRightLeft } from 'luci
 import { EggCategory, InventoryStock, Branch, StockAdjustment } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { useLanguage } from '../lib/i18n';
 import { AppleSectionHeader, AppleStatCard, AppleOptionChips } from '../components/ui/AppleUI';
 
 interface WastageCourtesyViewProps {
@@ -26,6 +27,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
   adjustments,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const rawBranchStocks = allBranchStocks || stocks;
   const [activeTab, setActiveTab] = useState<'WASTAGE' | 'COURTESY' | 'TRANSFER'>('WASTAGE');
   const [branchId, setBranchId] = useState(branches[0]?.id || '');
@@ -45,12 +47,12 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (qtyPcs <= 0) {
-      alert('দয়া করে সঠিক ডিমের সংখ্যা দিন!');
+      alert(t('দয়া করে সঠিক ডিমের সংখ্যা দিন!', 'Please enter a valid egg quantity!'));
       return;
     }
 
     if (activeTab === 'TRANSFER' && branchId === targetBranchId) {
-      alert('উৎস এবং গন্তব্য শাখা আলাদা হতে হবে!');
+      alert(t('উৎস এবং গন্তব্য শাখা আলাদা হতে হবে!', 'Source and destination branches must be different!'));
       return;
     }
 
@@ -76,9 +78,9 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
       recipient_or_reason:
         recipientOrReason ||
         (activeTab === 'WASTAGE'
-          ? 'পরিবহনে ভাঙা / গরমে পচা'
+          ? t('পরিবহনে ভাঙা / গরমে পচা', 'Broken / Rotten Wastage')
           : activeTab === 'COURTESY'
-          ? 'সৌজন্য গিফট'
+          ? t('সৌজন্য গিফট', 'Courtesy Gift')
           : `শাখা ট্রান্সফার (${branches.find((b) => b.id === targetBranchId)?.name || 'গন্তব্য শাখা'})`),
       created_at: new Date().toISOString(),
     };
@@ -86,8 +88,8 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
     DimKhataStore.recordStockAdjustment(newAdjustment);
     alert(
       activeTab === 'TRANSFER'
-        ? 'সফল! এক শাখা থেকে অন্য শাখায় ডিমের স্টক স্থানান্তরিত হয়েছে।'
-        : 'সফল! ডিম স্টক থেকে বিয়োগ করা হয়েছে এবং লাভ-লোকসানের খরচে যুক্ত হয়েছে।'
+        ? t('সফল! এক শাখা থেকে অন্য শাখায় ডিমের স্টক স্থানান্তরিত হয়েছে।', 'Stock transferred successfully between branches!')
+        : t('সফল! ডিম স্টক থেকে বিয়োগ করা হয়েছে এবং লাভ-লোকসানের খরচে যুক্ত হয়েছে।', 'Stock deducted and loss recorded in P&L!')
     );
     onRefresh();
 
@@ -107,24 +109,27 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="স্টক সমন্বয় ও লস ট্র্যাকিং"
-        title="ড্যামেজ, পচা, সৌজন্য ডিম ও শাখা স্থানান্তর"
-        subtitle="ভাঙা বা নষ্ট ডিম ও সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি স্বয়ংক্রিয়ভাবে লাভ-লোকসানে যোগ হবে"
+        eyebrow={t('স্টক সমন্বয় ও লস ট্র্যাকিং', 'Stock Adjustment & Loss Tracking')}
+        title={t('ড্যামেজ, পচা, সৌজন্য ডিম ও শাখা স্থানান্তর', 'Wastage, Courtesy & Branch Transfer')}
+        subtitle={t(
+          'ভাঙা বা নষ্ট ডিম ও সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি স্বয়ংক্রিয়ভাবে লাভ-লোকসানে যোগ হবে',
+          'Broken/rotten eggs and courtesy gifts are automatically deducted from stock and recorded in P&L'
+        )}
       />
 
       {/* 2 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AppleStatCard
-          label="চলতি মাসের মোট ভাঙা/পচা ক্ষতি"
+          label={t('চলতি মাসের মোট ভাঙা/পচা ক্ষতি', "This Month's Wastage Loss")}
           value={formatTaka(monthlyWastage)}
-          subtext="Wastage Loss Expense হিসাবে লাভ-লোকসানে বাদ পড়বে"
+          subtext={t('Wastage Loss Expense হিসাবে লাভ-লোকসানে বাদ পড়বে', 'Deducted as Wastage Loss in Net Profit')}
           icon={<span>💔</span>}
         />
 
         <AppleStatCard
-          label="চলতি মাসের মোট সৌজন্য ডিমের খরচ"
+          label={t('চলতি মাসের মোট সৌজন্য ডিমের খরচ', "This Month's Courtesy Expense")}
           value={formatTaka(monthlyCourtesy)}
-          subtext="Courtesy Promo Expense হিসাবে লাভ-লোকসানে বাদ পড়বে"
+          subtext={t('Courtesy Promo Expense হিসাবে লাভ-লোকসানে বাদ পড়বে', 'Deducted as Courtesy Expense in Net Profit')}
           icon={<span>🎁</span>}
         />
       </div>
@@ -135,9 +140,9 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
           {/* Option Chips */}
           <AppleOptionChips
             options={[
-              { value: 'WASTAGE', label: 'ভাঙা ও পচা (Wastage)', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-              { value: 'COURTESY', label: 'সৌজন্য গিফট (Courtesy)', icon: <Gift className="w-3.5 h-3.5" /> },
-              { value: 'TRANSFER', label: 'শাখা স্থানান্তর (Transfer)', icon: <ArrowRightLeft className="w-3.5 h-3.5" /> },
+              { value: 'WASTAGE', label: t('ভাঙা ও পচা (Wastage)', 'Wastage'), icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+              { value: 'COURTESY', label: t('সৌজন্য গিফট (Courtesy)', 'Courtesy'), icon: <Gift className="w-3.5 h-3.5" /> },
+              { value: 'TRANSFER', label: t('শাখা স্থানান্তর (Transfer)', 'Transfer'), icon: <ArrowRightLeft className="w-3.5 h-3.5" /> },
             ]}
             value={activeTab}
             onChange={setActiveTab}
@@ -147,7 +152,9 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  {activeTab === 'TRANSFER' ? 'উৎস শাখা (যেখান থেকে যাবে)' : 'শাখা / গোডাউন'}
+                  {activeTab === 'TRANSFER'
+                    ? t('উৎস শাখা (যেখান থেকে যাবে)', 'Source Branch')
+                    : t('শাখা / গোডাউন', 'Branch / Godown')}
                 </label>
                 <select
                   value={branchId}

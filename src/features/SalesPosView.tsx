@@ -1,5 +1,6 @@
 // ====================================================================
 // DIMKHATA (ডিমখাতা) — Sales POS & Delivery Challan (Apple Design System)
+// Supports Walk-in Cash Customer, Inline Quick Customer Creation & Bilingual UI
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +12,8 @@ import {
   Truck,
   AlertCircle,
   CheckCircle2,
+  UserPlus,
+  X,
 } from 'lucide-react';
 import {
   Customer,
@@ -27,6 +30,8 @@ import {
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
 import { shareInvoiceWhatsApp } from '../lib/whatsapp-share';
+import { useLanguage, getCategoryDisplayName } from '../lib/i18n';
+import { sanitizeText, sanitizePositiveNumber } from '../lib/security';
 import { AppleSectionHeader, AppleOptionChips } from '../components/ui/AppleUI';
 
 interface SalesPosViewProps {
@@ -56,11 +61,20 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   onRefresh,
   onSelectInvoiceForPrint,
 }) => {
+  const { t } = useLanguage();
   const rawBranchStocks = allBranchStocks || stocks;
-  const [customerId, setCustomerId] = useState(customers[0]?.id || '');
+
+  const [customerId, setCustomerId] = useState<string>(customers[0]?.id || 'WALK_IN');
   const [branchId, setBranchId] = useState(branches[0]?.id || '');
   const [saleType, setSaleType] = useState<'WHOLESALE' | 'RETAIL'>('WHOLESALE');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Inline Quick Add Customer state
+  const [showQuickCustomer, setShowQuickCustomer] = useState(false);
+  const [newCustName, setNewCustName] = useState('');
+  const [newCustPhone, setNewCustPhone] = useState('');
+  const [newCustAddress, setNewCustAddress] = useState('');
+  const [newCustLimit, setNewCustLimit] = useState(50000);
 
   const [items, setItems] = useState<
     { categoryId: string; inputType: 'CRATE' | 'PCS'; qtyInput: number; unitPrice: number }[]
@@ -69,7 +83,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
       categoryId: categories[0]?.id || '',
       inputType: 'CRATE',
       qtyInput: 10,
-      unitPrice: rates.find((r) => r.category_id === categories[0]?.id)?.wholesale_rate_pc || 10.80,
+      unitPrice: rates.find((r) => r.category_id === categories[0]?.id)?.wholesale_rate_pc || 10.8,
     },
   ]);
 
@@ -84,7 +98,14 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   const [driverName, setDriverName] = useState('');
   const [driverPhone, setDriverPhone] = useState('');
 
-  // Sync item unit prices if daily market rates are updated from the Navbar modal
+  // Ensure valid customer selection when customers array changes
+  useEffect(() => {
+    if (customerId !== 'WALK_IN' && !customers.some((c) => c.id === customerId)) {
+      setCustomerId(customers[0]?.id || 'WALK_IN');
+    }
+  }, [customers, customerId]);
+
+  // Sync item unit prices if daily market rates are updated
   useEffect(() => {
     setItems((prev) =>
       prev.map((item) => {
@@ -115,6 +136,35 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
   const newProjectedDue = (selectedCustomer?.current_due || 0) + dueAmount;
   const isCreditExceeded = selectedCustomer && newProjectedDue > selectedCustomer.credit_limit;
+
+  const handleQuickAddCustomer = () => {
+    const cleanName = sanitizeText(newCustName, 100);
+    if (!cleanName) {
+      alert(t('কাস্টমারের নাম লিখুন!', 'Please enter customer name!'));
+      return;
+    }
+    const newCust: Customer = {
+      id: `cust-${Date.now()}`,
+      customer_code: DimKhataStore.getNextCode('CUST'),
+      name: cleanName,
+      phone: sanitizeText(newCustPhone, 30) || '01700-000000',
+      customer_type: saleType,
+      present_address: sanitizeText(newCustAddress, 200) || t('ঢাকা', 'Dhaka'),
+      kyc_docs: [],
+      credit_limit: sanitizePositiveNumber(newCustLimit, 50000),
+      current_due: 0,
+      due_alert_days: 7,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+    DimKhataStore.saveCustomer(newCust);
+    onRefresh();
+    setCustomerId(newCust.id);
+    setNewCustName('');
+    setNewCustPhone('');
+    setNewCustAddress('');
+    setShowQuickCustomer(false);
+  };
 
   const handlePaymentMethodChange = (method: SalesInvoice['payment_method']) => {
     setPaymentMethod(method);
@@ -192,13 +242,18 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedCustomer) {
-      alert('দয়া করে একজন কাস্টমার নির্বাচন করুন!');
+    if (items.length === 0 || subtotal <= 0) {
+      alert(t('অন্তত একটি ডিমের আইটেম যোগ করুন!', 'Please add at least one egg item!'));
       return;
     }
 
-    if (items.length === 0 || subtotal <= 0) {
-      alert('অন্তত একটি ডিমের আইটেম যোগ করুন!');
+    if (customerId === 'WALK_IN' && dueAmount > 0) {
+      alert(
+        t(
+          'নগদ খুচরা কাস্টমারের ক্ষেত্রে বাকি রাখা যাবে না। "পূর্ণ বিল জমা" দিন অথবা "+ নতুন কাস্টমার" বাটনে ক্লিক করে কাস্টমার যোগ করুন।',
+          'Walk-in cash sales cannot have a due balance. Tap "Full Paid" or add a registered customer using "+ New Customer".'
+        )
+      );
       return;
     }
 
@@ -208,7 +263,10 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
       const cat = categories.find((c) => c.id === item.categoryId);
       if (!stock || stock.qty_pcs < pcs) {
         const proceed = confirm(
-          `সতর্কবার্তা: "${cat?.name_bn}" এর স্টক ঘাটতি রয়েছে (বর্তমান মজুদ: ${toBengaliNumber(stock?.qty_pcs || 0)} পিস)। আপনি কি ঘাটতি সত্ত্বেও বিক্রয় সম্পন্ন করতে চান?`
+          t(
+            `সতর্কবার্তা: "${cat ? getCategoryDisplayName(cat) : ''}" এর স্টক ঘাটতি রয়েছে (বর্তমান মজুদ: ${toBengaliNumber(stock?.qty_pcs || 0)} পিস)। আপনি কি ঘাটতি সত্ত্বেও বিক্রয় সম্পন্ন করতে চান?`,
+            `Warning: "${cat ? getCategoryDisplayName(cat) : ''}" has insufficient stock (Current: ${stock?.qty_pcs || 0} pcs). Proceed anyway?`
+          )
         );
         if (!proceed) return;
       }
@@ -238,11 +296,11 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
         challan_code: challanCode,
         invoice_id: '',
         challan_date: invoiceDate,
-        vehicle_type: 'পিকআপ / ভ্যান',
-        vehicle_number: vehicleNumber,
-        driver_name: driverName,
-        driver_phone: driverPhone,
-        destination_address: selectedCustomer.present_address,
+        vehicle_type: t('পিকআপ / ভ্যান', 'Pickup / Van'),
+        vehicle_number: sanitizeText(vehicleNumber, 50),
+        driver_name: sanitizeText(driverName, 80),
+        driver_phone: sanitizeText(driverPhone, 30),
+        destination_address: selectedCustomer?.present_address || t('ঢাকা', 'Dhaka'),
         created_at: new Date().toISOString(),
       };
     }
@@ -262,7 +320,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
       payment_account_id: paidAmount > 0 ? accountId : undefined,
       payment_method: paymentMethod,
       has_challan: includeChallan,
-      notes,
+      notes: sanitizeText(notes, 300),
       items: salesItems,
       challan,
       created_at: new Date().toISOString(),
@@ -278,16 +336,19 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <AppleSectionHeader
-        eyebrow="পাইকারি ও খুচরা বিক্রয়"
-        title="বিক্রয় মেমো ও ডেলিভারি চালান (POS)"
-        subtitle="১-ক্লিকে পাইকারি ও খুচরা রেটে মেমো তৈরি, বাকির সীমা সতর্কতা এবং প্রিন্ট ও WhatsApp শেয়ার"
+        eyebrow={t('পাইকারি ও খুচরা বিক্রয়', 'Wholesale & Retail POS')}
+        title={t('বিক্রয় মেমো ও ডেলিভারি চালান (POS)', 'Sales Memo & Delivery Challan (POS)')}
+        subtitle={t(
+          '১-ক্লিকে পাইকারি ও খুচরা রেটে মেমো তৈরি, বাকির সীমা সতর্কতা এবং প্রিন্ট ও WhatsApp শেয়ার',
+          'Create wholesale or retail memos in 1 click with credit limit alerts, thermal/A4 print & WhatsApp share'
+        )}
         actions={
           <AppleOptionChips
             options={[
-              { value: 'WHOLESALE', label: 'পাইকারি বিক্রয়' },
-              { value: 'RETAIL', label: 'খুচরা বিক্রয়' },
+              { value: 'WHOLESALE', label: t('পাইকারি বিক্রয়', 'Wholesale') },
+              { value: 'RETAIL', label: t('খুচরা বিক্রয়', 'Retail') },
             ]}
             value={saleType}
             onChange={handleSaleTypeChange}
@@ -295,21 +356,34 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Sales Memo Form (2 Cols) */}
-        <div className="lg:col-span-2 card-apple p-5 sm:p-6 space-y-5">
+        <div className="lg:col-span-2 card-apple p-4 sm:p-6 space-y-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Customer & Branch */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  কাস্টমার নির্বাচন (SE-CUST)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[12px] font-semibold text-[#1d1d1f]">
+                    {t('কাস্টমার নির্বাচন', 'Customer')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickCustomer((prev) => !prev)}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#0066cc] hover:underline"
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    <span>{t('+ নতুন কাস্টমার', '+ New Customer')}</span>
+                  </button>
+                </div>
                 <select
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
                   className="input-apple w-full text-[14px]"
                 >
+                  <option value="WALK_IN">
+                    {t('নগদ কাস্টমার (Walk-in Cash)', 'Walk-in Cash Customer')}
+                  </option>
                   {customers.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.customer_code})
@@ -320,7 +394,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  শাখা / গোডাউন
+                  {t('শাখা / গোডাউন', 'Branch / Godown')}
                 </label>
                 <select
                   value={branchId}
@@ -337,7 +411,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  তারিখ
+                  {t('তারিখ', 'Invoice Date')}
                 </label>
                 <input
                   type="date"
@@ -348,18 +422,74 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
             </div>
 
+            {/* Inline Quick Customer Registration Box */}
+            {showQuickCustomer && (
+              <div className="p-4 rounded-[14px] bg-[#f5f5f7] border border-[#0066cc]/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                    <UserPlus className="w-4 h-4 text-[#0066cc]" />
+                    {t('দ্রুত নতুন কাস্টমার নিবন্ধন (SE-CUST)', 'Quick Add Customer (SE-CUST)')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickCustomer(false)}
+                    className="text-[#86868b] hover:text-[#1d1d1f]"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                  <input
+                    type="text"
+                    placeholder={t('কাস্টমারের নাম *', 'Customer Name *')}
+                    value={newCustName}
+                    onChange={(e) => setNewCustName(e.target.value)}
+                    className="input-apple text-[13px]"
+                  />
+                  <input
+                    type="text"
+                    placeholder={t('মোবাইল নম্বর', 'Phone Number')}
+                    value={newCustPhone}
+                    onChange={(e) => setNewCustPhone(e.target.value)}
+                    className="input-apple text-[13px]"
+                  />
+                  <input
+                    type="text"
+                    placeholder={t('ঠিকানা / বাজার', 'Address / Market')}
+                    value={newCustAddress}
+                    onChange={(e) => setNewCustAddress(e.target.value)}
+                    className="input-apple text-[13px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuickAddCustomer}
+                    className="btn-primary !min-h-[42px] text-[13px]"
+                  >
+                    {t('কাস্টমার যোগ করুন', 'Save Customer')}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Credit Limit Alert Banner */}
             {selectedCustomer && (
               <div className="p-3 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] text-[13px] flex flex-wrap items-center justify-between gap-2 text-[#4e4e4e]">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-[#0066cc] shrink-0" />
                   <span>
-                    পূর্বের বকেয়া: <strong className="text-[#1d1d1f] font-semibold">{formatTaka(selectedCustomer.current_due)}</strong> | বাকির সীমা: <strong className="text-[#1d1d1f] font-semibold">{formatTaka(selectedCustomer.credit_limit)}</strong>
+                    {t('পূর্বের বকেয়া:', 'Previous Due:')}{' '}
+                    <strong className="text-[#1d1d1f] font-semibold">
+                      {formatTaka(selectedCustomer.current_due)}
+                    </strong>{' '}
+                    | {t('বাকির সীমা:', 'Credit Limit:')}{' '}
+                    <strong className="text-[#1d1d1f] font-semibold">
+                      {formatTaka(selectedCustomer.credit_limit)}
+                    </strong>
                   </span>
                 </div>
                 {isCreditExceeded && (
                   <span className="text-[#d92916] font-semibold text-[12px]">
-                    ⚠️ বাকির সীমা অতিক্রম করছে
+                    ⚠️ {t('বাকির সীমা অতিক্রম করছে', 'Exceeds Credit Limit')}
                   </span>
                 )}
               </div>
@@ -369,7 +499,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <label className="text-[13px] font-semibold text-[#1d1d1f]">
-                  বিক্রয়কৃত ডিমের তালিকা (Egg Items)
+                  {t('বিক্রয়কৃত ডিমের তালিকা', 'Egg Items')}
                 </label>
                 <button
                   type="button"
@@ -377,7 +507,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                   className="btn-outline text-[12px] py-1.5 px-3 min-h-[36px]"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ আরও ডিম যোগ করুন</span>
+                  <span>{t('+ আরও ডিম যোগ করুন', '+ Add Item')}</span>
                 </button>
               </div>
 
@@ -399,7 +529,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                           >
                             {categories.map((c) => (
                               <option key={c.id} value={c.id}>
-                                {c.name_bn}
+                                {getCategoryDisplayName(c)}
                               </option>
                             ))}
                           </select>
@@ -431,8 +561,10 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                             }}
                             className="input-apple text-[13px] flex-1"
                           >
-                            <option value="CRATE">খাঁচি ({cat?.pcs_per_crate || 30})</option>
-                            <option value="PCS">পিস</option>
+                            <option value="CRATE">
+                              {t('খাঁচি', 'Crate')} ({cat?.pcs_per_crate || 30})
+                            </option>
+                            <option value="PCS">{t('পিস', 'Pcs')}</option>
                           </select>
                         </div>
 
@@ -475,7 +607,10 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                       {/* Quick 1-Tap Mobile Quantity Presets */}
                       <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-[#e0e0e0]/70">
                         <span className="text-[11px] text-[#7a7a7a]">
-                          মোট ডিম: <strong className="text-[#1d1d1f] font-semibold">{toBengaliNumber(pcs)} পিস</strong>
+                          {t('মোট ডিম:', 'Total Eggs:')}{' '}
+                          <strong className="text-[#1d1d1f] font-semibold">
+                            {toBengaliNumber(pcs)} {t('পিস', 'pcs')}
+                          </strong>
                         </span>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {[1, 5, 10, 20, 50].map((preset) => (
@@ -495,7 +630,10 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                                   : 'bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:border-[#0066cc]'
                               }`}
                             >
-                              {toBengaliNumber(preset)} {item.inputType === 'CRATE' ? 'খাঁচি' : 'পিস'}
+                              {toBengaliNumber(preset)}{' '}
+                              {item.inputType === 'CRATE'
+                                ? t('খাঁচি', 'Crate')
+                                : t('পিস', 'Pcs')}
                             </button>
                           ))}
                         </div>
@@ -517,7 +655,12 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                 />
                 <span className="text-[13px] font-semibold text-[#1d1d1f] flex items-center gap-1.5">
                   <Truck className="w-4 h-4 text-[#0066cc]" />
-                  <span>আলাদা ডেলিভারি চালান প্রিন্ট করুন (Delivery Challan)</span>
+                  <span>
+                    {t(
+                      'আলাদা ডেলিভারি চালান প্রিন্ট করুন (Delivery Challan)',
+                      'Generate Separate Delivery Challan'
+                    )}
+                  </span>
                 </span>
               </label>
 
@@ -525,21 +668,21 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                   <input
                     type="text"
-                    placeholder="গাড়ি / ভ্যান নম্বর"
+                    placeholder={t('গাড়ি / ভ্যান নম্বর', 'Vehicle / Van No.')}
                     value={vehicleNumber}
                     onChange={(e) => setVehicleNumber(e.target.value)}
                     className="input-apple text-[13px]"
                   />
                   <input
                     type="text"
-                    placeholder="ড্রাইভারের নাম"
+                    placeholder={t('ড্রাইভারের নাম', 'Driver Name')}
                     value={driverName}
                     onChange={(e) => setDriverName(e.target.value)}
                     className="input-apple text-[13px]"
                   />
                   <input
                     type="text"
-                    placeholder="ড্রাইভারের ফোন"
+                    placeholder={t('ড্রাইভারের ফোন', 'Driver Phone')}
                     value={driverPhone}
                     onChange={(e) => setDriverPhone(e.target.value)}
                     className="input-apple text-[13px]"
@@ -552,7 +695,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#e0e0e0]">
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  বিশেষ ছাড় / ডিসকাউন্ট
+                  {t('বিশেষ ছাড় / ডিসকাউন্ট', 'Discount')}
                 </label>
                 <div className="relative">
                   <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
@@ -568,7 +711,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-[12px] font-semibold text-[#1d1d1f]">
-                    নগদ জমা / পেইড
+                    {t('নগদ জমা / পেইড', 'Paid Amount')}
                   </label>
                   <button
                     type="button"
@@ -578,7 +721,7 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                     }}
                     className="text-[11px] font-semibold text-[#0066cc] bg-[#0066cc]/10 hover:bg-[#0066cc]/20 px-2.5 py-0.5 rounded-[980px] transition"
                   >
-                    পূর্ণ বিল জমা
+                    {t('পূর্ণ বিল জমা', 'Full Paid')}
                   </button>
                 </div>
                 <div className="relative">
@@ -594,24 +737,24 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  পেমেন্ট মাধ্যম
+                  {t('পেমেন্ট মাধ্যম', 'Payment Method')}
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => handlePaymentMethodChange(e.target.value as any)}
                   className="input-apple w-full text-[14px]"
                 >
-                  <option value="CASH">ক্যাশ নগদ</option>
-                  <option value="BKASH">বিকাশ (bKash)</option>
-                  <option value="NAGAD">নগদ (Nagad)</option>
-                  <option value="BANK">ব্যাংক একাউন্ট</option>
-                  <option value="DUE">সম্পূর্ণ বাকি</option>
+                  <option value="CASH">{t('ক্যাশ নগদ', 'Cash')}</option>
+                  <option value="BKASH">{t('বিকাশ (bKash)', 'bKash')}</option>
+                  <option value="NAGAD">{t('নগদ (Nagad)', 'Nagad')}</option>
+                  <option value="BANK">{t('ব্যাংক একাউন্ট', 'Bank Account')}</option>
+                  <option value="DUE">{t('সম্পূর্ণ বাকি', 'Full Due')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                  জমা একাউন্ট (সিঙ্ক)
+                  {t('জমা একাউন্ট (সিঙ্ক)', 'Deposit Account')}
                 </label>
                 <select
                   value={accountId}
@@ -633,38 +776,45 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               className="btn-primary w-full py-3 text-[15px]"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>মেমো সংরক্ষণ করুন ও প্রিন্ট ভিউ দেখুন</span>
+              <span>
+                {t(
+                  'মেমো সংরক্ষণ করুন ও প্রিন্ট ভিউ দেখুন',
+                  'Save Memo & Open Print View'
+                )}
+              </span>
             </button>
           </form>
         </div>
 
         {/* Right Summary ({component.product-tile-dark} #272729) */}
         <div className="space-y-4">
-          <div className="tile-dark p-6 space-y-4">
-            <h3 className="font-semibold text-[20px] text-white border-b border-white/10 pb-3">
-              মেমোর মোট বিল হিসাব
+          <div className="tile-dark p-5 sm:p-6 space-y-4">
+            <h3 className="font-semibold text-[19px] sm:text-[20px] text-white border-b border-white/10 pb-3">
+              {t('মেমোর মোট বিল হিসাব', 'Invoice Summary')}
             </h3>
             <div className="space-y-2.5 text-[13px] text-white/75">
               <div className="flex justify-between">
-                <span>সাবটোটাল:</span>
+                <span>{t('সাবটোটাল:', 'Subtotal:')}</span>
                 <span className="text-white font-semibold">{formatTaka(subtotal)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-rose-300">
-                  <span>ছাড় (Discount):</span>
+                  <span>{t('ছাড় (Discount):', 'Discount:')}</span>
                   <span>- {formatTaka(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-[16px] font-semibold text-white border-t border-white/10 pt-3">
-                <span>মোট বিল:</span>
-                <span className="font-semibold text-[22px] text-[#2997ff]">{formatTaka(netTotal)}</span>
+                <span>{t('মোট বিল:', 'Net Total:')}</span>
+                <span className="font-semibold text-[22px] text-[#2997ff]">
+                  {formatTaka(netTotal)}
+                </span>
               </div>
               <div className="flex justify-between text-emerald-400">
-                <span>জমা প্রদান:</span>
+                <span>{t('জমা প্রদান:', 'Paid Amount:')}</span>
                 <span className="font-semibold">{formatTaka(paidAmount)}</span>
               </div>
               <div className="flex justify-between text-white font-semibold border-t border-white/10 pt-2.5 text-[14px]">
-                <span>চলতি বকেয়া:</span>
+                <span>{t('চলতি বকেয়া:', 'Balance Due:')}</span>
                 <span>{formatTaka(dueAmount)}</span>
               </div>
             </div>
@@ -674,13 +824,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
           <div className="card-apple p-4 sm:p-5 space-y-3">
             <h4 className="text-[12px] font-semibold text-[#7a7a7a] uppercase tracking-wider flex items-center gap-1.5">
               <Receipt className="w-3.5 h-3.5 text-[#0066cc]" />
-              <span>আজকের মেমো তালিকা</span>
+              <span>{t('সাম্প্রতিক মেমো তালিকা', 'Recent Sales Memos')}</span>
             </h4>
 
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {sales.length === 0 ? (
                 <div className="text-xs text-[#7a7a7a] text-center py-4">
-                  কোনো মেমো তৈরি হয়নি
+                  {t('এখনো কোনো মেমো তৈরি হয়নি', 'No sales memos created yet')}
                 </div>
               ) : (
                 sales.slice(0, 6).map((inv) => {
@@ -690,29 +840,34 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                       key={inv.id}
                       className="p-3 bg-[#f5f5f7] rounded-[12px] border border-[#e0e0e0] hover:border-[#0066cc] text-xs flex justify-between items-center transition"
                     >
-                      <div>
-                        <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5 flex-wrap">
                           <span className="text-[#0066cc] font-mono">{inv.invoice_code}</span>
-                          <span className="text-[#7a7a7a]">({cust?.name})</span>
+                          <span className="text-[#7a7a7a] truncate">
+                            ({cust?.name || t('নগদ কাস্টমার', 'Walk-in')})
+                          </span>
                         </div>
                         <div className="text-[11px] text-[#7a7a7a] mt-0.5">
-                          বিল: {formatTaka(inv.net_total)} | বকেয়া: {formatTaka(inv.due_amount)}
+                          {t('বিল:', 'Total:')} {formatTaka(inv.net_total)} |{' '}
+                          {t('বকেয়া:', 'Due:')} {formatTaka(inv.due_amount)}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 shrink-0">
+                        {cust && (
+                          <button
+                            type="button"
+                            onClick={() => shareInvoiceWhatsApp(inv, cust, company)}
+                            title={t('WhatsApp এ পাঠান', 'Share via WhatsApp')}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-[#4e4e4e] hover:text-[#0066cc] hover:bg-white transition"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={() => {
-                            if (cust) shareInvoiceWhatsApp(inv, cust, company);
-                          }}
-                          title="WhatsApp এ পাঠান"
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[#4e4e4e] hover:text-[#0066cc] hover:bg-white transition"
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </button>
-                        <button
+                          type="button"
                           onClick={() => onSelectInvoiceForPrint(inv)}
-                          title="প্রিন্ট করুন"
+                          title={t('প্রিন্ট করুন', 'Print Memo')}
                           className="w-8 h-8 rounded-full flex items-center justify-center text-[#4e4e4e] hover:text-[#0066cc] hover:bg-white transition"
                         >
                           <Printer className="w-4 h-4" />

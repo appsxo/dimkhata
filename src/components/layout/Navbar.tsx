@@ -1,7 +1,8 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Apple Two-Row Top Navigation (DESIGN.md)
+// DIMKHATA (ডিমখাতা) — Apple Two-Row Top Navigation & Mobile App Header
 // Row 1: {component.global-nav} (#000000, height 44px, 12px/400)
 // Row 2: {component.sub-nav-frosted} (#f5f5f7/82% blur, height 52px)
+// Supports Bilingual (Bangla default + English) & PIN Security Lock
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -16,9 +17,13 @@ import {
   Plus,
   Cloud,
   Check,
+  Lock,
+  Globe,
+  AlertCircle,
 } from 'lucide-react';
 import { DimKhataStore } from '../../lib/storage-store';
 import { isSupabaseConfigured } from '../../lib/supabase';
+import { useLanguage } from '../../lib/i18n';
 import { Branch, UserProfile } from '../../types';
 import { NavTabId } from './Sidebar';
 
@@ -28,13 +33,14 @@ interface NavbarProps {
   onSelectBranch: (branchId: string) => void;
   currentUser: UserProfile;
   onToggleUserRole: () => void;
+  onOpenSecurityModal: () => void;
   onOpenRatesModal: () => void;
   onRefresh: () => void;
   currentTab?: NavTabId;
   onSelectTab?: (tab: NavTabId) => void;
 }
 
-const TAB_TITLES: Record<NavTabId, string> = {
+const TAB_TITLES_BN: Record<NavTabId, string> = {
   dashboard: 'ড্যাশবোর্ড ও লাইভ স্টক',
   'sales-pos': 'বিক্রয় মেমো ও চালান (POS)',
   sourcing: 'মহাজন থেকে ডিম কেনা',
@@ -48,24 +54,45 @@ const TAB_TITLES: Record<NavTabId, string> = {
   'audit-branches': 'শাখা ও ডিজিটাল অডিট লগ',
 };
 
+const TAB_TITLES_EN: Record<NavTabId, string> = {
+  dashboard: 'Dashboard & Live Stock',
+  'sales-pos': 'Sales Memo & Challan (POS)',
+  sourcing: 'Sourcing & Egg Purchases',
+  'daily-pricing': "Today's Market Rates",
+  parties: 'Customers & Suppliers (KYC)',
+  'wastage-courtesy': 'Wastage, Courtesy & Transfer',
+  expenses: 'Operating & Vehicle Expenses',
+  cashbook: 'Cashbook & Bank Accounts',
+  payroll: 'Employees & Payroll HR',
+  'profit-settlement': 'Profit & 2:1 Settlement',
+  'audit-branches': 'Branches & Digital Audit Log',
+};
+
 export const Navbar: React.FC<NavbarProps> = ({
   branches,
   selectedBranchId,
   onSelectBranch,
   currentUser,
   onToggleUserRole,
+  onOpenSecurityModal,
   onOpenRatesModal,
   onRefresh,
   currentTab = 'dashboard',
   onSelectTab,
 }) => {
+  const { lang, toggleLanguage, t } = useLanguage();
   const company = DimKhataStore.getCompany();
+  const cloudStatus = DimKhataStore.getCloudStatus();
   const [syncing, setSyncing] = useState(false);
   const [syncDone, setSyncDone] = useState(false);
 
   const handleCloudSync = async () => {
     if (!isSupabaseConfigured) {
-      alert('ক্লাউড সিঙ্ক ব্যবহারের জন্য GitHub Secrets-এ VITE_SUPABASE_URL এবং VITE_SUPABASE_PUBLISHABLE_KEY যুক্ত করুন। বর্তমানে লোকাল ব্রাউজার মোডে সব তথ্য সংরক্ষিত হচ্ছে।');
+      onOpenSecurityModal();
+      return;
+    }
+    if (cloudStatus === 'NEEDS_SQL') {
+      onOpenSecurityModal();
       return;
     }
     setSyncing(true);
@@ -96,56 +123,66 @@ export const Navbar: React.FC<NavbarProps> = ({
     reader.onload = (event) => {
       const content = event.target?.result as string;
       if (DimKhataStore.importFullBackupJson(content)) {
-        alert('ডাটাবেজ ব্যাকআপ সফলভাবে রিস্টোর হয়েছে!');
+        alert(t('ডাটাবেজ ব্যাকআপ সফলভাবে রিস্টোর হয়েছে!', 'Database backup restored successfully!'));
         onRefresh();
       } else {
-        alert('ভুল ফাইল ফরম্যাট! দয়া করে সঠিক JSON ফাইল নির্বাচন করুন।');
+        alert(t('ভুল ফাইল ফরম্যাট! সঠিক JSON ফাইল নির্বাচন করুন।', 'Invalid file format! Please select a valid JSON backup file.'));
       }
     };
     reader.readAsText(file);
   };
 
-  const handleResetDemo = () => {
-    if (confirm('আপনি কি নিশ্চিত যে প্রাথমিক ডেমো ডাটা রিসেট করতে চান?')) {
-      DimKhataStore.resetToDemoData();
-      alert('সফলভাবে প্রাথমিক ডেমো ডাটা লোড হয়েছে!');
+  const handleResetClean = () => {
+    if (currentUser.role !== 'ADMIN') {
+      onToggleUserRole();
+      return;
+    }
+    if (
+      confirm(
+        t(
+          'আপনি কি নিশ্চিত যে সকল লেনদেন মুছে নতুন ফ্রেশ প্রোডাকশন ডাটাবেস শুরু করতে চান?',
+          'Are you sure you want to wipe all transactions and reset to a clean production state in Supabase?'
+        )
+      )
+    ) {
+      DimKhataStore.resetToCleanProduction();
       onRefresh();
     }
   };
 
   return (
-    <div className="sticky top-0 z-40 no-print">
+    <header className="sticky top-0 z-40 no-print select-none">
       {/* ROW 1: {component.global-nav} — 44px Pure Black Top Bar */}
-      <div className="apple-global-nav px-3 sm:px-6 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-3">
+      <div className="apple-global-nav px-3 sm:px-6 flex items-center justify-between">
+        <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-2">
           {/* Brand Identity */}
           <button
             type="button"
             onClick={() => onSelectTab?.('dashboard')}
-            className="flex items-center gap-2 text-white shrink-0 cursor-pointer active:scale-95 transition"
+            className="flex items-center gap-1.5 sm:gap-2 text-white min-w-0 cursor-pointer active:scale-95 transition"
           >
-            <span className="text-[15px]">🥚</span>
-            <span className="font-semibold text-[13px] tracking-[-0.12px]">
-              {company.company_name_bn}
+            <span className="text-[15px] shrink-0">🥚</span>
+            <span className="font-semibold text-[12px] sm:text-[13px] tracking-[-0.12px] truncate max-w-[135px] sm:max-w-none">
+              {lang === 'bn' ? company.company_name_bn : company.company_name_en}
             </span>
-            <span className="hidden md:inline text-[#cccccc] text-[11px]">
-              • ডিমখাতা ERP
+            <span className="hidden lg:inline text-[#cccccc] text-[11px] shrink-0">
+              • {t('ডিমখাতা ERP', 'DimKhata ERP')}
             </span>
           </button>
 
           {/* Global Utility Controls */}
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* Branch Selector */}
-            <div className="flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px]">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Branch Selector (Desktop & Tablet) */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px]">
               <Store className="w-3 h-3 text-[#2997ff] shrink-0" />
               <select
                 value={selectedBranchId}
                 onChange={(e) => onSelectBranch(e.target.value)}
-                aria-label="শাখা নির্বাচন"
-                className="bg-transparent text-white focus:outline-none cursor-pointer text-[11px] max-w-[125px] sm:max-w-none truncate"
+                aria-label={t('শাখা নির্বাচন', 'Select Branch')}
+                className="bg-transparent text-white focus:outline-none cursor-pointer text-[11px] max-w-[140px] truncate"
               >
                 <option value="ALL" className="bg-[#1d1d1f] text-white">
-                  সকল শাখা (একত্রিত)
+                  {t('সকল শাখা (একত্রিত)', 'All Branches (Combined)')}
                 </option>
                 {branches.map((b) => (
                   <option key={b.id} value={b.id} className="bg-[#1d1d1f] text-white">
@@ -155,84 +192,127 @@ export const Navbar: React.FC<NavbarProps> = ({
               </select>
             </div>
 
-            {/* Cloud Sync Status Button */}
+            {/* 1-Tap Bilingual Toggle (বাংলা | EN) */}
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              title={t('ইংরেজি ভাষায় পরিবর্তন করুন (Switch to English)', 'বাংলা ভাষায় পরিবর্তন করুন (Switch to Bangla)')}
+              className="flex items-center gap-1 bg-[#272729] hover:bg-[#3a3a3c] text-white rounded-full px-2.5 py-1 text-[11px] font-semibold cursor-pointer active:scale-95 transition"
+            >
+              <Globe className="w-3 h-3 text-[#2997ff]" />
+              <span>{lang === 'bn' ? 'EN' : 'বাংলা'}</span>
+            </button>
+
+            {/* Supabase Live Sync Status Pill */}
             <button
               type="button"
               onClick={handleCloudSync}
               title={
-                isSupabaseConfigured
-                  ? 'Supabase ক্লাউডের সাথে লাইভ সিঙ্ক করুন'
-                  : 'অফলাইন লোকাল স্টোরেজ সক্রিয়'
+                cloudStatus === 'ONLINE'
+                  ? t('Supabase ক্লাউড ডাটাবেস লাইভ সংযুক্ত', 'Supabase Cloud Database Live Connected')
+                  : cloudStatus === 'NEEDS_SQL'
+                  ? t('Supabase টেবিল সেটআপ করতে ক্লিক করুন', 'Click to view 1-time Supabase SQL setup')
+                  : t('Supabase সিঙ্ক স্ট্যাটাস', 'Supabase Sync Status')
               }
-              className="flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition"
+              className="flex items-center gap-1.5 bg-[#272729] hover:bg-[#3a3a3c] text-white rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition"
             >
               {syncDone ? (
-                <Check className="w-3 h-3 text-[#2997ff]" />
+                <Check className="w-3 h-3 text-[#30d158]" />
+              ) : cloudStatus === 'NEEDS_SQL' ? (
+                <AlertCircle className="w-3 h-3 text-[#ff9f0a]" />
               ) : (
                 <Cloud
                   className={`w-3 h-3 ${
-                    isSupabaseConfigured ? 'text-[#2997ff]' : 'text-[#cccccc]'
-                  } ${syncing ? 'animate-pulse' : ''}`}
+                    cloudStatus === 'ONLINE' ? 'text-[#30d158]' : 'text-[#2997ff]'
+                  } ${syncing || cloudStatus === 'SYNCING' ? 'animate-pulse' : ''}`}
                 />
               )}
-              <span className="hidden sm:inline">
-                {syncing
-                  ? 'সিঙ্ক হচ্ছে...'
+              <span className="hidden md:inline">
+                {syncing || cloudStatus === 'SYNCING'
+                  ? t('সিঙ্ক হচ্ছে...', 'Syncing...')
                   : syncDone
-                  ? 'সিঙ্ক সম্পন্ন'
-                  : isSupabaseConfigured
-                  ? 'ক্লাউড অনলাইন'
-                  : 'লোকাল মোড'}
+                  ? t('সিঙ্ক সম্পন্ন', 'Synced')
+                  : cloudStatus === 'ONLINE'
+                  ? t('Supabase লাইভ', 'Supabase Live')
+                  : cloudStatus === 'NEEDS_SQL'
+                  ? t('SQL সেটআপ', 'Setup SQL')
+                  : t('ক্লাউড', 'Cloud')}
               </span>
             </button>
 
-            {/* User Role Switcher (Admin vs Staff) */}
+            {/* User Role Switcher (Protected by Admin PIN) */}
             <button
               type="button"
               onClick={onToggleUserRole}
-              title="ক্লিক করে মালিক (অ্যাডমিন) ও কর্মচারী (স্টাফ) মোড পরিবর্তন করুন"
-              className="flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition"
+              title={
+                currentUser.role === 'ADMIN'
+                  ? t('স্টাফ মোডে লক করতে ট্যাপ করুন', 'Tap to lock into Staff Mode')
+                  : t('মালিক (অ্যাডমিন) মোডে আনলক করতে পিন দিন', 'Tap to unlock Admin Mode with PIN')
+              }
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition ${
+                currentUser.role === 'ADMIN'
+                  ? 'bg-[#0066cc] text-white'
+                  : 'bg-[#272729] text-white'
+              }`}
             >
               {currentUser.role === 'ADMIN' ? (
-                <ShieldCheck className="w-3 h-3 text-[#2997ff]" />
+                <ShieldCheck className="w-3 h-3 text-white" />
               ) : (
                 <UserCheck className="w-3 h-3 text-[#cccccc]" />
               )}
               <span className="font-semibold">
-                {currentUser.role === 'ADMIN' ? 'মালিক (শরিফ)' : 'স্টাফ (কাওসার)'}
+                {currentUser.role === 'ADMIN'
+                  ? t('মালিক', 'Admin')
+                  : t('স্টাফ', 'Staff')}
               </span>
             </button>
 
-            {/* Backup & Restore Icons */}
-            <div className="flex items-center gap-1">
+            {/* Security & PIN Settings Button */}
+            {currentUser.role === 'ADMIN' && (
+              <button
+                type="button"
+                onClick={onOpenSecurityModal}
+                title={t('নিরাপত্তা পিন ও ক্লাউড সেটিংস', 'Security PIN & Cloud Settings')}
+                className="w-7 h-7 rounded-full bg-[#272729] hover:bg-[#3a3a3c] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+              >
+                <Lock className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* Desktop Backup & Restore Icons (Admin Only for Restore/Reset) */}
+            <div className="hidden md:flex items-center gap-1">
               <button
                 type="button"
                 onClick={handleDownloadBackup}
-                title="সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড (JSON)"
+                title={t('সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড (JSON)', 'Download Full JSON Backup')}
                 className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
               >
                 <Download className="w-3.5 h-3.5" />
               </button>
-              <label
-                title="ব্যাকআপ ফাইল রিস্টোর করুন"
-                className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <input
-                  type="file"
-                  accept=".json"
-                  className="hidden"
-                  onChange={handleUploadBackup}
-                />
-              </label>
-              <button
-                type="button"
-                onClick={handleResetDemo}
-                title="ডেমো ডাটা রিসেট"
-                className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
+              {currentUser.role === 'ADMIN' && (
+                <>
+                  <label
+                    title={t('ব্যাকআপ ফাইল রিস্টোর করুন', 'Restore JSON Backup')}
+                    className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={handleUploadBackup}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleResetClean}
+                    title={t('ফ্রেশ প্রোডাকশন ডাটাবেস রিসেট', 'Reset to Clean Production State')}
+                    className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -240,38 +320,58 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* ROW 2: {component.sub-nav-frosted} — 52px Frosted Parchment Bar */}
       <div className="apple-sub-nav px-3 sm:px-6 flex items-center">
-        <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-3 py-1.5">
-          {/* Active Category / Module Name in {typography.tagline} (21px / 600) */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="text-[17px] sm:text-[21px] font-semibold text-[#1d1d1f] tracking-[0.231px] truncate">
-              {TAB_TITLES[currentTab] || 'ডিমখাতা'}
+        <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-2 py-1.5">
+          {/* Active Category / Module Name */}
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-[15px] sm:text-[20px] font-semibold text-[#1d1d1f] tracking-[0.2px] truncate">
+              {lang === 'bn'
+                ? TAB_TITLES_BN[currentTab] || 'ডিমখাতা'
+                : TAB_TITLES_EN[currentTab] || 'DimKhata'}
             </h1>
           </div>
 
-          {/* Right Quick Actions: Secondary Pill + Primary Action Blue Pill */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Right Quick Actions: Mobile Branch Selector + Today's Rate + POS CTA */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Compact Mobile Branch Selector */}
+            <div className="flex sm:hidden items-center gap-1 bg-white border border-[#e0e0e0] rounded-full px-2 py-1 text-[11px] text-[#1d1d1f]">
+              <Store className="w-3 h-3 text-[#0066cc] shrink-0" />
+              <select
+                value={selectedBranchId}
+                onChange={(e) => onSelectBranch(e.target.value)}
+                aria-label={t('শাখা', 'Branch')}
+                className="bg-transparent text-[#1d1d1f] font-medium focus:outline-none text-[11px] max-w-[78px] truncate"
+              >
+                <option value="ALL">{t('সব শাখা', 'All')}</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <button
               type="button"
               onClick={onOpenRatesModal}
-              className="btn-secondary-pill !min-h-[34px] !py-1.5 !px-3.5 !text-[13px]"
+              className="btn-secondary-pill !min-h-[32px] sm:!min-h-[34px] !py-1 !px-2.5 sm:!px-3.5 !text-[12px] sm:!text-[13px]"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>আজকের দর</span>
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span>{t('আজকের দর', 'Rates')}</span>
             </button>
 
             {currentTab !== 'sales-pos' && onSelectTab && (
               <button
                 type="button"
                 onClick={() => onSelectTab('sales-pos')}
-                className="btn-primary !min-h-[34px] !py-1.5 !px-3.5 !text-[13px]"
+                className="btn-primary !min-h-[32px] sm:!min-h-[34px] !py-1 !px-2.5 sm:!px-3.5 !text-[12px] sm:!text-[13px]"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>বিক্রয় মেমো</span>
+                <Plus className="w-3.5 h-3.5 shrink-0" />
+                <span>{t('মেমো', 'POS')}</span>
               </button>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 };

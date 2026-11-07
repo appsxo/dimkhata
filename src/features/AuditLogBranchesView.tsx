@@ -7,6 +7,8 @@ import { Plus, Lock } from 'lucide-react';
 import { Branch, AuditLog } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { toBengaliNumber } from '../lib/egg-units';
+import { useLanguage } from '../lib/i18n';
+import { sanitizeText } from '../lib/security';
 import {
   AppleSectionHeader,
   AppleOptionChips,
@@ -25,6 +27,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
   auditLogs,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'AUDIT' | 'BRANCHES'>('AUDIT');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAction, setFilterAction] = useState<string>('ALL');
@@ -56,14 +59,14 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
 
     DimKhataStore.addBranch({
       branch_code: branchCode,
-      name: branchName,
-      address: branchAddress,
-      phone: branchPhone,
+      name: sanitizeText(branchName, 100),
+      address: sanitizeText(branchAddress, 200),
+      phone: sanitizeText(branchPhone, 30),
       is_main: false,
       is_active: true,
     });
 
-    alert(`শাখা সফলভাবে যুক্ত হয়েছে! শাখা কোড: ${branchCode}`);
+    alert(t(`শাখা সফলভাবে যুক্ত হয়েছে! শাখা কোড: ${branchCode}`, `Branch added successfully! Code: ${branchCode}`));
     setIsAddBranchOpen(false);
     setBranchName('');
     setBranchAddress('');
@@ -74,15 +77,30 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="নিরাপত্তা ও মাল্টি-গোডাউন স্কেলিং"
-        title="শাখা ও ডিজিটাল অডিট ট্রেইল (Audit Log)"
-        subtitle="কোন স্টাফ কখন সিস্টেমে এন্ট্রি বা পরিবর্তন করল তার ডিজিটাল রেকর্ড ও শাখা ব্যবস্থাপনা"
+        eyebrow={t('নিরাপত্তা ও মাল্টি-গোডাউন স্কেলিং', 'Security & Multi-Branch Scaling')}
+        title={t('শাখা ও ডিজিটাল অডিট ট্রেইল (Audit Log)', 'Branches & Digital Audit Trail')}
+        subtitle={t(
+          'কোন স্টাফ কখন সিস্টেমে এন্ট্রি বা পরিবর্তন করল তার ডিজিটাল রেকর্ড ও শাখা ব্যবস্থাপনা',
+          'Immutable digital audit trail of every staff/admin action and multi-branch godown management'
+        )}
         actions={
           <div className="flex items-center gap-2.5 flex-wrap">
             <AppleOptionChips
               options={[
-                { value: 'AUDIT', label: `ডিজিটাল অডিট লগ (${toBengaliNumber(auditLogs.length)})` },
-                { value: 'BRANCHES', label: `শাখা ও গোডাউনসমূহ (${toBengaliNumber(branches.length)})` },
+                {
+                  value: 'AUDIT',
+                  label: t(
+                    `ডিজিটাল অডিট লগ (${toBengaliNumber(auditLogs.length)})`,
+                    `Audit Log (${auditLogs.length})`
+                  ),
+                },
+                {
+                  value: 'BRANCHES',
+                  label: t(
+                    `শাখা ও গোডাউনসমূহ (${toBengaliNumber(branches.length)})`,
+                    `Branches (${branches.length})`
+                  ),
+                },
               ]}
               value={activeTab}
               onChange={setActiveTab}
@@ -94,7 +112,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
                 className="btn-primary text-[13px] px-4"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ নতুন শাখা যোগ</span>
+                <span>{t('+ নতুন শাখা যোগ', '+ Add Branch')}</span>
               </button>
             )}
           </div>
@@ -108,10 +126,13 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
             <div>
               <h3 className="font-semibold text-[20px] text-[#1d1d1f] flex items-center gap-2">
                 <Lock className="w-4 h-4 text-[#0066cc]" />
-                <span>অপরিবর্তনযোগ্য অডিট হিস্ট্রি (Immutable Audit Log)</span>
+                <span>{t('অপরিবর্তনযোগ্য অডিট হিস্ট্রি (Immutable Audit Log)', 'Immutable Digital Audit Log')}</span>
               </h3>
               <p className="text-[12px] text-[#7a7a7a]">
-                কোনো কর্মচারী বা স্টাফ কোনো এন্ট্রি দিলে, এডিট বা ডিলিট করলে এখানে তারিখ ও সময়সহ স্থায়ীভাবে রেকর্ড থাকবে
+                {t(
+                  'কোনো কর্মচারী বা স্টাফ কোনো এন্ট্রি দিলে, এডিট বা ডিলিট করলে এখানে তারিখ ও সময়সহ স্থায়ীভাবে রেকর্ড থাকবে',
+                  'Every insert, update, or action by staff or admin is permanently recorded with timestamp'
+                )}
               </p>
             </div>
 
@@ -119,7 +140,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
               <AppleSearchInput
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder="স্টাফের নাম বা বিবরণ..."
+                placeholder={t('স্টাফের নাম বা বিবরণ...', 'Search staff or action...')}
               />
 
               <select
@@ -127,7 +148,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
                 onChange={(e) => setFilterAction(e.target.value)}
                 className="input-apple text-[13px] py-1.5"
               >
-                <option value="ALL">সকল অ্যাকশন</option>
+                <option value="ALL">{t('সকল অ্যাকশন', 'All Actions')}</option>
                 <option value="INSERT">নতুন এন্ট্রি (INSERT)</option>
                 <option value="UPDATE">তথ্য পরিবর্তন (UPDATE)</option>
                 <option value="DELETE">মুছে ফেলা (DELETE)</option>

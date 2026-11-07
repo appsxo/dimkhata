@@ -11,11 +11,14 @@ import {
   Phone,
   Building,
   CreditCard,
+  Users,
 } from 'lucide-react';
 import { Customer, Supplier, FinancialAccount, CompanySettings, KycDocument } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
 import { shareDueReminderWhatsApp } from '../lib/whatsapp-share';
+import { useLanguage } from '../lib/i18n';
+import { sanitizeText } from '../lib/security';
 import { KycUploadModal } from '../components/modals/KycUploadModal';
 import {
   AppleSectionHeader,
@@ -39,6 +42,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
   company,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'CUSTOMERS' | 'SUPPLIERS'>('CUSTOMERS');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -79,7 +83,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
   const handleCreateCustomer = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone) {
-      alert('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!');
+      alert(t('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!', 'Please enter Name and Phone Number!'));
       return;
     }
 
@@ -87,13 +91,13 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
     const newCust: Customer = {
       id: `cust-${Date.now()}`,
       customer_code: code,
-      name,
-      business_name: businessName,
-      phone,
-      emergency_phone: emergencyPhone,
+      name: sanitizeText(name, 100),
+      business_name: sanitizeText(businessName, 120),
+      phone: sanitizeText(phone, 30),
+      emergency_phone: sanitizeText(emergencyPhone, 30),
       customer_type: customerType,
-      present_address: presentAddress,
-      nid_number: nidNumber,
+      present_address: sanitizeText(presentAddress, 200),
+      nid_number: sanitizeText(nidNumber, 40),
       kyc_docs: [],
       credit_limit: creditLimit,
       current_due: 0,
@@ -103,7 +107,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
     };
 
     DimKhataStore.saveCustomer(newCust);
-    alert(`কাস্টমার সফলভাবে নিবন্ধিত হয়েছে! ইউনিক আইডি: ${code}`);
+    alert(t(`কাস্টমার সফলভাবে নিবন্ধিত হয়েছে! ইউনিক আইডি: ${code}`, `Customer registered! ID: ${code}`));
     setIsAddOpen(false);
     resetForm();
     onRefresh();
@@ -112,7 +116,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
   const handleCreateSupplier = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone) {
-      alert('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!');
+      alert(t('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!', 'Please enter Name and Phone Number!'));
       return;
     }
 
@@ -120,12 +124,12 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
     const newSup: Supplier = {
       id: `sup-${Date.now()}`,
       supplier_code: code,
-      name,
-      farm_name: businessName,
-      phone,
-      emergency_phone: emergencyPhone,
-      present_address: presentAddress,
-      nid_number: nidNumber,
+      name: sanitizeText(name, 100),
+      farm_name: sanitizeText(businessName, 120),
+      phone: sanitizeText(phone, 30),
+      emergency_phone: sanitizeText(emergencyPhone, 30),
+      present_address: sanitizeText(presentAddress, 200),
+      nid_number: sanitizeText(nidNumber, 40),
       kyc_docs: [],
       current_payable: 0,
       is_active: true,
@@ -133,7 +137,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
     };
 
     DimKhataStore.saveSupplier(newSup);
-    alert(`মহাজন সফলভাবে নিবন্ধিত হয়েছে! ইউনিক আইডি: ${code}`);
+    alert(t(`মহাজন সফলভাবে নিবন্ধিত হয়েছে! ইউনিক আইডি: ${code}`, `Supplier registered! ID: ${code}`));
     setIsAddOpen(false);
     resetForm();
     onRefresh();
@@ -165,7 +169,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       }
     }
     onRefresh();
-    alert('কেওয়াইসি ডকুমেন্ট সফলভাবে যুক্ত হয়েছে!');
+    alert(t('কেওয়াইসি ডকুমেন্ট সফলভাবে যুক্ত হয়েছে!', 'KYC Document uploaded successfully!'));
   };
 
   const handleSettleDue = (e: React.FormEvent) => {
@@ -185,7 +189,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       created_at: new Date().toISOString(),
     });
 
-    alert(`সফল! ৳${collectAmount} বকেয়া আদায় হয়েছে। রসিদ নং: ${receiptCode}`);
+    alert(t(`সফল! ৳${collectAmount} বকেয়া আদায় হয়েছে। রসিদ নং: ${receiptCode}`, `Collected ৳${collectAmount}! Receipt: ${receiptCode}`));
     setCollectingCust(null);
     onRefresh();
   };
@@ -202,7 +206,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       `মহাজন বকেয়া পরিশোধ (${payingSup.name})`
     );
 
-    alert(`সফল! মহাজনকে ৳${paySupAmount} পরিশোধ করা হয়েছে। ভাউচার নং: ${payCode}`);
+    alert(t(`সফল! মহাজনকে ৳${paySupAmount} পরিশোধ করা হয়েছে। ভাউচার নং: ${payCode}`, `Paid ৳${paySupAmount} to supplier! Voucher: ${payCode}`));
     setPayingSup(null);
     onRefresh();
   };
@@ -210,9 +214,12 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="বাকি খাতা ও কেওয়াইসি প্রোফাইল"
-        title="কাস্টমার ও মহাজন তালিকা (KYC & Due Ledger)"
-        subtitle="অটো ইউনিক আইডি (SE-CUST / SE-SUP), NID আপলোড, ১-ক্লিকে বকেয়া আদায় এবং WhatsApp তাগাদা"
+        eyebrow={t('বাকি খাতা ও কেওয়াইসি প্রোফাইল', 'Parties, KYC & Due Ledger')}
+        title={t('কাস্টমার ও মহাজন তালিকা (KYC & Due Ledger)', 'Customers & Suppliers (KYC & Dues)')}
+        subtitle={t(
+          'অটো ইউনিক আইডি (SE-CUST / SE-SUP), NID আপলোড, ১-ক্লিকে বকেয়া আদায় এবং WhatsApp তাগাদা',
+          'Auto unique IDs (SE-CUST / SE-SUP), NID verification, 1-click due collection & WhatsApp reminders'
+        )}
         actions={
           <button
             onClick={() => setIsAddOpen(true)}
@@ -220,7 +227,9 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>
-              {activeTab === 'CUSTOMERS' ? '+ নতুন কাস্টমার নিবন্ধন' : '+ নতুন খামারী নিবন্ধন'}
+              {activeTab === 'CUSTOMERS'
+                ? t('+ নতুন কাস্টমার নিবন্ধন', '+ Add Customer')
+                : t('+ নতুন খামারী নিবন্ধন', '+ Add Supplier')}
             </span>
           </button>
         }
@@ -230,8 +239,20 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       <div className="card-apple p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <AppleOptionChips
           options={[
-            { value: 'CUSTOMERS', label: `কাস্টমার ও পাইকার (${toBengaliNumber(customers.length)})` },
-            { value: 'SUPPLIERS', label: `খামারী ও মহাজন (${toBengaliNumber(suppliers.length)})` },
+            {
+              value: 'CUSTOMERS',
+              label: t(
+                `কাস্টমার ও পাইকার (${toBengaliNumber(customers.length)})`,
+                `Customers (${customers.length})`
+              ),
+            },
+            {
+              value: 'SUPPLIERS',
+              label: t(
+                `খামারী ও মহাজন (${toBengaliNumber(suppliers.length)})`,
+                `Suppliers (${suppliers.length})`
+              ),
+            },
           ]}
           value={activeTab}
           onChange={setActiveTab}
@@ -240,12 +261,39 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
         <AppleSearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="নাম, আইডি বা মোবাইল নম্বর দিয়ে খুঁজুন..."
+          placeholder={t(
+            'নাম, আইডি বা মোবাইল নম্বর দিয়ে খুঁজুন...',
+            'Search by name, ID or phone...'
+          )}
         />
       </div>
 
       {/* CUSTOMERS LIST */}
       {activeTab === 'CUSTOMERS' && (
+        filteredCustomers.length === 0 ? (
+          <div className="card-apple p-8 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
+              <Users className="w-6 h-6" />
+            </div>
+            <h3 className="text-[18px] font-semibold text-[#1d1d1f]">
+              {t('কোনো কাস্টমার পাওয়া যায়নি', 'No Customers Found')}
+            </h3>
+            <p className="text-[13px] text-[#7a7a7a] max-w-md mx-auto">
+              {t(
+                'নতুন পাইকার বা খুচরা কাস্টমার নিবন্ধন করতে নিচের বাটনে ট্যাপ করুন (অটো আইডি: SE-CUST-001)।',
+                'Register your wholesale or retail customers with auto SE-CUST-001 IDs.'
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(true)}
+              className="btn-primary mx-auto mt-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t('+ নতুন কাস্টমার নিবন্ধন', '+ Add First Customer')}</span>
+            </button>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCustomers.map((cust) => {
             const hasKyc = cust.kyc_docs && cust.kyc_docs.length > 0;
@@ -355,10 +403,35 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
             );
           })}
         </div>
+        )
       )}
 
       {/* SUPPLIERS LIST */}
       {activeTab === 'SUPPLIERS' && (
+        filteredSuppliers.length === 0 ? (
+          <div className="card-apple p-8 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
+              <Users className="w-6 h-6" />
+            </div>
+            <h3 className="text-[18px] font-semibold text-[#1d1d1f]">
+              {t('কোনো খামারী বা মহাজন পাওয়া যায়নি', 'No Suppliers Found')}
+            </h3>
+            <p className="text-[13px] text-[#7a7a7a] max-w-md mx-auto">
+              {t(
+                'নতুন খামারী বা মহাজন নিবন্ধন করতে নিচের বাটনে ট্যাপ করুন (অটো আইডি: SE-SUP-001)।',
+                'Register your egg farms or suppliers with auto SE-SUP-001 IDs.'
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(true)}
+              className="btn-primary mx-auto mt-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t('+ নতুন খামারী নিবন্ধন', '+ Add First Supplier')}</span>
+            </button>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSuppliers.map((sup) => {
             const hasKyc = sup.kyc_docs && sup.kyc_docs.length > 0;
@@ -420,7 +493,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
 
                 <div className="pt-3 border-t border-[#e0e0e0] space-y-2.5">
                   <div className="flex justify-between items-center bg-[#f5f5f7] p-3 rounded-[12px] border border-[#e0e0e0]">
-                    <span className="text-[12px] text-[#7a7a7a]">মহাজন মোট পাবে:</span>
+                    <span className="text-[12px] text-[#7a7a7a]">{t('মহাজন মোট পাবে:', 'Total Payable:')}</span>
                     <span className="font-semibold text-[20px] text-[#1d1d1f]">
                       {formatTaka(sup.current_payable)}
                     </span>
@@ -435,13 +508,14 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
                     className="btn-primary w-full text-[13px] min-h-[42px] py-2 disabled:opacity-40"
                   >
                     <DollarSign className="w-3.5 h-3.5" />
-                    <span>মহাজন বকেয়া পরিশোধ</span>
+                    <span>{t('মহাজন বকেয়া পরিশোধ', 'Pay Supplier')}</span>
                   </button>
                 </div>
               </div>
             );
           })}
         </div>
+        )
       )}
 
       {/* ADD PARTY MODAL */}

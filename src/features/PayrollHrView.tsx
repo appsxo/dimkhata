@@ -2,11 +2,13 @@
 // DIMKHATA (ডিমখাতা) — Payroll & Employee HR (Apple Design System)
 // ====================================================================
 
-import React, { useState } from 'react';
-import { Plus, DollarSign, Calendar, Printer } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, DollarSign, Calendar, Printer, Users } from 'lucide-react';
 import { Employee, SalaryAdvance, PayrollRecord, FinancialAccount, Branch } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { useLanguage } from '../lib/i18n';
+import { sanitizeText } from '../lib/security';
 import { AppleSectionHeader, AppleModal } from '../components/ui/AppleUI';
 
 interface PayrollHrViewProps {
@@ -25,6 +27,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   accounts,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const currentMonthStr = new Date().toISOString().slice(0, 7);
 
   const [isAddEmpOpen, setIsAddEmpOpen] = useState(false);
@@ -39,6 +42,12 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   const [advAmount, setAdvAmount] = useState(2000);
   const [advPurpose, setAdvPurpose] = useState('');
   const [advAccountId, setAdvAccountId] = useState(accounts[0]?.id || '');
+
+  useEffect(() => {
+    if (!advEmpId && employees[0]?.id) {
+      setAdvEmpId(employees[0].id);
+    }
+  }, [employees, advEmpId]);
 
   const [isPayrollModalOpen, setIsPayrollModalOpen] = useState(false);
   const [selectedEmpForPayroll, setSelectedEmpForPayroll] = useState<Employee | null>(null);
@@ -55,10 +64,10 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
     const newEmp: Employee = {
       id: `emp-${Date.now()}`,
       employee_code: code,
-      full_name: empName,
-      designation,
-      phone: empPhone,
-      nid_number: nidNumber,
+      full_name: sanitizeText(empName, 100),
+      designation: sanitizeText(designation, 80),
+      phone: sanitizeText(empPhone, 30),
+      nid_number: sanitizeText(nidNumber, 40),
       kyc_docs: [],
       joining_date: new Date().toISOString().split('T')[0],
       salary_type: 'MONTHLY',
@@ -69,7 +78,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
     };
 
     DimKhataStore.saveEmployee(newEmp);
-    alert(`কর্মচারী সফলভাবে নিবন্ধিত হয়েছেন! কর্মচারী আইডি: ${code}`);
+    alert(t(`কর্মচারী সফলভাবে নিবন্ধিত হয়েছেন! কর্মচারী আইডি: ${code}`, `Employee registered! ID: ${code}`));
     setIsAddEmpOpen(false);
     setEmpName('');
     setEmpPhone('');
@@ -85,12 +94,12 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
       employee_id: advEmpId,
       advance_date: new Date().toISOString().split('T')[0],
       amount: advAmount,
-      purpose: advPurpose || 'জরুরী ব্যক্তিগত প্রয়োজন',
+      purpose: sanitizeText(advPurpose, 150) || t('জরুরী ব্যক্তিগত প্রয়োজন', 'Personal Advance'),
       created_at: new Date().toISOString(),
     };
 
     DimKhataStore.recordSalaryAdvance(advance, advAccountId, 'br-01');
-    alert('অগ্রিম বেতন সফলভাবে সংরক্ষিত হয়েছে ও ক্যাশ বুক থেকে বাদ দেওয়া হয়েছে!');
+    alert(t('অগ্রিম বেতন সফলভাবে সংরক্ষিত হয়েছে ও ক্যাশ বুক থেকে বাদ দেওয়া হয়েছে!', 'Salary advance saved and deducted from Cashbook!'));
     setIsAdvanceOpen(false);
     onRefresh();
   };
@@ -122,7 +131,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
     };
 
     DimKhataStore.recordPayroll(record, payrollAccountId, 'br-01');
-    alert(`মাসিক বেতন পরিশোধ সম্পন্ন! রসিদ নং: ${payCode}`);
+    alert(t(`মাসিক বেতন পরিশোধ সম্পন্ন! রসিদ নং: ${payCode}`, `Monthly payroll paid! Slip: ${payCode}`));
     setIsPayrollModalOpen(false);
     setSlipRecord(record);
     onRefresh();
@@ -131,30 +140,59 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="কর্মচারী ও এইচআর ব্যবস্থাপনা"
-        title="কর্মচারীদের বেতন ও অ্যাডভান্স (Payroll)"
-        subtitle="কর্মচারী আইডি (SE-EMP), মাসিক বেতন, অগ্রিম কর্তন ও বেতন রসিদ প্রিন্ট"
+        eyebrow={t('কর্মচারী ও এইচআর ব্যবস্থাপনা', 'Employee & HR Management')}
+        title={t('কর্মচারীদের বেতন ও অ্যাডভান্স (Payroll)', 'Employee Payroll & Advances')}
+        subtitle={t(
+          'কর্মচারী আইডি (SE-EMP), মাসিক বেতন, অগ্রিম কর্তন ও বেতন রসিদ প্রিন্ট',
+          'Employee IDs (SE-EMP), monthly salary, advance deductions & printable salary slips'
+        )}
         actions={
           <>
-            <button
-              onClick={() => setIsAdvanceOpen(true)}
-              className="btn-outline text-[13px] px-4"
-            >
-              <DollarSign className="w-4 h-4" />
-              <span>অগ্রিম বেতন (Advance)</span>
-            </button>
+            {employees.length > 0 && (
+              <button
+                onClick={() => setIsAdvanceOpen(true)}
+                className="btn-outline text-[13px] px-4"
+              >
+                <DollarSign className="w-4 h-4" />
+                <span>{t('অগ্রিম বেতন (Advance)', 'Salary Advance')}</span>
+              </button>
+            )}
             <button
               onClick={() => setIsAddEmpOpen(true)}
               className="btn-primary text-[13px] px-4"
             >
               <Plus className="w-4 h-4" />
-              <span>+ নতুন কর্মচারী নিয়োগ</span>
+              <span>{t('+ নতুন কর্মচারী নিয়োগ', '+ Add Employee')}</span>
             </button>
           </>
         }
       />
 
       {/* Employees Grid */}
+      {employees.length === 0 ? (
+        <div className="card-apple p-8 text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
+            <Users className="w-6 h-6" />
+          </div>
+          <h3 className="text-[18px] font-semibold text-[#1d1d1f]">
+            {t('এখনো কোনো কর্মচারী যুক্ত করা হয়নি', 'No Employees Registered Yet')}
+          </h3>
+          <p className="text-[13px] text-[#7a7a7a] max-w-md mx-auto">
+            {t(
+              'আপনার আড়ৎ বা দোকানের কর্মচারীদের নিবন্ধন করতে "+ নতুন কর্মচারী নিয়োগ" বাটনে ক্লিক করুন।',
+              'Click "+ Add Employee" to register your staff with automatic SE-EMP-001 IDs.'
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsAddEmpOpen(true)}
+            className="btn-primary mx-auto mt-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('+ প্রথম কর্মচারী যোগ করুন', '+ Add First Employee')}</span>
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {employees.map((emp) => {
           const empAdvances = advances.filter(
@@ -226,6 +264,7 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
           );
         })}
       </div>
+      )}
 
       {/* Recent Salary Slips */}
       <div className="card-apple p-5 sm:p-6 space-y-4">

@@ -15,6 +15,8 @@ export interface UserProfile {
   is_active: boolean;
 }
 
+export type AppLanguage = 'bn' | 'en';
+
 export interface CompanySettings {
   id: string;
   company_name_bn: string;
@@ -26,6 +28,8 @@ export interface CompanySettings {
   logo_url?: string;
   invoice_footer_note: string;
   currency_symbol: string;
+  admin_pin_hash?: string;
+  staff_pin_hash?: string;
 }
 
 export interface Branch {

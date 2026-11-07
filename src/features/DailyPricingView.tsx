@@ -7,6 +7,7 @@ import { Save, Info } from 'lucide-react';
 import { EggCategory, DailyMarketRate, InventoryStock } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatQuantityPcs, toBengaliNumber } from '../lib/egg-units';
+import { useLanguage, getCategoryDisplayName } from '../lib/i18n';
 import { AppleSectionHeader } from '../components/ui/AppleUI';
 
 interface DailyPricingViewProps {
@@ -24,6 +25,7 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
   branchId,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [formRates, setFormRates] = useState<Record<string, { buying: number; wholesale: number; retail: number }>>(() => {
@@ -88,23 +90,26 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow={`আজকের তারিখ: ${toBengaliNumber(todayStr)}`}
-        title="ডিমের ৫টি ক্যাটাগরি ও দৈনিক বাজার দর"
-        subtitle="প্রতিদিনের কেনা, পাইকারি ও খুচরা বিক্রয় দর এখানে পরিবর্তন করলে বিক্রয় মেমোতে স্বয়ংক্রিয়ভাবে আপডেট হবে"
+        eyebrow={t(`আজকের তারিখ: ${toBengaliNumber(todayStr)}`, `Date: ${todayStr}`)}
+        title={t('ডিমের ৫টি ক্যাটাগরি ও দৈনিক বাজার দর', "5 Egg Categories & Daily Market Rates")}
+        subtitle={t(
+          'প্রতিদিনের কেনা, পাইকারি ও খুচরা বিক্রয় দর এখানে পরিবর্তন করলে বিক্রয় মেমোতে স্বয়ংক্রিয়ভাবে আপডেট হবে',
+          'Update buying, wholesale, and retail rates here to automatically sync with the POS memo'
+        )}
         actions={
           <button
             onClick={handleSaveAll}
             className="btn-primary py-2.5 px-5"
           >
             <Save className="w-4 h-4" />
-            <span>সকল বাজার দর সংরক্ষণ করুন</span>
+            <span>{t('সকল বাজার দর সংরক্ষণ করুন', 'Save All Market Rates')}</span>
           </button>
         }
       />
 
       {savedSuccess && (
         <div className="p-3.5 bg-white border border-[#15803d]/30 text-[#15803d] rounded-[12px] text-[13px] font-semibold flex items-center gap-2">
-          <span>✓ আজকের বাজার দর সফলভাবে সংরক্ষিত হয়েছে!</span>
+          <span>{t('✓ আজকের বাজার দর সফলভাবে সংরক্ষিত হয়েছে!', "✓ Today's market rates saved and synced to Supabase!")}</span>
         </div>
       )}
 
@@ -112,7 +117,11 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
       <div className="p-4 bg-white border border-[#e0e0e0] rounded-[18px] flex items-start gap-3 text-[13px] text-[#4e4e4e]">
         <Info className="w-4 h-4 text-[#0066cc] shrink-0 mt-0.5" />
         <div>
-          <strong className="text-[#1d1d1f] font-semibold">সহজ নির্দেশনা:</strong> নিচে প্রতিটি ডিমের পিস প্রতি দর বসান। নিচে ১০০ পিস (শ), ১ খাঁচি এবং ১ হালির হিসাব স্বয়ংক্রিয়ভাবে দেখা যাবে।
+          <strong className="text-[#1d1d1f] font-semibold">{t('সহজ নির্দেশনা:', 'Tip:')}</strong>{' '}
+          {t(
+            'নিচে প্রতিটি ডিমের পিস প্রতি দর বসান। নিচে ১০০ পিস (শ), ১ খাঁচি এবং ১ হালির হিসাব স্বয়ংক্রিয়ভাবে দেখা যাবে।',
+            'Enter per-piece rates below. 100 pcs (Sho), 1 Crate, and 1 Hali (4 pcs) rates are calculated automatically.'
+          )}
         </div>
       </div>
 
@@ -136,7 +145,7 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
                   </div>
                   <div>
                     <h3 className="font-semibold text-[20px] text-[#1d1d1f] tracking-[-0.015em]">
-                      {cat.name_bn}
+                      {getCategoryDisplayName(cat)}
                     </h3>
                     <div className="text-[12px] text-[#7a7a7a] flex items-center gap-2 flex-wrap">
                       <span>{cat.name_en}</span>
@@ -144,7 +153,10 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
                       <span className="font-mono text-[#1d1d1f]">{cat.code}</span>
                       <span>•</span>
                       <span className="badge-pill text-[11px] py-0 px-2">
-                        ১ খাঁচি = {toBengaliNumber(cat.pcs_per_crate)} পিস
+                        {t(
+                          `১ খাঁচি = ${toBengaliNumber(cat.pcs_per_crate)} পিস`,
+                          `1 Crate = ${cat.pcs_per_crate} pcs`
+                        )}
                       </span>
                     </div>
                   </div>
@@ -153,9 +165,9 @@ export const DailyPricingView: React.FC<DailyPricingViewProps> = ({
                 {/* Stock Badge */}
                 <div className="bg-[#f5f5f7] px-4 py-2.5 rounded-[12px] border border-[#e0e0e0] flex items-center gap-4 text-xs">
                   <div>
-                    <div className="text-[#7a7a7a] text-[11px]">বর্তমান মজুদ</div>
+                    <div className="text-[#7a7a7a] text-[11px]">{t('বর্তমান মজুদ', 'Current Stock')}</div>
                     <div className="font-semibold text-[17px] text-[#1d1d1f]">
-                      {bdown.totalPcsBn} পিস
+                      {bdown.totalPcsBn} {t('পিস', 'pcs')}
                     </div>
                   </div>
                   <div className="border-l pl-4 border-[#e0e0e0] text-[#0066cc] font-semibold">

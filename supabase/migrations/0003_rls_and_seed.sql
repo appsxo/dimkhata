@@ -121,10 +121,10 @@ ON CONFLICT (id) DO NOTHING;
 -- Default Financial Accounts (Req 5)
 INSERT INTO public.financial_accounts (id, name, account_type, account_number, current_balance, is_default, is_active)
 VALUES 
-    ('00000000-0000-0000-0000-000000000031', 'দোকানের ক্যাশ ড্রয়ার (Main Cash)', 'CASH', 'CASH-01', 50000.00, TRUE, TRUE),
-    ('00000000-0000-0000-0000-000000000032', 'বিকাশ মার্চেন্ট (bKash)', 'MFS', '01700-112233', 25000.00, FALSE, TRUE),
-    ('00000000-0000-0000-0000-000000000033', 'নগদ পার্সোনাল (Nagad)', 'MFS', '01700-445566', 15000.00, FALSE, TRUE),
-    ('00000000-0000-0000-0000-000000000034', 'ইসলামী ব্যাংক বাংলাদেশ (IBBL)', 'BANK', '2050-12345678', 120000.00, FALSE, TRUE)
+    ('00000000-0000-0000-0000-000000000031', 'দোকানের ক্যাশ ড্রয়ার (Main Cash)', 'CASH', 'CASH-01', 0.00, TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000032', 'বিকাশ মার্চেন্ট (bKash)', 'MFS', '01700-112233', 0.00, FALSE, TRUE),
+    ('00000000-0000-0000-0000-000000000033', 'নগদ পার্সোনাল (Nagad)', 'MFS', '01700-445566', 0.00, FALSE, TRUE),
+    ('00000000-0000-0000-0000-000000000034', 'ইসলামী ব্যাংক বাংলাদেশ (IBBL)', 'BANK', '2050-12345678', 0.00, FALSE, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Cloud Sync Table Policy for GitHub Pages (Publishable Key / Anon Access)

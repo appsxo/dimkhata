@@ -1,12 +1,16 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Egg Unit Calculation Engine & Bengali Formatters
+// DIMKHATA (ডিমখাতা) — Egg Unit Calculation Engine & Bilingual Formatters
 // ====================================================================
+
+import { getActiveLanguage } from './i18n';
 
 const BENGALI_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 
 export function toBengaliNumber(num: number | string | null | undefined): string {
-  if (num === null || num === undefined || num === '') return '০';
+  const isEn = getActiveLanguage() === 'en';
+  if (num === null || num === undefined || num === '') return isEn ? '0' : '০';
   const str = String(num);
+  if (isEn) return str;
   return str.replace(/[0-9]/g, (digit) => BENGALI_DIGITS[parseInt(digit, 10)] || digit);
 }
 
@@ -17,8 +21,8 @@ export function formatTaka(amount: number | null | undefined, includeSymbol = tr
     maximumFractionDigits: 2,
   }).format(val);
 
-  const bnFormatted = toBengaliNumber(formatted);
-  return includeSymbol ? `৳${bnFormatted}` : bnFormatted;
+  const localized = toBengaliNumber(formatted);
+  return includeSymbol ? `৳${localized}` : localized;
 }
 
 export function formatQuantityPcs(qtyPcs: number, pcsPerCrate = 30): {
@@ -29,39 +33,49 @@ export function formatQuantityPcs(qtyPcs: number, pcsPerCrate = 30): {
   haliBreakdown: string;
   summaryBadge: string;
 } {
+  const isEn = getActiveLanguage() === 'en';
   const pcs = Math.max(0, Math.floor(qtyPcs || 0));
-  const pcsBn = toBengaliNumber(pcs);
+  const pcsStr = toBengaliNumber(pcs);
+
+  const unitPcs = isEn ? 'Pcs' : 'পিস';
+  const unitSho = isEn ? 'Hundred' : 'শ';
+  const unitCrate = isEn ? 'Crates' : 'খাঁচি';
+  const unitHali = isEn ? 'Hali' : 'হালি';
 
   // Hundred (শ) breakdown
   const sho = Math.floor(pcs / 100);
   const remSho = pcs % 100;
-  const shoText = sho > 0 
-    ? `${toBengaliNumber(sho)} শ${remSho > 0 ? ` ${toBengaliNumber(remSho)} পিস` : ''}`
-    : `${pcsBn} পিস`;
+  const shoText =
+    sho > 0
+      ? `${toBengaliNumber(sho)} ${unitSho}${remSho > 0 ? ` ${toBengaliNumber(remSho)} ${unitPcs}` : ''}`
+      : `${pcsStr} ${unitPcs}`;
 
   // Crate (খাঁচি) breakdown
   const crateSize = pcsPerCrate > 0 ? pcsPerCrate : 30;
   const crates = Math.floor(pcs / crateSize);
   const remCrates = pcs % crateSize;
-  const crateText = crates > 0
-    ? `${toBengaliNumber(crates)} খাঁচি${remCrates > 0 ? ` + ${toBengaliNumber(remCrates)} পিস` : ''}`
-    : `${pcsBn} পিস`;
+  const crateText =
+    crates > 0
+      ? `${toBengaliNumber(crates)} ${unitCrate}${remCrates > 0 ? ` + ${toBengaliNumber(remCrates)} ${unitPcs}` : ''}`
+      : `${pcsStr} ${unitPcs}`;
 
   // Hali (হালি) breakdown
   const hali = Math.floor(pcs / 4);
   const remHali = pcs % 4;
-  const haliText = hali > 0
-    ? `${toBengaliNumber(hali)} হালি${remHali > 0 ? ` + ${toBengaliNumber(remHali)} পিস` : ''}`
-    : `${pcsBn} পিস`;
+  const haliText =
+    hali > 0
+      ? `${toBengaliNumber(hali)} ${unitHali}${remHali > 0 ? ` + ${toBengaliNumber(remHali)} ${unitPcs}` : ''}`
+      : `${pcsStr} ${unitPcs}`;
 
   // Summary badge for POS and Cards
-  const summaryBadge = crates > 0
-    ? `${toBengaliNumber(crates)} খাঁচি (${pcsBn} পিস)`
-    : `${pcsBn} পিস`;
+  const summaryBadge =
+    crates > 0
+      ? `${toBengaliNumber(crates)} ${unitCrate} (${pcsStr} ${unitPcs})`
+      : `${pcsStr} ${unitPcs}`;
 
   return {
     totalPcs: pcs,
-    totalPcsBn: pcsBn,
+    totalPcsBn: pcsStr,
     shoBreakdown: shoText,
     crateBreakdown: crateText,
     haliBreakdown: haliText,
@@ -101,6 +115,7 @@ export function calculateWeightedAverageCost(
 ): number {
   const totalQty = (existingQtyPcs || 0) + (incomingQtyPcs || 0);
   if (totalQty <= 0) return incomingRate || 0;
-  const totalVal = ((existingQtyPcs || 0) * (existingWac || 0)) + ((incomingQtyPcs || 0) * (incomingRate || 0));
+  const totalVal =
+    (existingQtyPcs || 0) * (existingWac || 0) + (incomingQtyPcs || 0) * (incomingRate || 0);
   return Math.round((totalVal / totalQty) * 10000) / 10000;
 }

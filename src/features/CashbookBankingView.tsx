@@ -7,6 +7,7 @@ import { Wallet, Plus, RefreshCcw, Building, Smartphone, Settings } from 'lucide
 import { FinancialAccount, CashbookTransaction, Branch, CompanySettings } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { useLanguage } from '../lib/i18n';
 import { AppleSectionHeader, AppleModal } from '../components/ui/AppleUI';
 
 interface CashbookBankingViewProps {
@@ -22,6 +23,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
   branches,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const [filterAccount, setFilterAccount] = useState<string>('ALL');
   const [filterType, setFilterType] = useState<string>('ALL');
 
@@ -63,7 +65,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
     };
 
     DimKhataStore.addAccount(newAcc);
-    alert(`সফল! নতুন একাউন্ট "${accName}" যুক্ত করা হয়েছে।`);
+    alert(t(`সফল! নতুন একাউন্ট "${accName}" যুক্ত করা হয়েছে।`, `Account "${accName}" added successfully!`));
     setIsAddAccOpen(false);
     setAccName('');
     setAccNumber('');
@@ -74,7 +76,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
   const handleSaveCompany = (e: React.FormEvent) => {
     e.preventDefault();
     DimKhataStore.updateCompany(companyForm);
-    alert('সফল! প্রতিষ্ঠানের ব্র্যান্ডিং ও মেমো তথ্য আপডেট করা হয়েছে।');
+    alert(t('সফল! প্রতিষ্ঠানের ব্র্যান্ডিং ও মেমো তথ্য আপডেট করা হয়েছে।', 'Company branding & memo settings updated!'));
     setIsCompanyOpen(false);
     onRefresh();
   };
@@ -82,17 +84,17 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
   const handleContraTransfer = (e: React.FormEvent) => {
     e.preventDefault();
     if (fromAccount === toAccount) {
-      alert('উৎস ও গন্তব্য একাউন্ট আলাদা হতে হবে!');
+      alert(t('উৎস ও গন্তব্য একাউন্ট আলাদা হতে হবে!', 'Source and destination accounts must be different!'));
       return;
     }
     if (transferAmount <= 0) {
-      alert('সঠিক টাকার অঙ্ক দিন!');
+      alert(t('সঠিক টাকার অঙ্ক দিন!', 'Please enter a valid amount!'));
       return;
     }
 
     const fromAccObj = accounts.find((a) => a.id === fromAccount);
     if (!fromAccObj || fromAccObj.current_balance < transferAmount) {
-      alert('উৎস একাউন্টে পর্যাপ্ত ব্যালেন্স নেই!');
+      alert(t('উৎস একাউন্টে পর্যাপ্ত ব্যালেন্স নেই!', 'Insufficient balance in source account!'));
       return;
     }
 
@@ -116,7 +118,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
       `আন্তঃএকাউন্ট ফান্ড রিসিভ (প্রেরক: ${fromAccObj.name})`
     );
 
-    alert('ফান্ড ট্রান্সফার সফল হয়েছে!');
+    alert(t('ফান্ড ট্রান্সফার সফল হয়েছে!', 'Fund transfer completed successfully!'));
     setIsContraOpen(false);
     onRefresh();
   };
@@ -135,9 +137,12 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="প্রতিষ্ঠান ও ডিজিটাল ব্যাংকিং"
-        title="ক্যাশবুক ও ব্যাংক একাউন্ট (Live Cashbook)"
-        subtitle="দোকানের ক্যাশ ড্রয়ার, ব্যাংক ও মোবাইল ব্যাংকিং (বিকাশ/নগদ) লাইভ সিঙ্ক ও মেমো ব্র্যান্ডিং"
+        eyebrow={t('প্রতিষ্ঠান ও ডিজিটাল ব্যাংকিং', 'Company & Digital Banking')}
+        title={t('ক্যাশবুক ও ব্যাংক একাউন্ট (Live Cashbook)', 'Live Cashbook & Bank Accounts')}
+        subtitle={t(
+          'দোকানের ক্যাশ ড্রয়ার, ব্যাংক ও মোবাইল ব্যাংকিং (বিকাশ/নগদ) লাইভ সিঙ্ক ও মেমো ব্র্যান্ডিং',
+          'Live synced shop cash drawer, bank accounts, mobile banking (bKash/Nagad) & invoice branding'
+        )}
         actions={
           <>
             <button
@@ -148,7 +153,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
               className="btn-outline text-[13px] px-4"
             >
               <Settings className="w-4 h-4" />
-              <span>প্রতিষ্ঠান ব্র্যান্ডিং</span>
+              <span>{t('প্রতিষ্ঠান ব্র্যান্ডিং', 'Company Branding')}</span>
             </button>
 
             <button
@@ -156,7 +161,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
               className="btn-outline text-[13px] px-4"
             >
               <Plus className="w-4 h-4" />
-              <span>নতুন একাউন্ট যোগ</span>
+              <span>{t('নতুন একাউন্ট যোগ', '+ Add Account')}</span>
             </button>
 
             <button
@@ -164,7 +169,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
               className="btn-primary text-[13px] px-5"
             >
               <RefreshCcw className="w-4 h-4" />
-              <span>ফান্ড ট্রান্সফার</span>
+              <span>{t('ফান্ড ট্রান্সফার', 'Fund Transfer')}</span>
             </button>
           </>
         }
@@ -180,7 +185,11 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             <div className="flex items-start justify-between">
               <div>
                 <span className="badge-blue text-[10px] py-0 px-2">
-                  {acc.account_type === 'MFS' ? 'মোবাইল ব্যাংকিং' : acc.account_type === 'BANK' ? 'ব্যাংক হিসাব' : 'ক্যাশ ড্রয়ার'}
+                  {acc.account_type === 'MFS'
+                    ? t('মোবাইল ব্যাংকিং', 'Mobile Banking')
+                    : acc.account_type === 'BANK'
+                    ? t('ব্যাংক হিসাব', 'Bank Account')
+                    : t('ক্যাশ ড্রয়ার', 'Cash Drawer')}
                 </span>
                 <h3 className="font-semibold text-[16px] text-[#1d1d1f] mt-2">{acc.name}</h3>
                 {acc.account_number && (
@@ -195,7 +204,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             </div>
 
             <div className="mt-4 pt-3 border-t border-[#e0e0e0]">
-              <div className="text-[11px] text-[#7a7a7a]">বর্তমান লাইভ স্থিতি</div>
+              <div className="text-[11px] text-[#7a7a7a]">{t('বর্তমান লাইভ স্থিতি', 'Live Balance')}</div>
               <div className="font-semibold text-[22px] text-[#1d1d1f] mt-0.5">
                 {formatTaka(acc.current_balance)}
               </div>

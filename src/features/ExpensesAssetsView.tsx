@@ -7,6 +7,8 @@ import { TrendingDown, Plus, Package, Zap, Coffee } from 'lucide-react';
 import { Expense, FinancialAccount, Branch } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { useLanguage } from '../lib/i18n';
+import { sanitizeText } from '../lib/security';
 import { AppleSectionHeader, AppleStatCard, AppleModal } from '../components/ui/AppleUI';
 
 interface ExpensesAssetsViewProps {
@@ -22,6 +24,7 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
   branches,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [category, setCategory] = useState<Expense['expense_category']>('FIXED');
   const [title, setTitle] = useState('');
@@ -49,17 +52,17 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
       expense_code: code,
       branch_id: branchId,
       expense_category: category,
-      title,
+      title: sanitizeText(title, 150),
       amount,
       account_id: accountId,
       expense_date: expenseDate,
       is_capital_asset: category === 'CAPITAL_ASSET',
-      notes,
+      notes: sanitizeText(notes, 200),
       created_at: new Date().toISOString(),
     };
 
     DimKhataStore.recordExpense(newExpense);
-    alert('খরচ সফলভাবে এন্ট্রি হয়েছে ও ক্যাশ বুক থেকে কর্তন হয়েছে!');
+    alert(t('খরচ সফলভাবে এন্ট্রি হয়েছে ও ক্যাশ বুক থেকে কর্তন হয়েছে!', 'Expense saved and deducted from Cashbook!'));
     setIsAddOpen(false);
     setTitle('');
     setAmount(1000);
@@ -70,16 +73,19 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
   return (
     <div className="space-y-6">
       <AppleSectionHeader
-        eyebrow="পরিচালনা ও অ্যাসেট হিসাব"
-        title="দোকান খরচ ও অ্যাসেট (Expenses & Assets)"
-        subtitle="স্থায়ী খরচ, চলতি আপ্যায়ন/মেরামত, ডিমের খাঁচি/ডিজিটাল স্কেল অ্যাসেট ও বিবিধ খরচ"
+        eyebrow={t('পরিচালনা ও অ্যাসেট হিসাব', 'Operating & Capital Asset Expenses')}
+        title={t('দোকান খরচ ও অ্যাসেট (Expenses & Assets)', 'Shop Expenses & Capital Assets')}
+        subtitle={t(
+          'স্থায়ী খরচ, চলতি আপ্যায়ন/মেরামত, ডিমের খাঁচি/ডিজিটাল স্কেল অ্যাসেট ও বিবিধ খরচ',
+          'Track fixed rent/utilities, variable operations, capital assets (crates/scales) & miscellaneous expenses'
+        )}
         actions={
           <button
             onClick={() => setIsAddOpen(true)}
             className="btn-primary py-2.5 px-5"
           >
             <Plus className="w-4 h-4" />
-            <span>+ নতুন খরচ এন্ট্রি করুন</span>
+            <span>{t('+ নতুন খরচ এন্ট্রি করুন', '+ Add Expense')}</span>
           </button>
         }
       />
@@ -87,30 +93,30 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
       {/* 4 Expense Category Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         <AppleStatCard
-          label="স্থায়ী খরচ (Fixed)"
+          label={t('স্থায়ী খরচ (Fixed)', 'Fixed Expenses')}
           value={formatTaka(fixedTotal)}
-          subtext="দোকান ভাড়া, কারেন্ট বিল"
+          subtext={t('দোকান ভাড়া, কারেন্ট বিল', 'Shop rent, electricity, internet')}
           icon={<Zap className="w-4 h-4 text-[#0066cc]" />}
         />
 
         <AppleStatCard
-          label="চলতি খরচ (Variable)"
+          label={t('চলতি খরচ (Variable)', 'Variable Expenses')}
           value={formatTaka(variableTotal)}
-          subtext="আপ্যায়ন, যাতায়াত, ভ্যান মেরামত"
+          subtext={t('আপ্যায়ন, যাতায়াত, ভ্যান মেরামত', 'Refreshments, local transport, van repair')}
           icon={<Coffee className="w-4 h-4 text-[#0066cc]" />}
         />
 
         <AppleStatCard
-          label="অ্যাসেট কেনা (Capital Assets)"
+          label={t('অ্যাসেট কেনা (Capital Assets)', 'Capital Assets')}
           value={formatTaka(assetTotal)}
-          subtext="ডিমের খাঁচি, স্কেল, ফার্নিচার"
+          subtext={t('ডিমের খাঁচি, স্কেল, ফার্নিচার', 'Egg crates, digital scales, furniture')}
           icon={<Package className="w-4 h-4 text-[#0066cc]" />}
         />
 
         <AppleStatCard
-          label="বিবিধ খরচ (Misc)"
+          label={t('বিবিধ খরচ (Misc)', 'Misc Expenses')}
           value={formatTaka(miscTotal)}
-          subtext="জরুরী আনঅফিশিয়াল নগদ খরচ"
+          subtext={t('জরুরী আনঅফিশিয়াল নগদ খরচ', 'Urgent miscellaneous cash expenses')}
           icon={<TrendingDown className="w-4 h-4 text-[#0066cc]" />}
         />
       </div>
@@ -118,26 +124,26 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
       {/* Expenses Table */}
       <div className="card-apple p-5 sm:p-6 space-y-4">
         <h3 className="font-semibold text-[20px] text-[#1d1d1f]">
-          খরচের বিবরণ ও ভাউচার তালিকা
+          {t('খরচের বিবরণ ও ভাউচার তালিকা', 'Expense Ledger & Vouchers')}
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[#e0e0e0] text-[#7a7a7a] text-left bg-[#f5f5f7]">
-                <th className="py-2.5 px-3 font-semibold">ভাউচার কোড</th>
-                <th className="py-2.5 px-3 font-semibold">তারিখ</th>
-                <th className="py-2.5 px-3 font-semibold">খাত / ক্যাটাগরি</th>
-                <th className="py-2.5 px-3 font-semibold">খরচের শিরোনাম</th>
-                <th className="py-2.5 px-3 font-semibold">পেমেন্ট একাউন্ট</th>
-                <th className="py-2.5 px-3 font-semibold text-right">টাকার পরিমাণ</th>
+                <th className="py-2.5 px-3 font-semibold">{t('ভাউচার কোড', 'Voucher Code')}</th>
+                <th className="py-2.5 px-3 font-semibold">{t('তারিখ', 'Date')}</th>
+                <th className="py-2.5 px-3 font-semibold">{t('খাত / ক্যাটাগরি', 'Category')}</th>
+                <th className="py-2.5 px-3 font-semibold">{t('খরচের শিরোনাম', 'Title')}</th>
+                <th className="py-2.5 px-3 font-semibold">{t('পেমেন্ট একাউন্ট', 'Account')}</th>
+                <th className="py-2.5 px-3 font-semibold text-right">{t('টাকার পরিমাণ', 'Amount')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e0e0e0]">
               {expenses.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-[#7a7a7a]">
-                    কোনো খরচের রেকর্ড নেই।
+                    {t('কোনো খরচের রেকর্ড নেই।', 'No expenses recorded yet.')}
                   </td>
                 </tr>
               ) : (

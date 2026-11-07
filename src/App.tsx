@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DimKhataStore } from './lib/storage-store';
+import { useLanguage } from './lib/i18n';
 import {
   UserProfile,
   Branch,
@@ -30,6 +31,7 @@ import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTabId } from './components/layout/Sidebar';
 import { DailyRateModal } from './components/modals/DailyRateModal';
 import { PrintInvoiceModal } from './components/modals/PrintInvoiceModal';
+import { SecurityPinModal } from './components/modals/SecurityPinModal';
 
 // Feature Views
 import { DashboardView } from './features/DashboardView';
@@ -45,12 +47,15 @@ import { ProfitSettlementView } from './features/ProfitSettlementView';
 import { AuditLogBranchesView } from './features/AuditLogBranchesView';
 
 export const App: React.FC = () => {
+  // Subscribe root to active language ('bn' default, 'en' toggle)
+  useLanguage();
+
   // State from DimKhataStore
   const [currentUser, setCurrentUser] = useState<UserProfile>(DimKhataStore.getActiveUser());
   const [currentTab, setCurrentTab] = useState<NavTabId>('dashboard');
   const [selectedBranchId, setSelectedBranchId] = useState<string>(DimKhataStore.getSelectedBranchId());
 
-  // Data collections
+  // Data collections (Synced with Supabase Cloud as Single Source of Truth)
   const [company, setCompany] = useState(DimKhataStore.getCompany());
   const [branches, setBranches] = useState<Branch[]>(DimKhataStore.getBranches());
   const [categories, setCategories] = useState<EggCategory[]>(DimKhataStore.getCategories());
@@ -75,6 +80,7 @@ export const App: React.FC = () => {
   // Modals state
   const [isDailyRateModalOpen, setIsDailyRateModalOpen] = useState(false);
   const [printInvoice, setPrintInvoice] = useState<SalesInvoice | null>(null);
+  const [securityModalMode, setSecurityModalMode] = useState<'UNLOCK_ADMIN' | 'MANAGE_SECURITY' | null>(null);
 
   // Reload all state from Store
   const reloadData = () => {
@@ -116,20 +122,31 @@ export const App: React.FC = () => {
     setStocks(DimKhataStore.getStocks(bId));
   };
 
-  // Toggle user role between Admin (Sharif) and Staff (Kawsar Ahmed)
+  const activateAdminRole = () => {
+    const adminUser: UserProfile = {
+      id: 'admin-sharif',
+      full_name: 'শরিফ (মালিক)',
+      role: 'ADMIN',
+      phone: '01711-100001',
+      is_active: true,
+    };
+    DimKhataStore.setActiveUser(adminUser);
+    setCurrentUser(adminUser);
+  };
+
+  // Toggle user role between Admin (Sharif) and Staff (Cashier) with PIN Guard
   const handleToggleUserRole = () => {
     if (currentUser.role === 'ADMIN') {
       const staffUser: UserProfile = {
-        id: 'staff-kawsar',
+        id: 'staff-cashier',
         employee_code: 'SE-EMP-001',
-        full_name: 'কাওসার আহমেদ (ক্যাশিয়ার)',
+        full_name: 'স্টাফ / ক্যাশিয়ার',
         role: 'STAFF',
-        phone: '01822-112233',
+        phone: '',
         is_active: true,
       };
       DimKhataStore.setActiveUser(staffUser);
       setCurrentUser(staffUser);
-      // If current tab was admin only, redirect to dashboard
       if (
         currentTab === 'profit-settlement' ||
         currentTab === 'audit-branches' ||
@@ -139,27 +156,23 @@ export const App: React.FC = () => {
         setCurrentTab('dashboard');
       }
     } else {
-      const adminUser: UserProfile = {
-        id: 'admin-sharif',
-        full_name: 'শরিফ (মালিক)',
-        role: 'ADMIN',
-        phone: '01711-100001',
-        is_active: true,
-      };
-      DimKhataStore.setActiveUser(adminUser);
-      setCurrentUser(adminUser);
+      // Require Admin PIN before unlocking Admin mode
+      setSecurityModalMode('UNLOCK_ADMIN');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans">
-      {/* Apple Two-Row Top Navbar */}
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans overflow-x-hidden">
+      {/* Apple Two-Row Top Navbar & Mobile App Header */}
       <Navbar
         branches={branches}
         selectedBranchId={selectedBranchId}
         onSelectBranch={handleSelectBranch}
         currentUser={currentUser}
         onToggleUserRole={handleToggleUserRole}
+        onOpenSecurityModal={() =>
+          setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
+        }
         onOpenRatesModal={() => setIsDailyRateModalOpen(true)}
         onRefresh={reloadData}
         currentTab={currentTab}
@@ -172,10 +185,13 @@ export const App: React.FC = () => {
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
           userRole={currentUser.role}
+          onOpenSecurityModal={() =>
+            setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
+          }
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-3 sm:p-6 pb-24 md:pb-10 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-6 pb-24 md:pb-10 overflow-y-auto max-w-7xl w-full mx-auto min-w-0">
           {currentTab === 'dashboard' && (
             <DashboardView
               categories={categories}
@@ -314,6 +330,14 @@ export const App: React.FC = () => {
           customer={customers.find((c) => c.id === printInvoice.customer_id) || null}
           company={company}
           categories={categories}
+        />
+      )}
+
+      {securityModalMode && (
+        <SecurityPinModal
+          mode={securityModalMode}
+          onClose={() => setSecurityModalMode(null)}
+          onSuccessUnlockAdmin={activateAdminRole}
         />
       )}
     </div>
