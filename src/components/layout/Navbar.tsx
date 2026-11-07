@@ -302,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTab('daily-pricing')}
-                className="btn-secondary-pill !min-h-[32px] !py-1 !px-2.5 sm:!px-3 !text-[12px]"
+                className="btn-outline !min-h-[32px] !py-1 !px-2.5 sm:!px-3 !text-[12px]"
               >
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
                 <span>{t('আজকের দর', 'Rates')}</span>

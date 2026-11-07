@@ -2,7 +2,7 @@
 
 **প্রতিষ্ঠান:** শরিফ এন্ড ইমান এন্টারপ্রাইজ (Sharif & Eman Enterprise)  
 **মালিকদ্বয়:** শরিফ (৬৬.৬৭% / ২ অংশ) এবং ইমান (৩৩.৩৩% / ১ অংশ)  
-**লাইভ লিংক:** `https://apps-hossain.github.io/DimKhata/`  
+**লাইভ লিংক:** `https://appsxo.github.io/DimKhata/`  
 **টেক স্ট্যাক:** React 19 + TypeScript + Tailwind CSS v4 + Vite (PWA) + Supabase + GitHub Pages
 
 ---

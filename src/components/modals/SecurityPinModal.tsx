@@ -1,14 +1,9 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Security PIN & Supabase Cloud Guard Modal
-// Strict Apple Design System + SHA-256 Role Verification
-// ====================================================================
-
 import React, { useState } from 'react';
 import { KeyRound, Cloud, Copy, CheckCircle2, RefreshCw } from 'lucide-react';
 import { DimKhataStore } from '../../lib/storage-store';
 import { verifyRolePin, sha256Hex } from '../../lib/security';
 import { useLanguage } from '../../lib/i18n';
-import { AppleModal } from '../ui/AppleUI';
+import { AppleModal, AppleOptionChips } from '../ui/AppleUI';
 
 interface SecurityPinModalProps {
   mode: 'UNLOCK_ADMIN' | 'MANAGE_SECURITY';
@@ -16,7 +11,7 @@ interface SecurityPinModalProps {
   onSuccessUnlockAdmin?: () => void;
 }
 
-const SUPABASE_KV_SQL = `-- Run this once in Supabase SQL Editor to enable 100% Real-Time Cloud Sync
+const SUPABASE_KV_SQL = `-- Run once in Supabase SQL Editor
 CREATE TABLE IF NOT EXISTS public.dimkhata_kv_store (
     key TEXT PRIMARY KEY,
     value JSONB NOT NULL,
@@ -46,7 +41,6 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   const [errorMsg, setErrorMsg] = useState('');
   const [verifying, setVerifying] = useState(false);
 
-  // Manage PIN state
   const [activeTab, setActiveTab] = useState<'PIN' | 'CLOUD'>(
     cloudStatus === 'NEEDS_SQL' ? 'CLOUD' : 'PIN'
   );
@@ -64,12 +58,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     const ok = await verifyRolePin('ADMIN', pinInput, company);
     setVerifying(false);
     if (!ok) {
-      setErrorMsg(
-        t(
-          'ভুল অ্যাডমিন পিন! সঠিক ৪-সংখ্যার পিন দিন (ডিফল্ট: 1234)',
-          'Incorrect Admin PIN! Please enter valid PIN (Default: 1234)'
-        )
-      );
+      setErrorMsg(t('ভুল অ্যাডমিন পিন! সঠিক পিন দিন (ডিফল্ট: 1234)', 'Incorrect Admin PIN! (Default: 1234)'));
       return;
     }
     if (onSuccessUnlockAdmin) onSuccessUnlockAdmin();
@@ -83,12 +72,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
 
     const isCurrentValid = await verifyRolePin('ADMIN', currentAdminPin, company);
     if (!isCurrentValid) {
-      setErrorMsg(
-        t(
-          'বর্তমান অ্যাডমিন পিন সঠিক নয়! (ডিফল্ট পিন: 1234)',
-          'Current Admin PIN is incorrect! (Default: 1234)'
-        )
-      );
+      setErrorMsg(t('বর্তমান অ্যাডমিন পিন সঠিক নয়! (ডিফল্ট: 1234)', 'Current Admin PIN is incorrect! (Default: 1234)'));
       return;
     }
 
@@ -104,12 +88,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     setCurrentAdminPin('');
     setNewAdminPin('');
     setNewStaffPin('');
-    setSavedNotice(
-      t(
-        'নিরাপত্তা পিন সফলভাবে আপডেট এবং Supabase ক্লাউডে সংরক্ষিত হয়েছে!',
-        'Security PINs updated and synced to Supabase Cloud!'
-      )
-    );
+    setSavedNotice(t('পিন আপডেট ও ক্লাউডে সংরক্ষিত হয়েছে!', 'PINs updated and synced to Supabase!'));
   };
 
   const handleCopySql = () => {
@@ -128,16 +107,8 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
     <AppleModal
       isOpen={true}
       onClose={onClose}
-      title={
-        mode === 'UNLOCK_ADMIN'
-          ? t('অ্যাডমিন নিরাপত্তা পিন', 'Admin Security PIN')
-          : t('নিরাপত্তা ও ক্লাউড সেটিংস', 'Security & Cloud Sync')
-      }
-      subtitle={
-        mode === 'UNLOCK_ADMIN'
-          ? t('মালিক মোডে প্রবেশ করতে পিন দিন', 'Enter Admin PIN to unlock owner controls')
-          : t('SHA-256 পিন লক এবং Supabase ডাটাবেস সিঙ্ক', 'SHA-256 PIN Protection & Supabase Source of Truth')
-      }
+      title={mode === 'UNLOCK_ADMIN' ? t('অ্যাডমিন নিরাপত্তা পিন', 'Admin Security PIN') : t('নিরাপত্তা ও ক্লাউড সেটিংস', 'Security & Cloud Sync')}
+      subtitle={mode === 'UNLOCK_ADMIN' ? t('মালিক মোডে প্রবেশ করতে পিন দিন', 'Enter Admin PIN to unlock owner mode') : undefined}
       maxWidth="max-w-md"
     >
       {mode === 'UNLOCK_ADMIN' ? (
@@ -156,18 +127,10 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
               className="input-apple w-full text-center text-[20px] tracking-[0.3em] font-semibold"
               required
             />
-            {!company.admin_pin_hash && (
-              <p className="text-[11px] text-[#7a7a7a] mt-1.5 text-center">
-                {t(
-                  'প্রথমবার ডিফল্ট অ্যাডমিন পিন: 1234 (আনলকের পর পরিবর্তন করা যাবে)',
-                  'Default Admin PIN: 1234 (You can change this anytime after unlocking)'
-                )}
-              </p>
-            )}
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-[10px] bg-[#fff2f4] border border-[#ffd1d9] text-[#bf0013] text-[12px] font-medium text-center">
+            <div className="p-2.5 rounded-[10px] bg-[#fff2f4] border border-[#ffd1d9] text-[#bf0013] text-[12px] font-semibold text-center">
               {errorMsg}
             </div>
           )}
@@ -186,54 +149,32 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
             <button
               type="button"
               onClick={() => setPinInput('')}
-              className="col-span-2 h-11 rounded-[10px] bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[13px] font-medium text-[#bf0013] border border-[#e0e0e0]"
+              className="col-span-2 h-11 rounded-[10px] bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[13px] font-semibold text-[#bf0013] border border-[#e0e0e0]"
             >
               {t('মুছুন (Clear)', 'Clear')}
             </button>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e0e0e0]">
-            <button type="button" onClick={onClose} className="btn-outline px-4">
+            <button type="button" onClick={onClose} className="btn-outline text-[13px] px-4">
               {t('বাতিল', 'Cancel')}
             </button>
-            <button type="submit" disabled={verifying || !pinInput} className="btn-primary px-5">
+            <button type="submit" disabled={verifying || !pinInput} className="btn-primary text-[13px] px-5">
               <KeyRound className="w-4 h-4" />
-              <span>
-                {verifying
-                  ? t('যাচাই হচ্ছে...', 'Verifying...')
-                  : t('আনলক করুন', 'Unlock Admin')}
-              </span>
+              <span>{verifying ? t('যাচাই হচ্ছে...', 'Verifying...') : t('আনলক করুন', 'Unlock')}</span>
             </button>
           </div>
         </form>
       ) : (
         <div className="space-y-4">
-          {/* Segmented Control */}
-          <div className="grid grid-cols-2 gap-1 p-1 rounded-[10px] bg-[#f5f5f7] border border-[#e0e0e0]">
-            <button
-              type="button"
-              onClick={() => setActiveTab('PIN')}
-              className={`py-2 px-3 rounded-[8px] text-[13px] font-medium transition-all ${
-                activeTab === 'PIN'
-                  ? 'bg-white text-[#1d1d1f] font-semibold border border-[#e0e0e0]'
-                  : 'text-[#7a7a7a]'
-              }`}
-            >
-              {t('পিন পরিবর্তন', 'Change PIN')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('CLOUD')}
-              className={`py-2 px-3 rounded-[8px] text-[13px] font-medium transition-all flex items-center justify-center gap-1.5 ${
-                activeTab === 'CLOUD'
-                  ? 'bg-white text-[#1d1d1f] font-semibold border border-[#e0e0e0]'
-                  : 'text-[#7a7a7a]'
-              }`}
-            >
-              <Cloud className="w-3.5 h-3.5" />
-              <span>{t('Supabase ক্লাউড', 'Supabase Cloud')}</span>
-            </button>
-          </div>
+          <AppleOptionChips
+            options={[
+              { value: 'PIN', label: t('পিন পরিবর্তন', 'Change PIN'), icon: <KeyRound className="w-3.5 h-3.5" /> },
+              { value: 'CLOUD', label: t('Supabase ক্লাউড', 'Supabase Cloud'), icon: <Cloud className="w-3.5 h-3.5" /> },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
 
           {activeTab === 'PIN' ? (
             <form onSubmit={handleUpdatePins} className="space-y-3.5">
@@ -279,21 +220,21 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
               </div>
 
               {errorMsg && (
-                <div className="p-3 rounded-[10px] bg-[#fff2f4] border border-[#ffd1d9] text-[#bf0013] text-[12px] font-medium">
+                <div className="p-2.5 rounded-[10px] bg-[#fff2f4] border border-[#ffd1d9] text-[#bf0013] text-[12px] font-semibold">
                   {errorMsg}
                 </div>
               )}
               {savedNotice && (
-                <div className="p-3 rounded-[10px] bg-[#eefbf3] border border-[#bbf7d0] text-[#00802b] text-[12px] font-medium">
+                <div className="p-2.5 rounded-[10px] bg-[#eefbf3] border border-[#bbf7d0] text-[#00802b] text-[12px] font-semibold">
                   {savedNotice}
                 </div>
               )}
 
               <div className="flex justify-end gap-2 pt-2 border-t border-[#e0e0e0]">
-                <button type="button" onClick={onClose} className="btn-outline px-4">
+                <button type="button" onClick={onClose} className="btn-outline text-[13px] px-4">
                   {t('বন্ধ করুন', 'Close')}
                 </button>
-                <button type="submit" className="btn-primary px-5">
+                <button type="submit" className="btn-primary text-[13px] px-5">
                   {t('পিন সেভ করুন', 'Save PINs')}
                 </button>
               </div>
@@ -302,10 +243,8 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
             <div className="space-y-3.5">
               <div className="p-3.5 rounded-[12px] bg-[#f5f5f7] border border-[#e0e0e0] flex items-center justify-between">
                 <div>
-                  <div className="text-[12px] text-[#7a7a7a]">
-                    {t('ক্লাউড ডাটাবেস স্ট্যাটাস', 'Cloud Database Status')}
-                  </div>
-                  <div className="text-[14px] font-semibold text-[#1d1d1f] mt-0.5 flex items-center gap-1.5">
+                  <div className="text-[12px] text-[#7a7a7a]">{t('ক্লাউড স্ট্যাটাস', 'Cloud Status')}</div>
+                  <div className="text-[13px] font-semibold text-[#1d1d1f] mt-0.5 flex items-center gap-1.5">
                     <span
                       className={`w-2.5 h-2.5 rounded-full ${
                         cloudStatus === 'ONLINE'
@@ -317,10 +256,10 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
                     />
                     <span>
                       {cloudStatus === 'ONLINE'
-                        ? t('Supabase Live Sync সক্রিয় (Source of Truth)', 'Supabase Live Sync Active')
+                        ? t('Supabase Live Sync সক্রিয়', 'Supabase Live Sync Active')
                         : cloudStatus === 'NEEDS_SQL'
-                        ? t('Supabase SQL টেবিল সেটআপ প্রয়োজন', 'Needs 1-Time SQL Table Setup')
-                        : t('সিঙ্ক হচ্ছে...', 'Syncing with Supabase...')}
+                        ? t('SQL টেবিল সেটআপ প্রয়োজন', 'Needs SQL Table Setup')
+                        : t('সিঙ্ক হচ্ছে...', 'Syncing...')}
                     </span>
                   </div>
                 </div>
@@ -328,31 +267,20 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
                   type="button"
                   onClick={handleManualSync}
                   disabled={syncingNow}
-                  className="btn-outline !min-h-[36px] !px-3 !py-1.5 !text-[12px]"
+                  className="btn-outline !min-h-[34px] !px-3 !py-1 !text-[12px]"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${syncingNow ? 'animate-spin' : ''}`} />
                   <span>{t('সিঙ্ক', 'Sync')}</span>
                 </button>
               </div>
 
-              {cloudStatus === 'NEEDS_SQL' && (
-                <div className="p-3 rounded-[10px] bg-[#fff8f0] border border-[#fed7aa] text-[#bf4800] text-[12px]">
-                  {t(
-                    'আপনার Supabase প্রজেক্টে রিয়েল-টাইম ক্লাউড সিঙ্ক সচল করতে নিচের SQL কোডটি কপি করে Supabase SQL Editor-এ একবার রান করুন:',
-                    'To enable 100% real-time cloud sync in your Supabase project, copy and run this SQL once in the Supabase SQL Editor:'
-                  )}
-                </div>
-              )}
-
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[12px] font-semibold text-[#1d1d1f]">
-                    {t('Supabase Cloud Sync SQL', 'Supabase Cloud Sync SQL')}
-                  </span>
+                  <span className="text-[12px] font-semibold text-[#1d1d1f]">Supabase SQL (`supabase/schema.sql`)</span>
                   <button
                     type="button"
                     onClick={handleCopySql}
-                    className="inline-flex items-center gap-1 text-[12px] font-medium text-[#0066cc] hover:underline"
+                    className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#0066cc] hover:underline"
                   >
                     {copiedSql ? (
                       <>
@@ -362,7 +290,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>{t('SQL কপি করুন', 'Copy SQL')}</span>
+                        <span>{t('কপি করুন', 'Copy SQL')}</span>
                       </>
                     )}
                   </button>

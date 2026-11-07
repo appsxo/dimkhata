@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  /* Apple Design System Color Tokens (DESIGN.md) */
   --color-primary: #0066cc;
   --color-primary-focus: #0071e3;
   --color-primary-on-dark: #2997ff;
@@ -17,8 +16,6 @@
   --color-canvas-parchment: #f5f5f7;
   --color-surface-pearl: #fafafc;
   --color-surface-tile-1: #272729;
-  --color-surface-tile-2: #2a2a2c;
-  --color-surface-tile-3: #252527;
   --color-surface-black: #000000;
   --color-surface-chip-translucent: rgba(210, 210, 215, 0.64);
   --color-on-primary: #ffffff;
@@ -38,28 +35,21 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, .font-display, .font-serif, .font-editorial {
+  h1, h2, h3 {
     font-family: 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, 'Inter', 'Hind Siliguri', sans-serif;
     font-weight: 600;
     letter-spacing: -0.28px;
   }
 
-  /* Apple Design System Mandate: Weight 500 is absent (ladder is 300/400/600/700) */
   .font-medium {
     font-weight: 600 !important;
   }
 
-  /* Apple Design System Mandate: Zero shadows on cards, buttons, or UI chrome */
   .shadow-xs, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
     box-shadow: none !important;
   }
 }
 
-/* ====================================================================
-   APPLE DESIGN SYSTEM COMPONENTS (DESIGN.md)
-   ==================================================================== */
-
-/* {component.global-nav}: 44px Pure Black Top Bar */
 .apple-global-nav {
   background-color: var(--color-surface-black);
   color: var(--color-on-dark);
@@ -70,7 +60,6 @@
   letter-spacing: -0.12px;
 }
 
-/* {component.sub-nav-frosted}: 52px Frosted Glass Sub-Nav */
 .apple-sub-nav {
   background-color: rgba(245, 245, 247, 0.82);
   backdrop-filter: saturate(180%) blur(20px);
@@ -80,7 +69,6 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* {component.floating-sticky-bar}: Mobile & Bottom Sticky Frosted Bar */
 .apple-floating-sticky-bar {
   background-color: rgba(245, 245, 247, 0.86);
   backdrop-filter: saturate(180%) blur(20px);
@@ -89,7 +77,6 @@
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* {component.button-primary}: Action Blue #0066cc Full Pill CTA */
 .btn-primary {
   background-color: var(--color-primary);
   color: var(--color-on-primary);
@@ -121,9 +108,7 @@
   cursor: not-allowed;
 }
 
-/* {component.button-secondary-pill}: Ghost Action Blue Pill */
-.btn-outline,
-.btn-secondary-pill {
+.btn-outline {
   background-color: var(--color-canvas);
   color: var(--color-primary);
   border: 1px solid var(--color-primary);
@@ -142,61 +127,14 @@
   cursor: pointer;
   transition: transform 0.14s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.btn-outline:active,
-.btn-secondary-pill:active {
+.btn-outline:active {
   transform: scale(0.95);
 }
-.btn-outline:focus-visible,
-.btn-secondary-pill:focus-visible {
+.btn-outline:focus-visible {
   outline: 2px solid var(--color-primary-focus);
   outline-offset: 2px;
 }
 
-/* {component.button-pearl-capsule}: Secondary Card Capsule Button */
-.btn-pearl {
-  background-color: var(--color-surface-pearl);
-  color: var(--color-ink-muted-80);
-  border: 3px solid var(--color-divider-soft);
-  border-radius: 11px;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.29;
-  letter-spacing: -0.224px;
-  min-height: 40px;
-  padding: 8px 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: transform 0.14s ease;
-}
-.btn-pearl:active {
-  transform: scale(0.95);
-}
-
-/* {component.button-dark-utility}: Compact Dark Utility Button */
-.btn-dark-utility {
-  background-color: var(--color-ink);
-  color: var(--color-on-dark);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.29;
-  letter-spacing: -0.224px;
-  padding: 8px 15px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: transform 0.14s ease;
-}
-.btn-dark-utility:active {
-  transform: scale(0.95);
-}
-
-/* {component.button-icon-circular}: 44x44 Circular Control Button */
 .btn-icon-circle {
   background-color: var(--color-surface-chip-translucent);
   color: var(--color-ink);
@@ -214,8 +152,6 @@
   transform: scale(0.95);
 }
 
-/* {component.store-utility-card}: White Utility Card (18px radius, 1px #e0e0e0 hairline, zero shadow) */
-.card-editorial,
 .card-apple {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -225,13 +161,11 @@
   box-shadow: none;
 }
 @media (min-width: 640px) {
-  .card-editorial,
   .card-apple {
     padding: 24px;
   }
 }
 
-/* {component.product-tile-dark}: Near-Black Tile (#272729) */
 .tile-dark {
   background-color: var(--color-surface-tile-1);
   color: var(--color-on-dark);
@@ -240,14 +174,6 @@
   box-shadow: none;
 }
 
-.tile-dark-2 {
-  background-color: var(--color-surface-tile-2);
-  color: var(--color-on-dark);
-  border-radius: 11px;
-  padding: 16px;
-}
-
-/* {component.configurator-option-chip} & {component.configurator-option-chip-selected} */
 .chip-option {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -275,7 +201,6 @@
   font-weight: 600;
 }
 
-/* Apple Badge Pill */
 .badge-pill {
   background-color: var(--color-canvas-parchment);
   color: var(--color-ink);
@@ -290,8 +215,20 @@
   gap: 6px;
 }
 
-/* Apple Form Inputs & {component.search-input} */
-.input-editorial,
+.badge-blue {
+  background-color: rgba(0, 102, 204, 0.08);
+  color: var(--color-primary);
+  border: 1px solid rgba(0, 102, 204, 0.2);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.12px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .input-apple {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -305,7 +242,6 @@
   font-family: 'SF Pro Text', system-ui, -apple-system, 'Inter', 'Hind Siliguri', sans-serif;
   transition: border-color 0.14s ease;
 }
-.input-editorial:focus,
 .input-apple:focus {
   outline: 2px solid var(--color-primary-focus);
   outline-offset: -1px;
@@ -328,7 +264,6 @@
   outline-offset: -1px;
 }
 
-/* Text Links ({component.text-link} & {component.text-link-on-dark}) */
 .apple-link {
   color: var(--color-primary);
   font-weight: 400;
@@ -340,7 +275,6 @@
   cursor: pointer;
 }
 
-/* Custom Print Styles for Sales Invoices, Challans, Salary Slips & P&L Reports */
 @media print {
   body {
     background: white !important;

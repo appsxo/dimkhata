@@ -45,11 +45,10 @@ export interface Branch {
 
 export interface EggCategory {
   id: string;
-  code: string; // CAT-RED, CAT-PAR, CAT-DUCK, etc.
-  name_bn: string; // লাল ডিম (ফার্মের), প্যারাগন ডিম, etc.
+  code: string;
+  name_bn: string;
   name_en: string;
-  pcs_per_crate: number; // 30 default, 50 for quail
-  color_hex?: string;
+  pcs_per_crate: number;
   is_active: boolean;
   sort_order: number;
 }
@@ -327,30 +326,6 @@ export interface PartnerDrawing {
   amount: number;
   account_id: string;
   notes?: string;
-  created_at: string;
-}
-
-export interface MonthlySettlement {
-  id: string;
-  settlement_month: string; // '2026-11'
-  total_sales_revenue: number;
-  total_cogs: number;
-  gross_profit: number;
-  total_operating_expenses: number;
-  total_salaries: number;
-  total_wastage_loss: number;
-  total_courtesy_loss: number;
-  net_profit: number;
-  distribution: {
-    partner_id: string;
-    partner_name: string;
-    weight: number;
-    share_percentage: number;
-    gross_share: number;
-    drawings_deducted: number;
-    net_payable: number;
-  }[];
-  is_locked: boolean;
   created_at: string;
 }
 

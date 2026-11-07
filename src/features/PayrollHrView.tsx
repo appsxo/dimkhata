@@ -475,16 +475,15 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
         )}
       </AppleModal>
 
-      {slipRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-[18px] max-w-md w-full p-6 space-y-4 print-card border border-[#e0e0e0]">
-            <div className="text-center border-b pb-3 border-[#e0e0e0]">
-              <h3 className="font-semibold text-[20px] text-[#1d1d1f]">{t('শরিফ এন্ড ইমান এন্টারপ্রাইজ', 'Sharif & Eman Enterprise')}</h3>
-              <div className="text-[12px] text-[#7a7a7a] uppercase tracking-wider mt-0.5">
-                {t('মাসিক বেতন রসিদ (Salary Slip)', 'Monthly Salary Slip')}
-              </div>
-            </div>
-
+      <AppleModal
+        isOpen={Boolean(slipRecord)}
+        onClose={() => setSlipRecord(null)}
+        title={t('মাসিক বেতন রসিদ (Salary Slip)', 'Monthly Salary Slip')}
+        subtitle={t('শরিফ এন্ড ইমান এন্টারপ্রাইজ', 'Sharif & Eman Enterprise')}
+        maxWidth="max-w-md"
+      >
+        {slipRecord && (
+          <div className="space-y-4 print-card">
             <div className="text-[13px] space-y-1.5 text-[#4e4e4e]">
               <div className="flex justify-between">
                 <span className="text-[#7a7a7a]">{t('রসিদ নম্বর:', 'Slip Code:')}</span>
@@ -544,8 +543,8 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </AppleModal>
     </div>
   );
 };

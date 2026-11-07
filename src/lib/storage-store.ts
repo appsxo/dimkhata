@@ -117,28 +117,7 @@ const STORAGE_KEYS = {
 };
 
 const SESSION_ONLY_KEYS = new Set<string>([STORAGE_KEYS.ACTIVE_USER, STORAGE_KEYS.SELECTED_BRANCH]);
-
-const LEGACY_DEMO_IDS = new Set<string>([
-  'cust-01', 'cust-02', 'cust-03', 'sup-01', 'sup-02', 'emp-01', 'emp-02',
-  'pur-01', 'pur-02', 'inv-01', 'inv-02', 'inv-03', 'adj-01', 'adj-02',
-  'exp-01', 'exp-02', 'exp-03', 'tx-01', 'tx-02', 'tx-03', 'tx-04', 'tx-05',
-  'audit-01', 'audit-02', 'audit-03', 'br-02', 'stock-06', 'stock-07',
-]);
-const LEGACY_DEMO_STOCK_QTYS = new Set<number>([14500, 4200, 2100, 3500, 950, 3200, 800, 15000, 9000, 4500, 10000, 3000]);
-const LEGACY_DEMO_ACCOUNT_BALANCES = new Set<number>([142500, 48200, 21500, 385000, 50000, 25000, 15000, 120000]);
-
 const MEMORY_DB = new Map<string, unknown>();
-
-(function purgeLegacyLocalStorage() {
-  if (typeof window === 'undefined') return;
-  try {
-    Object.values(STORAGE_KEYS).forEach((key) => {
-      if (!SESSION_ONLY_KEYS.has(key)) localStorage.removeItem(key);
-    });
-  } catch {
-    // ignore
-  }
-})();
 
 function cloneDefault<T>(val: T): T {
   return JSON.parse(JSON.stringify(val));
@@ -828,40 +807,6 @@ export class DimKhataStore {
     }
   }
 
-  private static sanitizeCloudRow(key: string, value: unknown): { cleaned: unknown; modified: boolean } {
-    if (!Array.isArray(value)) return { cleaned: value, modified: false };
-    let modified = false;
-    let filtered = value.filter((item: any) => {
-      if (item && typeof item.id === 'string' && LEGACY_DEMO_IDS.has(item.id)) {
-        modified = true;
-        return false;
-      }
-      return true;
-    });
-
-    if (key === STORAGE_KEYS.STOCKS) {
-      filtered = filtered.map((s: any) => {
-        if (s && typeof s.qty_pcs === 'number' && LEGACY_DEMO_STOCK_QTYS.has(s.qty_pcs)) {
-          modified = true;
-          return { ...s, qty_pcs: 0 };
-        }
-        return s;
-      });
-    }
-
-    if (key === STORAGE_KEYS.ACCOUNTS) {
-      filtered = filtered.map((a: any) => {
-        if (a && typeof a.current_balance === 'number' && LEGACY_DEMO_ACCOUNT_BALANCES.has(a.current_balance)) {
-          modified = true;
-          return { ...a, current_balance: 0 };
-        }
-        return a;
-      });
-    }
-
-    return { cleaned: filtered, modified };
-  }
-
   static async syncWithSupabase(): Promise<{ synced: boolean; count: number }> {
     if (!isSupabaseConfigured || !supabase) {
       this.setCloudStatus('OFFLINE');
@@ -882,19 +827,11 @@ export class DimKhataStore {
       }
 
       if (data && data.length > 0) {
-        const sanitizedRowsToPush: { key: string; value: unknown; updated_at: string }[] = [];
         data.forEach((row: { key: string; value: unknown }) => {
           if (row.key && !SESSION_ONLY_KEYS.has(row.key)) {
-            const { cleaned, modified } = this.sanitizeCloudRow(row.key, row.value);
-            MEMORY_DB.set(row.key, cleaned);
-            if (modified) {
-              sanitizedRowsToPush.push({ key: row.key, value: cleaned, updated_at: new Date().toISOString() });
-            }
+            MEMORY_DB.set(row.key, row.value);
           }
         });
-        if (sanitizedRowsToPush.length > 0) {
-          await supabase.from('dimkhata_kv_store').upsert(sanitizedRowsToPush, { onConflict: 'key' });
-        }
         this.setCloudStatus('ONLINE');
         window.dispatchEvent(new Event('dimkhata_storage_change'));
       } else {
@@ -914,11 +851,10 @@ export class DimKhataStore {
         this.realtimeSubscribed = true;
         supabase
           .channel('dimkhata-cloud-sync')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'dimkhata_kv_store' }, (payload: any) => {
-            const row = payload.new as { key?: string; value?: unknown };
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'dimkhata_kv_store' }, (payload: { new?: { key?: string; value?: unknown } }) => {
+            const row = payload.new;
             if (row && row.key && !SESSION_ONLY_KEYS.has(row.key)) {
-              const { cleaned } = this.sanitizeCloudRow(row.key, row.value);
-              MEMORY_DB.set(row.key, cleaned);
+              MEMORY_DB.set(row.key, row.value);
               this.setCloudStatus('ONLINE');
               window.dispatchEvent(new Event('dimkhata_storage_change'));
             }
