@@ -2,8 +2,8 @@
 
 **Business Name:** Sharif & Eman Enterprise (`শরিফ এন্ড ইমান এন্টারপ্রাইজ`)  
 **Partners & Profit Ratio:** Sharif (`শরিফ` — 66.67% / 2 Shares) & Eman (`ইমান` — 33.33% / 1 Share)  
-**Live Application:** [https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)  
-**Repository:** [https://github.com/appsxo/DimKhata](https://github.com/appsxo/DimKhata)  
+**Live Application:** [https://appsxo.github.io/dimkhata/](https://appsxo.github.io/dimkhata/)  
+**Repository:** [https://github.com/appsxo/dimkhata](https://github.com/appsxo/dimkhata)  
 **Tech Stack:** React 19 + TypeScript + Tailwind CSS v4 + Vite (PWA) + Supabase + GitHub Pages
 
 ---
@@ -100,7 +100,7 @@ You can connect Supabase in **either of two easy ways**:
 ### Step 2: Configure Supabase via GitHub Actions Secrets
 
 Open your repository's **Actions Secrets** settings:  
-👉 [https://github.com/appsxo/DimKhata/settings/secrets/actions](https://github.com/appsxo/DimKhata/settings/secrets/actions)
+👉 [https://github.com/appsxo/dimkhata/settings/secrets/actions](https://github.com/appsxo/dimkhata/settings/secrets/actions)
 
 Click **New repository secret** and add:
 
@@ -113,11 +113,11 @@ Click **New repository secret** and add:
 
 ### Step 3: Enable GitHub Pages & Deploy (1 Minute)
 1. Go to **Settings → Pages**:  
-   [https://github.com/appsxo/DimKhata/settings/pages](https://github.com/appsxo/DimKhata/settings/pages)
+   [https://github.com/appsxo/dimkhata/settings/pages](https://github.com/appsxo/dimkhata/settings/pages)
 2. Under **Build and deployment → Source**, select **GitHub Actions**.
-3. Go to the **Actions** tab ([https://github.com/appsxo/DimKhata/actions](https://github.com/appsxo/DimKhata/actions)), select **Deploy DimKhata to GitHub Pages**, and click **Run workflow** (or push any commit to `main`).
+3. Go to the **Actions** tab ([https://github.com/appsxo/dimkhata/actions](https://github.com/appsxo/dimkhata/actions)), select **Deploy DimKhata to GitHub Pages**, and click **Run workflow** (or push any commit to `main`).
 4. Once completed (~45 seconds), your application will be live at:  
-   **[https://appsxo.github.io/DimKhata/](https://appsxo.github.io/DimKhata/)**
+   **[https://appsxo.github.io/dimkhata/](https://appsxo.github.io/dimkhata/)**
 
 ---
 
