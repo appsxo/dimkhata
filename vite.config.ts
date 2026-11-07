@@ -3,13 +3,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
-  base: './', // relative path works seamlessly with GitHub Pages subpath deployment
+  plugins: [react(), tailwindcss()],
+  base: './',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -20,8 +16,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-icons': ['lucide-react'],
-          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'browser-image-compression'],
         },
       },
     },

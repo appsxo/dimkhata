@@ -1,7 +1,3 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Digital Audit Trail & Multi-Branch (Apple Design)
-// ====================================================================
-
 import React, { useState } from 'react';
 import { Plus, Lock } from 'lucide-react';
 import { Branch, AuditLog } from '../types';
@@ -27,7 +23,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
   auditLogs,
   onRefresh,
 }) => {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'AUDIT' | 'BRANCHES'>('AUDIT');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAction, setFilterAction] = useState<string>('ALL');
@@ -54,9 +50,7 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
     e.preventDefault();
     if (!branchName || !branchAddress) return;
 
-    const count = branches.length + 1;
-    const branchCode = `SE-BR-${String(count).padStart(3, '0')}`;
-
+    const branchCode = `SE-BR-${String(branches.length + 1).padStart(3, '0')}`;
     DimKhataStore.addBranch({
       branch_code: branchCode,
       name: sanitizeText(branchName, 100),
@@ -66,7 +60,6 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
       is_active: true,
     });
 
-    alert(t(`শাখা সফলভাবে যুক্ত হয়েছে! শাখা কোড: ${branchCode}`, `Branch added successfully! Code: ${branchCode}`));
     setIsAddBranchOpen(false);
     setBranchName('');
     setBranchAddress('');
@@ -75,29 +68,24 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <AppleSectionHeader
-        eyebrow={t('নিরাপত্তা ও মাল্টি-গোডাউন স্কেলিং', 'Security & Multi-Branch Scaling')}
-        title={t('শাখা ও ডিজিটাল অডিট ট্রেইল (Audit Log)', 'Branches & Digital Audit Trail')}
-        subtitle={t(
-          'কোন স্টাফ কখন সিস্টেমে এন্ট্রি বা পরিবর্তন করল তার ডিজিটাল রেকর্ড ও শাখা ব্যবস্থাপনা',
-          'Immutable digital audit trail of every staff/admin action and multi-branch godown management'
-        )}
+        title={t('শাখা ও ডিজিটাল অডিট লগ', 'Branches & Digital Audit Trail')}
         actions={
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <AppleOptionChips
               options={[
                 {
                   value: 'AUDIT',
                   label: t(
-                    `ডিজিটাল অডিট লগ (${toBengaliNumber(auditLogs.length)})`,
+                    `অডিট লগ (${toBengaliNumber(auditLogs.length)})`,
                     `Audit Log (${auditLogs.length})`
                   ),
                 },
                 {
                   value: 'BRANCHES',
                   label: t(
-                    `শাখা ও গোডাউনসমূহ (${toBengaliNumber(branches.length)})`,
+                    `শাখাসমূহ (${toBengaliNumber(branches.length)})`,
                     `Branches (${branches.length})`
                   ),
                 },
@@ -108,39 +96,31 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
 
             {activeTab === 'BRANCHES' && (
               <button
+                type="button"
                 onClick={() => setIsAddBranchOpen(true)}
                 className="btn-primary text-[13px] px-4"
               >
                 <Plus className="w-4 h-4" />
-                <span>{t('+ নতুন শাখা যোগ', '+ Add Branch')}</span>
+                <span>{t('+ নতুন শাখা', '+ Add Branch')}</span>
               </button>
             )}
           </div>
         }
       />
 
-      {/* AUDIT LOG TAB */}
       {activeTab === 'AUDIT' && (
-        <div className="card-apple p-5 sm:p-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e0e0e0] pb-3.5">
-            <div>
-              <h3 className="font-semibold text-[20px] text-[#1d1d1f] flex items-center gap-2">
-                <Lock className="w-4 h-4 text-[#0066cc]" />
-                <span>{t('অপরিবর্তনযোগ্য অডিট হিস্ট্রি (Immutable Audit Log)', 'Immutable Digital Audit Log')}</span>
-              </h3>
-              <p className="text-[12px] text-[#7a7a7a]">
-                {t(
-                  'কোনো কর্মচারী বা স্টাফ কোনো এন্ট্রি দিলে, এডিট বা ডিলিট করলে এখানে তারিখ ও সময়সহ স্থায়ীভাবে রেকর্ড থাকবে',
-                  'Every insert, update, or action by staff or admin is permanently recorded with timestamp'
-                )}
-              </p>
-            </div>
+        <div className="card-apple p-4 sm:p-5 space-y-3.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#e0e0e0] pb-3">
+            <h3 className="font-semibold text-[17px] text-[#1d1d1f] flex items-center gap-2">
+              <Lock className="w-4 h-4 text-[#0066cc]" />
+              <span>{t('অডিট হিস্ট্রি', 'Audit History')}</span>
+            </h3>
 
             <div className="flex items-center gap-2 flex-wrap">
               <AppleSearchInput
                 value={searchQuery}
                 onChange={setSearchQuery}
-                placeholder={t('স্টাফের নাম বা বিবরণ...', 'Search staff or action...')}
+                placeholder={t('খুঁজুন...', 'Search...')}
               />
 
               <select
@@ -149,9 +129,9 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
                 className="input-apple text-[13px] py-1.5"
               >
                 <option value="ALL">{t('সকল অ্যাকশন', 'All Actions')}</option>
-                <option value="INSERT">নতুন এন্ট্রি (INSERT)</option>
-                <option value="UPDATE">তথ্য পরিবর্তন (UPDATE)</option>
-                <option value="DELETE">মুছে ফেলা (DELETE)</option>
+                <option value="INSERT">INSERT</option>
+                <option value="UPDATE">UPDATE</option>
+                <option value="DELETE">DELETE</option>
               </select>
             </div>
           </div>
@@ -160,52 +140,43 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[#e0e0e0] text-[#7a7a7a] text-left bg-[#f5f5f7]">
-                  <th className="py-2.5 px-3 font-semibold">তারিখ ও সময়</th>
-                  <th className="py-2.5 px-3 font-semibold">ব্যবহারকারী</th>
-                  <th className="py-2.5 px-3 font-semibold">রোল</th>
-                  <th className="py-2.5 px-3 font-semibold">অ্যাকশন</th>
-                  <th className="py-2.5 px-3 font-semibold">মডিউল</th>
-                  <th className="py-2.5 px-3 font-semibold">কার্যক্রমের বিবরণ (Summary)</th>
+                  <th className="py-2 px-3 font-semibold">{t('তারিখ ও সময়', 'Timestamp')}</th>
+                  <th className="py-2 px-3 font-semibold">{t('ব্যবহারকারী', 'Actor')}</th>
+                  <th className="py-2 px-3 font-semibold">{t('রোল', 'Role')}</th>
+                  <th className="py-2 px-3 font-semibold">{t('অ্যাকশন', 'Action')}</th>
+                  <th className="py-2 px-3 font-semibold">{t('মডিউল', 'Module')}</th>
+                  <th className="py-2 px-3 font-semibold">{t('বিবরণ', 'Summary')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e0e0e0]">
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-[#7a7a7a]">
-                      কোনো অডিট লগ রেকর্ড পাওয়া যায়নি।
+                    <td colSpan={6} className="py-7 text-center text-[#7a7a7a]">
+                      {t('কোনো অডিট লগ রেকর্ড নেই।', 'No audit logs found.')}
                     </td>
                   </tr>
                 ) : (
                   filteredLogs.map((log) => {
-                    const dateFormatted = new Date(log.timestamp).toLocaleString('bn-BD', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    });
-
+                    const dateFormatted = new Date(log.timestamp).toLocaleString(
+                      lang === 'bn' ? 'bn-BD' : 'en-US',
+                      { dateStyle: 'medium', timeStyle: 'short' }
+                    );
                     return (
                       <tr key={log.id} className="hover:bg-[#f5f5f7]">
-                        <td className="py-2.5 px-3 text-[#7a7a7a] font-mono text-[11px] whitespace-nowrap">
+                        <td className="py-2 px-3 text-[#7a7a7a] font-mono text-[11px] whitespace-nowrap">
                           {toBengaliNumber(dateFormatted)}
                         </td>
-                        <td className="py-2.5 px-3 font-semibold text-[#1d1d1f]">
-                          {log.actor_name}
+                        <td className="py-2 px-3 font-semibold text-[#1d1d1f]">{log.actor_name}</td>
+                        <td className="py-2 px-3">
+                          <span className="badge-pill text-[10px] py-0 px-2">{log.actor_role}</span>
                         </td>
-                        <td className="py-2.5 px-3">
-                          <span className="badge-pill text-[10px] py-0 px-2">
-                            {log.actor_role}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-2 px-3">
                           <span className="badge-blue text-[10px] py-0 px-2 font-mono">
                             {log.action}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-[#4e4e4e]">
-                          {log.entity_name}
-                        </td>
-                        <td className="py-2.5 px-3 text-[#1d1d1f]">
-                          {log.summary}
-                        </td>
+                        <td className="py-2 px-3 text-[#4e4e4e]">{log.entity_name}</td>
+                        <td className="py-2 px-3 text-[#1d1d1f]">{log.summary}</td>
                       </tr>
                     );
                   })
@@ -216,62 +187,58 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
         </div>
       )}
 
-      {/* BRANCHES TAB */}
       {activeTab === 'BRANCHES' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {branches.map((b) => (
-            <div
-              key={b.id}
-              className="card-apple p-5 flex flex-col justify-between space-y-4"
-            >
+            <div key={b.id} className="card-apple p-4 sm:p-5 flex flex-col justify-between space-y-3">
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="badge-blue text-[11px] py-0 px-2">
-                      {b.branch_code}
-                    </span>
-                    <h3 className="font-semibold text-[20px] text-[#1d1d1f] mt-1.5">
-                      {b.name}
-                    </h3>
+                    <span className="badge-blue text-[11px] py-0 px-2">{b.branch_code}</span>
+                    <h3 className="font-semibold text-[18px] text-[#1d1d1f] mt-1.5">{b.name}</h3>
                   </div>
                   {b.is_main && (
                     <span className="badge-pill text-[10px] py-0 px-2">
-                      ★ প্রধান আড়ৎ
+                      ★ {t('প্রধান আড়ৎ', 'Main Branch')}
                     </span>
                   )}
                 </div>
 
-                <div className="mt-3 space-y-1.5 text-[13px] text-[#4e4e4e]">
-                  <div>ঠিকানা: {b.address}</div>
-                  {b.phone && <div>যোগাযোগ: {toBengaliNumber(b.phone)}</div>}
+                <div className="mt-2.5 space-y-1 text-[13px] text-[#4e4e4e]">
+                  <div>
+                    {t('ঠিকানা:', 'Address:')} {b.address}
+                  </div>
+                  {b.phone && (
+                    <div>
+                      {t('ফোন:', 'Phone:')} {toBengaliNumber(b.phone)}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#e0e0e0] text-xs text-[#15803d] font-semibold flex items-center gap-1.5">
+              <div className="pt-2.5 border-t border-[#e0e0e0] text-xs text-[#15803d] font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#15803d]" />
-                <span>শাখা সক্রিয় রয়েছে</span>
+                <span>{t('শাখা সক্রিয়', 'Active Branch')}</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* ADD BRANCH MODAL */}
       <AppleModal
         isOpen={isAddBranchOpen}
         onClose={() => setIsAddBranchOpen(false)}
-        title="নতুন শাখা বা গোডাউন যুক্ত করুন"
-        subtitle="ভবিষ্যতে ব্যবসার শাখা বাড়লে একই সফটওয়্যার থেকে শাখাভিত্তিক স্টক ও সমন্বিত হিসাব দেখা যাবে"
+        title={t('নতুন শাখা বা গোডাউন যুক্ত করুন', 'Add New Branch or Godown')}
       >
-        <form onSubmit={handleCreateBranch} className="space-y-3.5">
+        <form onSubmit={handleCreateBranch} className="space-y-3">
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              শাখা বা গোডাউনের নাম
+              {t('শাখার নাম *', 'Branch Name *')}
             </label>
             <input
               type="text"
               required
-              placeholder="যেমন: মিরপুর শাখা গোডাউন"
+              placeholder={t('যেমন: মিরপুর গোডাউন', 'e.g. Mirpur Godown')}
               value={branchName}
               onChange={(e) => setBranchName(e.target.value)}
               className="input-apple w-full text-[14px]"
@@ -279,11 +246,13 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">ঠিকানা</label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              {t('ঠিকানা *', 'Address *')}
+            </label>
             <input
               type="text"
               required
-              placeholder="শাখার বিস্তারিত ঠিকানা"
+              placeholder={t('বিস্তারিত ঠিকানা', 'Full branch address')}
               value={branchAddress}
               onChange={(e) => setBranchAddress(e.target.value)}
               className="input-apple w-full text-[14px]"
@@ -291,10 +260,12 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">ফোন নম্বর</label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              {t('ফোন নম্বর', 'Phone Number')}
+            </label>
             <input
               type="text"
-              placeholder="শাখা ইনচার্জের ফোন"
+              placeholder="017XX-XXXXXX"
               value={branchPhone}
               onChange={(e) => setBranchPhone(e.target.value)}
               className="input-apple w-full text-[14px]"
@@ -307,13 +278,10 @@ export const AuditLogBranchesView: React.FC<AuditLogBranchesViewProps> = ({
               onClick={() => setIsAddBranchOpen(false)}
               className="btn-outline text-[13px] px-4"
             >
-              বাতিল
+              {t('বাতিল', 'Cancel')}
             </button>
-            <button
-              type="submit"
-              className="btn-primary text-[13px] px-5"
-            >
-              শাখা তৈরি করুন
+            <button type="submit" className="btn-primary text-[13px] px-5">
+              {t('শাখা তৈরি করুন', 'Create Branch')}
             </button>
           </div>
         </form>

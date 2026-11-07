@@ -1,7 +1,3 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Operational & Asset Expenses (Apple Design System)
-// ====================================================================
-
 import React, { useState } from 'react';
 import { TrendingDown, Plus, Package, Zap, Coffee } from 'lucide-react';
 import { Expense, FinancialAccount, Branch } from '../types';
@@ -30,39 +26,33 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState<number>(1000);
   const [accountId, setAccountId] = useState(accounts[0]?.id || '');
-  const [branchId] = useState(branches[0]?.id || '');
+  const [branchId] = useState(branches[0]?.id || 'br-01');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
 
   const currentMonthStr = new Date().toISOString().slice(0, 7);
-
   const monthlyExpenses = expenses.filter((e) => e.expense_date.startsWith(currentMonthStr));
-  const fixedTotal = monthlyExpenses.filter((e) => e.expense_category === 'FIXED').reduce((s, e) => s + e.amount, 0);
-  const variableTotal = monthlyExpenses.filter((e) => e.expense_category === 'VARIABLE').reduce((s, e) => s + e.amount, 0);
-  const assetTotal = monthlyExpenses.filter((e) => e.expense_category === 'CAPITAL_ASSET').reduce((s, e) => s + e.amount, 0);
-  const miscTotal = monthlyExpenses.filter((e) => e.expense_category === 'MISC').reduce((s, e) => s + e.amount, 0);
+  const sumByCat = (cat: Expense['expense_category']) =>
+    monthlyExpenses.filter((e) => e.expense_category === cat).reduce((s, e) => s + e.amount, 0);
 
   const handleCreateExpense = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || amount <= 0) return;
 
-    const code = DimKhataStore.getNextCode('EXP');
-    const newExpense: Expense = {
+    DimKhataStore.recordExpense({
       id: `exp-${Date.now()}`,
-      expense_code: code,
+      expense_code: DimKhataStore.getNextCode('EXP'),
       branch_id: branchId,
       expense_category: category,
       title: sanitizeText(title, 150),
       amount,
-      account_id: accountId,
+      account_id: accountId || accounts[0]?.id || 'acc-01',
       expense_date: expenseDate,
       is_capital_asset: category === 'CAPITAL_ASSET',
       notes: sanitizeText(notes, 200),
       created_at: new Date().toISOString(),
-    };
+    });
 
-    DimKhataStore.recordExpense(newExpense);
-    alert(t('খরচ সফলভাবে এন্ট্রি হয়েছে ও ক্যাশ বুক থেকে কর্তন হয়েছে!', 'Expense saved and deducted from Cashbook!'));
     setIsAddOpen(false);
     setTitle('');
     setAmount(1000);
@@ -70,111 +60,99 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
     onRefresh();
   };
 
+  const catLabels: Record<Expense['expense_category'], string> = {
+    FIXED: t('স্থায়ী খরচ', 'Fixed'),
+    VARIABLE: t('চলতি খরচ', 'Variable'),
+    CAPITAL_ASSET: t('অ্যাসেট কেনা', 'Capital Asset'),
+    MISC: t('বিবিধ খরচ', 'Misc'),
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <AppleSectionHeader
-        eyebrow={t('পরিচালনা ও অ্যাসেট হিসাব', 'Operating & Capital Asset Expenses')}
-        title={t('দোকান খরচ ও অ্যাসেট (Expenses & Assets)', 'Shop Expenses & Capital Assets')}
-        subtitle={t(
-          'স্থায়ী খরচ, চলতি আপ্যায়ন/মেরামত, ডিমের খাঁচি/ডিজিটাল স্কেল অ্যাসেট ও বিবিধ খরচ',
-          'Track fixed rent/utilities, variable operations, capital assets (crates/scales) & miscellaneous expenses'
-        )}
+        title={t('দোকান খরচ ও অ্যাসেট', 'Shop Expenses & Capital Assets')}
         actions={
           <button
+            type="button"
             onClick={() => setIsAddOpen(true)}
-            className="btn-primary py-2.5 px-5"
+            className="btn-primary py-2 px-4 text-[13.5px]"
           >
             <Plus className="w-4 h-4" />
-            <span>{t('+ নতুন খরচ এন্ট্রি করুন', '+ Add Expense')}</span>
+            <span>{t('+ নতুন খরচ', '+ Add Expense')}</span>
           </button>
         }
       />
 
-      {/* 4 Expense Category Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <AppleStatCard
-          label={t('স্থায়ী খরচ (Fixed)', 'Fixed Expenses')}
-          value={formatTaka(fixedTotal)}
-          subtext={t('দোকান ভাড়া, কারেন্ট বিল', 'Shop rent, electricity, internet')}
+          label={t('স্থায়ী খরচ', 'Fixed Expenses')}
+          value={formatTaka(sumByCat('FIXED'))}
+          subtext={t('ভাড়া, বিদ্যুৎ, ইন্টারনেট', 'Rent, utilities')}
           icon={<Zap className="w-4 h-4 text-[#0066cc]" />}
         />
-
         <AppleStatCard
-          label={t('চলতি খরচ (Variable)', 'Variable Expenses')}
-          value={formatTaka(variableTotal)}
-          subtext={t('আপ্যায়ন, যাতায়াত, ভ্যান মেরামত', 'Refreshments, local transport, van repair')}
+          label={t('চলতি খরচ', 'Variable Expenses')}
+          value={formatTaka(sumByCat('VARIABLE'))}
+          subtext={t('আপ্যায়ন, যাতায়াত, মেরামত', 'Transport, repair')}
           icon={<Coffee className="w-4 h-4 text-[#0066cc]" />}
         />
-
         <AppleStatCard
-          label={t('অ্যাসেট কেনা (Capital Assets)', 'Capital Assets')}
-          value={formatTaka(assetTotal)}
-          subtext={t('ডিমের খাঁচি, স্কেল, ফার্নিচার', 'Egg crates, digital scales, furniture')}
+          label={t('অ্যাসেট কেনা', 'Capital Assets')}
+          value={formatTaka(sumByCat('CAPITAL_ASSET'))}
+          subtext={t('খাঁচি, স্কেল, ফার্নিচার', 'Crates, scales')}
           icon={<Package className="w-4 h-4 text-[#0066cc]" />}
         />
-
         <AppleStatCard
-          label={t('বিবিধ খরচ (Misc)', 'Misc Expenses')}
-          value={formatTaka(miscTotal)}
-          subtext={t('জরুরী আনঅফিশিয়াল নগদ খরচ', 'Urgent miscellaneous cash expenses')}
+          label={t('বিবিধ খরচ', 'Misc Expenses')}
+          value={formatTaka(sumByCat('MISC'))}
+          subtext={t('জরুরী নগদ খরচ', 'Misc cash costs')}
           icon={<TrendingDown className="w-4 h-4 text-[#0066cc]" />}
         />
       </div>
 
-      {/* Expenses Table */}
-      <div className="card-apple p-5 sm:p-6 space-y-4">
-        <h3 className="font-semibold text-[20px] text-[#1d1d1f]">
-          {t('খরচের বিবরণ ও ভাউচার তালিকা', 'Expense Ledger & Vouchers')}
+      <div className="card-apple p-4 sm:p-5 space-y-3">
+        <h3 className="font-semibold text-[17px] text-[#1d1d1f]">
+          {t('খরচের ভাউচার তালিকা', 'Expense Vouchers')}
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[#e0e0e0] text-[#7a7a7a] text-left bg-[#f5f5f7]">
-                <th className="py-2.5 px-3 font-semibold">{t('ভাউচার কোড', 'Voucher Code')}</th>
-                <th className="py-2.5 px-3 font-semibold">{t('তারিখ', 'Date')}</th>
-                <th className="py-2.5 px-3 font-semibold">{t('খাত / ক্যাটাগরি', 'Category')}</th>
-                <th className="py-2.5 px-3 font-semibold">{t('খরচের শিরোনাম', 'Title')}</th>
-                <th className="py-2.5 px-3 font-semibold">{t('পেমেন্ট একাউন্ট', 'Account')}</th>
-                <th className="py-2.5 px-3 font-semibold text-right">{t('টাকার পরিমাণ', 'Amount')}</th>
+                <th className="py-2 px-3 font-semibold">{t('কোড', 'Code')}</th>
+                <th className="py-2 px-3 font-semibold">{t('তারিখ', 'Date')}</th>
+                <th className="py-2 px-3 font-semibold">{t('খাত', 'Category')}</th>
+                <th className="py-2 px-3 font-semibold">{t('বিবরণ', 'Title')}</th>
+                <th className="py-2 px-3 font-semibold">{t('একাউন্ট', 'Account')}</th>
+                <th className="py-2 px-3 font-semibold text-right">{t('পরিমাণ', 'Amount')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e0e0e0]">
               {expenses.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-[#7a7a7a]">
+                  <td colSpan={6} className="py-7 text-center text-[#7a7a7a]">
                     {t('কোনো খরচের রেকর্ড নেই।', 'No expenses recorded yet.')}
                   </td>
                 </tr>
               ) : (
                 expenses.map((exp) => {
                   const acc = accounts.find((a) => a.id === exp.account_id);
-                  const catLabels = {
-                    FIXED: 'স্থায়ী খরচ',
-                    VARIABLE: 'চলতি খরচ',
-                    CAPITAL_ASSET: 'অ্যাসেট কেনা',
-                    MISC: 'বিবিধ খরচ',
-                  };
                   return (
                     <tr key={exp.id} className="hover:bg-[#f5f5f7]">
-                      <td className="py-2.5 px-3 font-mono font-semibold text-[#0066cc]">
+                      <td className="py-2 px-3 font-mono font-semibold text-[#0066cc]">
                         {exp.expense_code}
                       </td>
-                      <td className="py-2.5 px-3 text-[#7a7a7a]">
+                      <td className="py-2 px-3 text-[#7a7a7a]">
                         {toBengaliNumber(exp.expense_date)}
                       </td>
-                      <td className="py-2.5 px-3">
+                      <td className="py-2 px-3">
                         <span className="badge-blue text-[10px] py-0 px-2">
                           {catLabels[exp.expense_category]}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-[#1d1d1f]">
-                        {exp.title}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#7a7a7a]">
-                        {acc?.name || 'ক্যাশ'}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-semibold text-[#1d1d1f]">
+                      <td className="py-2 px-3 font-semibold text-[#1d1d1f]">{exp.title}</td>
+                      <td className="py-2 px-3 text-[#7a7a7a]">{acc?.name || '---'}</td>
+                      <td className="py-2 px-3 text-right font-semibold text-[#1d1d1f]">
                         {formatTaka(exp.amount)}
                       </td>
                     </tr>
@@ -186,38 +164,36 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
         </div>
       </div>
 
-      {/* ADD EXPENSE MODAL */}
       <AppleModal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
-        title="নতুন খরচ এন্ট্রি করুন"
-        subtitle="অ্যাসেট কেনা বাদে বাকি খরচগুলো মাসিক লাভ-লোকসান থেকে বিয়োগ হবে"
+        title={t('নতুন খরচ এন্ট্রি', 'Add New Expense')}
       >
-        <form onSubmit={handleCreateExpense} className="space-y-3.5">
+        <form onSubmit={handleCreateExpense} className="space-y-3">
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              খরচের ক্যাটাগরি
+              {t('খরচের খাত', 'Category')}
             </label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as any)}
+              onChange={(e) => setCategory(e.target.value as Expense['expense_category'])}
               className="input-apple w-full text-[14px]"
             >
-              <option value="FIXED">স্থায়ী খরচ (দোকান ভাড়া, কারেন্ট বিল, ইন্টারনেট)</option>
-              <option value="VARIABLE">চলতি খরচ (আপ্যায়ন, যাতায়াত, ভ্যান মেরামত)</option>
-              <option value="CAPITAL_ASSET">অ্যাসেট কেনা (ডিমের খাঁচি, ডিজিটাল স্কেল, ফার্নিচার)</option>
-              <option value="MISC">বিবিধ খরচ (জরুরী আনঅফিশিয়াল বা ক্যাশ খরচ)</option>
+              <option value="FIXED">{t('স্থায়ী খরচ (ভাড়া, বিল)', 'Fixed (Rent, Utilities)')}</option>
+              <option value="VARIABLE">{t('চলতি খরচ (আপ্যায়ন, মেরামত)', 'Variable (Transport, Repair)')}</option>
+              <option value="CAPITAL_ASSET">{t('অ্যাসেট কেনা (খাঁচি, স্কেল)', 'Capital Asset (Crates, Scale)')}</option>
+              <option value="MISC">{t('বিবিধ খরচ', 'Miscellaneous')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              খরচের শিরোনাম / বিবরণ
+              {t('খরচের বিবরণ *', 'Expense Title *')}
             </label>
             <input
               type="text"
               required
-              placeholder="যেমন: চলতি মাসের বিদ্যুৎ বিল / ভ্যান মেরামত"
+              placeholder={t('যেমন: বিদ্যুৎ বিল / ভ্যান মেরামত', 'e.g. Electricity bill / Van repair')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="input-apple w-full text-[14px]"
@@ -227,7 +203,7 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                টাকার পরিমাণ (৳)
+                {t('টাকার পরিমাণ (৳)', 'Amount (৳)')}
               </label>
               <input
                 type="number"
@@ -240,7 +216,7 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
 
             <div>
               <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                তারিখ
+                {t('তারিখ', 'Date')}
               </label>
               <input
                 type="date"
@@ -253,7 +229,7 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
 
           <div>
             <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              উৎস একাউন্ট
+              {t('পেমেন্ট একাউন্ট', 'Payment Account')}
             </label>
             <select
               value={accountId}
@@ -274,13 +250,10 @@ export const ExpensesAssetsView: React.FC<ExpensesAssetsViewProps> = ({
               onClick={() => setIsAddOpen(false)}
               className="btn-outline text-[13px] px-4"
             >
-              বাতিল
+              {t('বাতিল', 'Cancel')}
             </button>
-            <button
-              type="submit"
-              className="btn-primary text-[13px] px-5"
-            >
-              খরচ সংরক্ষণ করুন
+            <button type="submit" className="btn-primary text-[13px] px-5">
+              {t('সংরক্ষণ করুন', 'Save Expense')}
             </button>
           </div>
         </form>

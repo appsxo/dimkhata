@@ -1,8 +1,3 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Main Application Root
-// Business: Sharif & Eman Enterprise (শরিফ এন্ড ইমান এন্টারপ্রাইজ)
-// ====================================================================
-
 import React, { useState, useEffect } from 'react';
 import { DimKhataStore } from './lib/storage-store';
 import { useLanguage } from './lib/i18n';
@@ -29,11 +24,9 @@ import {
 } from './types';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar, NavTabId } from './components/layout/Sidebar';
-import { DailyRateModal } from './components/modals/DailyRateModal';
 import { PrintInvoiceModal } from './components/modals/PrintInvoiceModal';
 import { SecurityPinModal } from './components/modals/SecurityPinModal';
 
-// Feature Views
 import { DashboardView } from './features/DashboardView';
 import { DailyPricingView } from './features/DailyPricingView';
 import { SourcingPurchasesView } from './features/SourcingPurchasesView';
@@ -47,15 +40,12 @@ import { ProfitSettlementView } from './features/ProfitSettlementView';
 import { AuditLogBranchesView } from './features/AuditLogBranchesView';
 
 export const App: React.FC = () => {
-  // Subscribe root to active language ('bn' default, 'en' toggle)
   useLanguage();
 
-  // State from DimKhataStore
   const [currentUser, setCurrentUser] = useState<UserProfile>(DimKhataStore.getActiveUser());
   const [currentTab, setCurrentTab] = useState<NavTabId>('dashboard');
   const [selectedBranchId, setSelectedBranchId] = useState<string>(DimKhataStore.getSelectedBranchId());
 
-  // Data collections (Synced with Supabase Cloud as Single Source of Truth)
   const [company, setCompany] = useState(DimKhataStore.getCompany());
   const [branches, setBranches] = useState<Branch[]>(DimKhataStore.getBranches());
   const [categories, setCategories] = useState<EggCategory[]>(DimKhataStore.getCategories());
@@ -77,12 +67,9 @@ export const App: React.FC = () => {
   const [payrolls, setPayrolls] = useState<PayrollRecord[]>(DimKhataStore.getPayrolls());
   const [advances, setAdvances] = useState<SalaryAdvance[]>(DimKhataStore.getSalaryAdvances());
 
-  // Modals state
-  const [isDailyRateModalOpen, setIsDailyRateModalOpen] = useState(false);
   const [printInvoice, setPrintInvoice] = useState<SalesInvoice | null>(null);
   const [securityModalMode, setSecurityModalMode] = useState<'UNLOCK_ADMIN' | 'MANAGE_SECURITY' | null>(null);
 
-  // Reload all state from Store
   const reloadData = () => {
     setCompany(DimKhataStore.getCompany());
     setBranches(DimKhataStore.getBranches());
@@ -107,7 +94,6 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Initial cloud sync + real-time subscription with Supabase
     DimKhataStore.syncWithSupabase();
   }, []);
 
@@ -134,7 +120,6 @@ export const App: React.FC = () => {
     setCurrentUser(adminUser);
   };
 
-  // Toggle user role between Admin (Sharif) and Staff (Cashier) with PIN Guard
   const handleToggleUserRole = () => {
     if (currentUser.role === 'ADMIN') {
       const staffUser: UserProfile = {
@@ -156,14 +141,12 @@ export const App: React.FC = () => {
         setCurrentTab('dashboard');
       }
     } else {
-      // Require Admin PIN before unlocking Admin mode
       setSecurityModalMode('UNLOCK_ADMIN');
     }
   };
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans overflow-x-hidden">
-      {/* Apple Two-Row Top Navbar & Mobile App Header */}
       <Navbar
         branches={branches}
         selectedBranchId={selectedBranchId}
@@ -173,14 +156,12 @@ export const App: React.FC = () => {
         onOpenSecurityModal={() =>
           setSecurityModalMode(currentUser.role === 'ADMIN' ? 'MANAGE_SECURITY' : 'UNLOCK_ADMIN')
         }
-        onOpenRatesModal={() => setIsDailyRateModalOpen(true)}
         onRefresh={reloadData}
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
       />
 
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Desktop Rail & Mobile Sticky Dock */}
         <Sidebar
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
@@ -190,8 +171,7 @@ export const App: React.FC = () => {
           }
         />
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-3 sm:p-6 pb-24 md:pb-10 overflow-y-auto max-w-7xl w-full mx-auto min-w-0">
+        <main className="flex-1 p-3 sm:p-5 pb-24 md:pb-8 overflow-y-auto max-w-7xl w-full mx-auto min-w-0">
           {currentTab === 'dashboard' && (
             <DashboardView
               categories={categories}
@@ -202,7 +182,6 @@ export const App: React.FC = () => {
               accounts={accounts}
               userRole={currentUser.role}
               onNavigate={setCurrentTab}
-              onOpenRateModal={() => setIsDailyRateModalOpen(true)}
               onSelectInvoiceForPrint={setPrintInvoice}
             />
           )}
@@ -312,15 +291,6 @@ export const App: React.FC = () => {
           )}
         </main>
       </div>
-
-      {/* Global Modals */}
-      <DailyRateModal
-        isOpen={isDailyRateModalOpen}
-        onClose={() => setIsDailyRateModalOpen(false)}
-        categories={categories}
-        branchId={selectedBranchId}
-        onSaved={reloadData}
-      />
 
       {printInvoice && (
         <PrintInvoiceModal

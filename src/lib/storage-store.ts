@@ -1,8 +1,3 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Universal Enterprise Data & Cloud State Engine
-// Single Source of Truth: Supabase Cloud Database (Zero Local Dummy Data)
-// ====================================================================
-
 import {
   CompanySettings,
   Branch,
@@ -26,26 +21,74 @@ import {
   SalaryAdvance,
   UserProfile,
 } from '../types';
-import {
-  INITIAL_COMPANY_SETTINGS,
-  INITIAL_BRANCHES,
-  INITIAL_PARTNERS,
-  INITIAL_EGG_CATEGORIES,
-  INITIAL_DAILY_RATES,
-  INITIAL_INVENTORY_STOCKS,
-  INITIAL_CUSTOMERS,
-  INITIAL_SUPPLIERS,
-  INITIAL_EMPLOYEES,
-  INITIAL_ACCOUNTS,
-  INITIAL_PURCHASES,
-  INITIAL_SALES,
-  INITIAL_ADJUSTMENTS,
-  INITIAL_EXPENSES,
-  INITIAL_CASHBOOK,
-  INITIAL_AUDIT_LOGS,
-} from './mock-data';
 import { calculateWeightedAverageCost } from './egg-units';
 import { supabase, isSupabaseConfigured } from './supabase';
+
+export type CloudSyncStatus = 'SYNCING' | 'ONLINE' | 'NEEDS_SQL' | 'OFFLINE';
+
+const todayStr = new Date().toISOString().split('T')[0];
+
+const DEFAULT_COMPANY: CompanySettings = {
+  id: 'comp-01',
+  company_name_bn: 'শরিফ এন্ড ইমান এন্টারপ্রাইজ',
+  company_name_en: 'Sharif & Eman Enterprise',
+  tagline: 'ডিমের নির্ভরযোগ্য পাইকারি ও খুচরা আড়ৎ',
+  phone: '01711-223344',
+  email: 'sharifeman.enterprise@gmail.com',
+  address: 'তেজগাঁও ডিমের আড়ৎ, ঢাকা-১২০৮',
+  logo_url: '',
+  invoice_footer_note: 'বিকাশ/নগদ/ব্যাংকের মাধ্যমে পরিশোধযোগ্য। কোনো ডিম পরিবর্তনের দাবি ৭২ ঘণ্টার মধ্যে প্রযোজ্য।',
+  currency_symbol: '৳',
+};
+
+const DEFAULT_BRANCHES: Branch[] = [
+  {
+    id: 'br-01',
+    branch_code: 'SE-BR-001',
+    name: 'প্রধান আড়ৎ (তেজগাঁও সদর)',
+    address: 'তেজগাঁও ডিমের আড়ৎ, ঢাকা-১২০৮',
+    phone: '01711-223344',
+    is_main: true,
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+  },
+];
+
+const DEFAULT_PARTNERS: Partner[] = [
+  { id: 'part-01', name: 'শরিফ (Sharif)', phone: '01711-000001', share_weight: 2.0, is_active: true },
+  { id: 'part-02', name: 'ইমান (Eman)', phone: '01711-000002', share_weight: 1.0, is_active: true },
+];
+
+const DEFAULT_CATEGORIES: EggCategory[] = [
+  { id: 'cat-01', code: 'RED_FARM', name_bn: 'লাল ডিম (ফার্মের)', name_en: 'Brown Farm Layer Egg', pcs_per_crate: 30, sort_order: 1, is_active: true },
+  { id: 'cat-02', code: 'PARAGON', name_bn: 'প্যারাগন ডিম', name_en: 'Paragon Branded Egg', pcs_per_crate: 30, sort_order: 2, is_active: true },
+  { id: 'cat-03', code: 'DUCK', name_bn: 'হাঁসের ডিম', name_en: 'Duck Egg', pcs_per_crate: 30, sort_order: 3, is_active: true },
+  { id: 'cat-04', code: 'QUAIL', name_bn: 'কোয়েল পাখির ডিম', name_en: 'Quail Egg', pcs_per_crate: 50, sort_order: 4, is_active: true },
+  { id: 'cat-05', code: 'DESHI_HEN', name_bn: 'দেশি মুরগির ডিম', name_en: 'Indigenous Deshi Hen Egg', pcs_per_crate: 30, sort_order: 5, is_active: true },
+];
+
+const DEFAULT_RATES: DailyMarketRate[] = [
+  { id: 'rate-01', rate_date: todayStr, branch_id: 'br-01', category_id: 'cat-01', buying_rate_pc: 10.5, wholesale_rate_pc: 11.2, retail_rate_pc: 12.0, updated_at: new Date().toISOString() },
+  { id: 'rate-02', rate_date: todayStr, branch_id: 'br-01', category_id: 'cat-02', buying_rate_pc: 10.8, wholesale_rate_pc: 11.5, retail_rate_pc: 12.5, updated_at: new Date().toISOString() },
+  { id: 'rate-03', rate_date: todayStr, branch_id: 'br-01', category_id: 'cat-03', buying_rate_pc: 14.0, wholesale_rate_pc: 15.0, retail_rate_pc: 16.5, updated_at: new Date().toISOString() },
+  { id: 'rate-04', rate_date: todayStr, branch_id: 'br-01', category_id: 'cat-04', buying_rate_pc: 3.0, wholesale_rate_pc: 3.4, retail_rate_pc: 4.0, updated_at: new Date().toISOString() },
+  { id: 'rate-05', rate_date: todayStr, branch_id: 'br-01', category_id: 'cat-05', buying_rate_pc: 14.5, wholesale_rate_pc: 15.5, retail_rate_pc: 17.0, updated_at: new Date().toISOString() },
+];
+
+const DEFAULT_STOCKS: InventoryStock[] = [
+  { id: 'stock-01', branch_id: 'br-01', category_id: 'cat-01', qty_pcs: 0, avg_landed_cost_per_pc: 10.5, updated_at: new Date().toISOString() },
+  { id: 'stock-02', branch_id: 'br-01', category_id: 'cat-02', qty_pcs: 0, avg_landed_cost_per_pc: 10.8, updated_at: new Date().toISOString() },
+  { id: 'stock-03', branch_id: 'br-01', category_id: 'cat-03', qty_pcs: 0, avg_landed_cost_per_pc: 14.0, updated_at: new Date().toISOString() },
+  { id: 'stock-04', branch_id: 'br-01', category_id: 'cat-04', qty_pcs: 0, avg_landed_cost_per_pc: 3.0, updated_at: new Date().toISOString() },
+  { id: 'stock-05', branch_id: 'br-01', category_id: 'cat-05', qty_pcs: 0, avg_landed_cost_per_pc: 14.5, updated_at: new Date().toISOString() },
+];
+
+const DEFAULT_ACCOUNTS: FinancialAccount[] = [
+  { id: 'acc-01', name: 'দোকানের ক্যাশ ড্রয়ার (Main Cash)', account_type: 'CASH', account_number: 'CASH-01', branch_id: 'br-01', current_balance: 0, is_default: true, is_active: true },
+  { id: 'acc-02', name: 'বিকাশ মার্চেন্ট (bKash)', account_type: 'MFS', account_number: '01711-223344', branch_id: 'br-01', current_balance: 0, is_default: false, is_active: true },
+  { id: 'acc-03', name: 'নগদ পার্সোনাল (Nagad)', account_type: 'MFS', account_number: '01711-223344', branch_id: 'br-01', current_balance: 0, is_default: false, is_active: true },
+  { id: 'acc-04', name: 'ইসলামী ব্যাংক বাংলাদেশ (IBBL)', account_type: 'BANK', account_number: '2050-00000000', branch_id: 'br-01', current_balance: 0, is_default: false, is_active: true },
+];
 
 const STORAGE_KEYS = {
   COMPANY: 'dimkhata_company',
@@ -73,45 +116,27 @@ const STORAGE_KEYS = {
   SELECTED_BRANCH: 'dimkhata_selected_branch',
 };
 
-const SESSION_ONLY_KEYS = new Set<string>([
-  STORAGE_KEYS.ACTIVE_USER,
-  STORAGE_KEYS.SELECTED_BRANCH,
-]);
+const SESSION_ONLY_KEYS = new Set<string>([STORAGE_KEYS.ACTIVE_USER, STORAGE_KEYS.SELECTED_BRANCH]);
 
-// Legacy demo IDs from earlier prototype builds — automatically purged if found in cloud
 const LEGACY_DEMO_IDS = new Set<string>([
-  'cust-01', 'cust-02', 'cust-03',
-  'sup-01', 'sup-02',
-  'emp-01', 'emp-02',
-  'pur-01', 'pur-02',
-  'inv-01', 'inv-02', 'inv-03',
-  'adj-01', 'adj-02',
-  'exp-01', 'exp-02', 'exp-03',
-  'tx-01', 'tx-02', 'tx-03', 'tx-04', 'tx-05',
-  'audit-01', 'audit-02', 'audit-03',
-  'br-02',
-  'stock-06', 'stock-07',
+  'cust-01', 'cust-02', 'cust-03', 'sup-01', 'sup-02', 'emp-01', 'emp-02',
+  'pur-01', 'pur-02', 'inv-01', 'inv-02', 'inv-03', 'adj-01', 'adj-02',
+  'exp-01', 'exp-02', 'exp-03', 'tx-01', 'tx-02', 'tx-03', 'tx-04', 'tx-05',
+  'audit-01', 'audit-02', 'audit-03', 'br-02', 'stock-06', 'stock-07',
 ]);
-
-const LEGACY_DEMO_STOCK_QTYS = new Set<number>([14500, 4200, 2100, 3500, 950, 3200, 800]);
+const LEGACY_DEMO_STOCK_QTYS = new Set<number>([14500, 4200, 2100, 3500, 950, 3200, 800, 15000, 9000, 4500, 10000, 3000]);
 const LEGACY_DEMO_ACCOUNT_BALANCES = new Set<number>([142500, 48200, 21500, 385000, 50000, 25000, 15000, 120000]);
 
-export type CloudSyncStatus = 'SYNCING' | 'ONLINE' | 'NEEDS_SQL' | 'OFFLINE';
-
-// Pure In-Memory Runtime State synced directly with Supabase (Zero localStorage business data)
 const MEMORY_DB = new Map<string, unknown>();
 
-// Purge any legacy localStorage business keys immediately on module load
 (function purgeLegacyLocalStorage() {
   if (typeof window === 'undefined') return;
   try {
     Object.values(STORAGE_KEYS).forEach((key) => {
-      if (!SESSION_ONLY_KEYS.has(key)) {
-        localStorage.removeItem(key);
-      }
+      if (!SESSION_ONLY_KEYS.has(key)) localStorage.removeItem(key);
     });
   } catch {
-    // ignore storage errors
+    // ignore
   }
 })();
 
@@ -128,10 +153,7 @@ function getStored<T>(key: string, defaultValue: T): T {
       return cloneDefault(defaultValue);
     }
   }
-  if (MEMORY_DB.has(key)) {
-    return cloneDefault(MEMORY_DB.get(key) as T);
-  }
-  return cloneDefault(defaultValue);
+  return MEMORY_DB.has(key) ? cloneDefault(MEMORY_DB.get(key) as T) : cloneDefault(defaultValue);
 }
 
 function pushKeyToSupabase(key: string, value: unknown): void {
@@ -141,7 +163,6 @@ function pushKeyToSupabase(key: string, value: unknown): void {
     .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     .then(({ error }) => {
       if (error) {
-        console.warn(`Supabase cloud sync warning for ${key}:`, error.message);
         if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
           DimKhataStore.setCloudStatus('NEEDS_SQL');
         }
@@ -182,15 +203,12 @@ export class DimKhataStore {
   static setCloudStatus(status: CloudSyncStatus): void {
     const changed = this.cloudStatus !== status;
     this.cloudStatus = status;
-    if (status === 'ONLINE') {
-      this.lastSyncTimestamp = new Date().toISOString();
-    }
+    if (status === 'ONLINE') this.lastSyncTimestamp = new Date().toISOString();
     if (changed && typeof window !== 'undefined') {
       window.dispatchEvent(new Event('dimkhata_storage_change'));
     }
   }
 
-  // Current active user (Admin vs Staff)
   static getActiveUser(): UserProfile {
     return getStored<UserProfile>(STORAGE_KEYS.ACTIVE_USER, {
       id: 'admin-sharif',
@@ -205,7 +223,6 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.ACTIVE_USER, user);
   }
 
-  // Current active branch filter ('ALL' or branch_id)
   static getSelectedBranchId(): string {
     return getStored<string>(STORAGE_KEYS.SELECTED_BRANCH, 'ALL');
   }
@@ -214,48 +231,24 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.SELECTED_BRANCH, branchId);
   }
 
-  // Atomic Sequential Unique ID Generator (Starts cleanly from 0)
   static getNextCode(prefix: 'EMP' | 'CUST' | 'SUP' | 'INV' | 'CHL' | 'PUR' | 'ADJ' | 'EXP' | 'REC' | 'PAY' | 'SPAY'): string {
-    const seqs = getStored<Record<string, number>>(STORAGE_KEYS.SEQUENCES, {
-      EMP: 0,
-      CUST: 0,
-      SUP: 0,
-      INV: 0,
-      CHL: 0,
-      PUR: 0,
-      ADJ: 0,
-      EXP: 0,
-      REC: 0,
-      PAY: 0,
-      SPAY: 0,
-    });
-
+    const seqs = getStored<Record<string, number>>(STORAGE_KEYS.SEQUENCES, {});
     const currentYear = new Date().getFullYear();
     const nextVal = (seqs[prefix] || 0) + 1;
     seqs[prefix] = nextVal;
     setStored(STORAGE_KEYS.SEQUENCES, seqs);
 
-    if (prefix === 'EMP') return `SE-EMP-${String(nextVal).padStart(3, '0')}`;
-    if (prefix === 'CUST') return `SE-CUST-${String(nextVal).padStart(3, '0')}`;
-    if (prefix === 'SUP') return `SE-SUP-${String(nextVal).padStart(3, '0')}`;
-    if (prefix === 'INV') return `SE-INV-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'CHL') return `SE-CHL-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'PUR') return `SE-PUR-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'ADJ') return `SE-ADJ-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'EXP') return `SE-EXP-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'REC') return `SE-REC-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'PAY') return `SE-PAY-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-    if (prefix === 'SPAY') return `SE-SPAY-${currentYear}-${String(nextVal).padStart(4, '0')}`;
-
-    return `SE-${prefix}-${nextVal}`;
+    if (prefix === 'EMP' || prefix === 'CUST' || prefix === 'SUP') {
+      return `SE-${prefix}-${String(nextVal).padStart(3, '0')}`;
+    }
+    return `SE-${prefix}-${currentYear}-${String(nextVal).padStart(4, '0')}`;
   }
 
-  // Audit Logger
   static logAudit(entityName: string, action: 'INSERT' | 'UPDATE' | 'DELETE', recordId: string, summary: string): void {
     const user = this.getActiveUser();
-    const logs = getStored<AuditLog[]>(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
-    const newLog: AuditLog = {
-      id: `audit-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    const logs = getStored<AuditLog[]>(STORAGE_KEYS.AUDIT_LOGS, []);
+    logs.unshift({
+      id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       actor_name: user.full_name,
       actor_role: user.role,
       entity_name: entityName,
@@ -263,15 +256,13 @@ export class DimKhataStore {
       record_id: recordId,
       summary,
       timestamp: new Date().toISOString(),
-    };
-    logs.unshift(newLog);
-    if (logs.length > 500) logs.pop(); // keep last 500 audit logs
+    });
+    if (logs.length > 500) logs.pop();
     setStored(STORAGE_KEYS.AUDIT_LOGS, logs);
   }
 
-  // Getters
   static getCompany(): CompanySettings {
-    return getStored<CompanySettings>(STORAGE_KEYS.COMPANY, INITIAL_COMPANY_SETTINGS);
+    return getStored<CompanySettings>(STORAGE_KEYS.COMPANY, DEFAULT_COMPANY);
   }
 
   static updateCompany(settings: CompanySettings): void {
@@ -280,24 +271,20 @@ export class DimKhataStore {
   }
 
   static getBranches(): Branch[] {
-    return getStored<Branch[]>(STORAGE_KEYS.BRANCHES, INITIAL_BRANCHES);
+    return getStored<Branch[]>(STORAGE_KEYS.BRANCHES, DEFAULT_BRANCHES);
   }
 
   static addBranch(branch: Omit<Branch, 'id' | 'created_at'>): Branch {
     const branches = this.getBranches();
-    const newBranch: Branch = {
-      ...branch,
-      id: `br-${Date.now()}`,
-      created_at: new Date().toISOString(),
-    };
+    const newBranch: Branch = { ...branch, id: `br-${Date.now()}`, created_at: new Date().toISOString() };
     branches.push(newBranch);
     setStored(STORAGE_KEYS.BRANCHES, branches);
-    this.logAudit('Branches', 'INSERT', newBranch.branch_code, `নতুন শাখা যোগ করা হয়েছে: ${newBranch.name}`);
+    this.logAudit('Branches', 'INSERT', newBranch.branch_code, `নতুন শাখা যোগ: ${newBranch.name}`);
     return newBranch;
   }
 
   static getPartners(): Partner[] {
-    return getStored<Partner[]>(STORAGE_KEYS.PARTNERS, INITIAL_PARTNERS);
+    return getStored<Partner[]>(STORAGE_KEYS.PARTNERS, DEFAULT_PARTNERS);
   }
 
   static updatePartnerWeight(partnerId: string, newWeight: number): void {
@@ -306,68 +293,60 @@ export class DimKhataStore {
     if (partner) {
       partner.share_weight = Number(newWeight) || 1;
       setStored(STORAGE_KEYS.PARTNERS, partners);
-      this.logAudit('Partners', 'UPDATE', partnerId, `${partner.name}-এর লভ্যাংশ অনুপাত পরিবর্তিত হয়ে ${newWeight} করা হয়েছে`);
+      this.logAudit('Partners', 'UPDATE', partnerId, `${partner.name}-এর লভ্যাংশ অনুপাত: ${newWeight}`);
     }
   }
 
   static getCategories(): EggCategory[] {
-    return getStored<EggCategory[]>(STORAGE_KEYS.CATEGORIES, INITIAL_EGG_CATEGORIES);
+    return getStored<EggCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
   }
 
   static getDailyRates(dateStr?: string): DailyMarketRate[] {
     const targetDate = dateStr || new Date().toISOString().split('T')[0];
-    const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
+    const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, DEFAULT_RATES);
     const todayMatches = rates.filter((r) => r.rate_date === targetDate);
     if (todayMatches.length > 0) return todayMatches;
-    return rates.length > 0 ? rates.slice(0, 5) : INITIAL_DAILY_RATES;
+    return rates.length > 0 ? rates.slice(0, 5) : DEFAULT_RATES;
   }
 
   static setDailyRates(newRates: DailyMarketRate[]): void {
-    const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
-    const filtered = rates.filter((r) => !newRates.some((nr) => nr.rate_date === r.rate_date && nr.branch_id === r.branch_id && nr.category_id === r.category_id));
-    const merged = [...newRates, ...filtered];
-    setStored(STORAGE_KEYS.DAILY_RATES, merged);
-    this.logAudit('Daily Market Rates', 'UPDATE', newRates[0]?.rate_date || 'TODAY', 'দৈনিক ডিমের বাজার দর আপডেট করা হয়েছে');
+    const rates = getStored<DailyMarketRate[]>(STORAGE_KEYS.DAILY_RATES, DEFAULT_RATES);
+    const filtered = rates.filter(
+      (r) => !newRates.some((nr) => nr.rate_date === r.rate_date && nr.branch_id === r.branch_id && nr.category_id === r.category_id)
+    );
+    setStored(STORAGE_KEYS.DAILY_RATES, [...newRates, ...filtered]);
+    this.logAudit('Daily Market Rates', 'UPDATE', newRates[0]?.rate_date || 'TODAY', 'দৈনিক বাজার দর আপডেট');
   }
 
-  /**
-   * Raw per-branch stocks stored in Cloud Memory
-   */
   static getAllBranchStocks(): InventoryStock[] {
-    return getStored<InventoryStock[]>(STORAGE_KEYS.STOCKS, INITIAL_INVENTORY_STOCKS);
+    return getStored<InventoryStock[]>(STORAGE_KEYS.STOCKS, DEFAULT_STOCKS);
   }
 
-  /**
-   * Returns branch-filtered stocks, or category-aggregated stocks when branchId === 'ALL'
-   */
   static getStocks(branchId?: string): InventoryStock[] {
     const allStocks = this.getAllBranchStocks();
     if (branchId && branchId !== 'ALL') {
       return allStocks.filter((s) => s.branch_id === branchId);
     }
-
     const byCat = new Map<string, InventoryStock>();
     allStocks.forEach((s) => {
       const existing = byCat.get(s.category_id);
       if (!existing) {
         byCat.set(s.category_id, { ...s, branch_id: 'ALL' });
       } else {
-        const combinedQty = existing.qty_pcs + s.qty_pcs;
-        const combinedWac = calculateWeightedAverageCost(
+        existing.avg_landed_cost_per_pc = calculateWeightedAverageCost(
           existing.qty_pcs,
           existing.avg_landed_cost_per_pc,
           s.qty_pcs,
           s.avg_landed_cost_per_pc
         );
-        existing.qty_pcs = combinedQty;
-        existing.avg_landed_cost_per_pc = combinedWac;
+        existing.qty_pcs += s.qty_pcs;
       }
     });
     return Array.from(byCat.values());
   }
 
   static getCustomers(): Customer[] {
-    return getStored<Customer[]>(STORAGE_KEYS.CUSTOMERS, INITIAL_CUSTOMERS);
+    return getStored<Customer[]>(STORAGE_KEYS.CUSTOMERS, []);
   }
 
   static saveCustomer(customer: Customer): void {
@@ -375,16 +354,16 @@ export class DimKhataStore {
     const idx = customers.findIndex((c) => c.id === customer.id);
     if (idx >= 0) {
       customers[idx] = customer;
-      this.logAudit('Customers', 'UPDATE', customer.customer_code, `কাস্টমার তথ্য আপডেট: ${customer.name}`);
+      this.logAudit('Customers', 'UPDATE', customer.customer_code, `কাস্টমার আপডেট: ${customer.name}`);
     } else {
       customers.push(customer);
-      this.logAudit('Customers', 'INSERT', customer.customer_code, `নতুন কাস্টমার নিবন্ধন: ${customer.name}`);
+      this.logAudit('Customers', 'INSERT', customer.customer_code, `নতুন কাস্টমার: ${customer.name}`);
     }
     setStored(STORAGE_KEYS.CUSTOMERS, customers);
   }
 
   static getSuppliers(): Supplier[] {
-    return getStored<Supplier[]>(STORAGE_KEYS.SUPPLIERS, INITIAL_SUPPLIERS);
+    return getStored<Supplier[]>(STORAGE_KEYS.SUPPLIERS, []);
   }
 
   static saveSupplier(supplier: Supplier): void {
@@ -392,16 +371,16 @@ export class DimKhataStore {
     const idx = suppliers.findIndex((s) => s.id === supplier.id);
     if (idx >= 0) {
       suppliers[idx] = supplier;
-      this.logAudit('Suppliers', 'UPDATE', supplier.supplier_code, `খামারী/মহাজন তথ্য আপডেট: ${supplier.name}`);
+      this.logAudit('Suppliers', 'UPDATE', supplier.supplier_code, `মহাজন আপডেট: ${supplier.name}`);
     } else {
       suppliers.push(supplier);
-      this.logAudit('Suppliers', 'INSERT', supplier.supplier_code, `নতুন খামারী নিবন্ধন: ${supplier.name}`);
+      this.logAudit('Suppliers', 'INSERT', supplier.supplier_code, `নতুন মহাজন: ${supplier.name}`);
     }
     setStored(STORAGE_KEYS.SUPPLIERS, suppliers);
   }
 
   static getEmployees(): Employee[] {
-    return getStored<Employee[]>(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES);
+    return getStored<Employee[]>(STORAGE_KEYS.EMPLOYEES, []);
   }
 
   static saveEmployee(employee: Employee): void {
@@ -409,48 +388,45 @@ export class DimKhataStore {
     const idx = employees.findIndex((e) => e.id === employee.id);
     if (idx >= 0) {
       employees[idx] = employee;
-      this.logAudit('Employees', 'UPDATE', employee.employee_code, `কর্মচারী তথ্য আপডেট: ${employee.full_name}`);
+      this.logAudit('Employees', 'UPDATE', employee.employee_code, `কর্মচারী আপডেট: ${employee.full_name}`);
     } else {
       employees.push(employee);
-      this.logAudit('Employees', 'INSERT', employee.employee_code, `নতুন কর্মচারী নিয়োগ: ${employee.full_name}`);
+      this.logAudit('Employees', 'INSERT', employee.employee_code, `নতুন কর্মচারী: ${employee.full_name}`);
     }
     setStored(STORAGE_KEYS.EMPLOYEES, employees);
   }
 
   static getAccounts(): FinancialAccount[] {
-    return getStored<FinancialAccount[]>(STORAGE_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
+    return getStored<FinancialAccount[]>(STORAGE_KEYS.ACCOUNTS, DEFAULT_ACCOUNTS);
   }
 
   static addAccount(account: Omit<FinancialAccount, 'id'>): FinancialAccount {
     const accounts = this.getAccounts();
-    const newAcc: FinancialAccount = {
-      ...account,
-      id: `acc-${Date.now()}`,
-    };
+    const newAcc: FinancialAccount = { ...account, id: `acc-${Date.now()}` };
     accounts.push(newAcc);
     setStored(STORAGE_KEYS.ACCOUNTS, accounts);
-    this.logAudit('Financial Accounts', 'INSERT', newAcc.id, `নতুন ব্যাংক/ক্যাশ একাউন্ট যুক্ত: ${newAcc.name}`);
+    this.logAudit('Financial Accounts', 'INSERT', newAcc.id, `নতুন একাউন্ট যুক্ত: ${newAcc.name}`);
     return newAcc;
   }
 
   static getCashbook(): CashbookTransaction[] {
-    return getStored<CashbookTransaction[]>(STORAGE_KEYS.CASHBOOK, INITIAL_CASHBOOK);
+    return getStored<CashbookTransaction[]>(STORAGE_KEYS.CASHBOOK, []);
   }
 
   static getExpenses(): Expense[] {
-    return getStored<Expense[]>(STORAGE_KEYS.EXPENSES, INITIAL_EXPENSES);
+    return getStored<Expense[]>(STORAGE_KEYS.EXPENSES, []);
   }
 
   static getPurchases(): Purchase[] {
-    return getStored<Purchase[]>(STORAGE_KEYS.PURCHASES, INITIAL_PURCHASES);
+    return getStored<Purchase[]>(STORAGE_KEYS.PURCHASES, []);
   }
 
   static getSales(): SalesInvoice[] {
-    return getStored<SalesInvoice[]>(STORAGE_KEYS.SALES, INITIAL_SALES);
+    return getStored<SalesInvoice[]>(STORAGE_KEYS.SALES, []);
   }
 
   static getAdjustments(): StockAdjustment[] {
-    return getStored<StockAdjustment[]>(STORAGE_KEYS.ADJUSTMENTS, INITIAL_ADJUSTMENTS);
+    return getStored<StockAdjustment[]>(STORAGE_KEYS.ADJUSTMENTS, []);
   }
 
   static getDueCollections(): CustomerDueCollection[] {
@@ -470,12 +446,8 @@ export class DimKhataStore {
   }
 
   static getAuditLogs(): AuditLog[] {
-    return getStored<AuditLog[]>(STORAGE_KEYS.AUDIT_LOGS, INITIAL_AUDIT_LOGS);
+    return getStored<AuditLog[]>(STORAGE_KEYS.AUDIT_LOGS, []);
   }
-
-  // ====================================================================
-  // ACCOUNTING TRANSACTIONS & BUSINESS TRIGGERS
-  // ====================================================================
 
   static postCashbook(
     accountId: string,
@@ -490,17 +462,13 @@ export class DimKhataStore {
     const account = accounts.find((a) => a.id === accountId);
     if (!account) return;
 
-    if (type === 'CASH_IN') {
-      account.current_balance += amount;
-    } else if (type === 'CASH_OUT') {
-      account.current_balance -= amount;
-    }
-
+    if (type === 'CASH_IN') account.current_balance += amount;
+    else if (type === 'CASH_OUT') account.current_balance -= amount;
     setStored(STORAGE_KEYS.ACCOUNTS, accounts);
 
     const cashbook = this.getCashbook();
-    const newTx: CashbookTransaction = {
-      id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    cashbook.unshift({
+      id: `tx-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       transaction_date: new Date().toISOString(),
       account_id: accountId,
       branch_id: branchId,
@@ -511,8 +479,7 @@ export class DimKhataStore {
       description,
       recorded_by: this.getActiveUser().full_name,
       created_at: new Date().toISOString(),
-    };
-    cashbook.unshift(newTx);
+    });
     setStored(STORAGE_KEYS.CASHBOOK, cashbook);
   }
 
@@ -526,7 +493,7 @@ export class DimKhataStore {
       let stock = stocks.find((s) => s.branch_id === purchase.branch_id && s.category_id === item.category_id);
       if (!stock) {
         stock = {
-          id: `stock-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          id: `stock-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           branch_id: purchase.branch_id,
           category_id: item.category_id,
           qty_pcs: 0,
@@ -535,16 +502,13 @@ export class DimKhataStore {
         };
         stocks.push(stock);
       }
-
-      const newWac = calculateWeightedAverageCost(
+      stock.avg_landed_cost_per_pc = calculateWeightedAverageCost(
         stock.qty_pcs,
         stock.avg_landed_cost_per_pc,
         item.qty_pcs,
         item.effective_landed_cost_per_pc
       );
-
       stock.qty_pcs += item.qty_pcs;
-      stock.avg_landed_cost_per_pc = newWac;
       stock.updated_at = new Date().toISOString();
     });
     setStored(STORAGE_KEYS.STOCKS, stocks);
@@ -570,7 +534,7 @@ export class DimKhataStore {
       );
     }
 
-    this.logAudit('Purchases', 'INSERT', purchase.purchase_code, `ডিম কেনা ভাউচার সম্পন্ন: ${purchase.total_eggs_pcs} পিস, মোট ল্যান্ডেড কস্ট: ৳${purchase.total_landed_cost}`);
+    this.logAudit('Purchases', 'INSERT', purchase.purchase_code, `ডিম কেনা: ${purchase.total_eggs_pcs} পিস, মোট: ৳${purchase.total_landed_cost}`);
   }
 
   static recordSalesInvoice(invoice: SalesInvoice): void {
@@ -605,11 +569,11 @@ export class DimKhataStore {
         'SALE_COLLECTION',
         invoice.paid_amount,
         invoice.invoice_code,
-        `বিক্রয় মেমো বাবদ আদায় (মেমো: ${invoice.invoice_code})`
+        `বিক্রয় মেমো বাবদ আদায় (${invoice.invoice_code})`
       );
     }
 
-    this.logAudit('Sales Invoices', 'INSERT', invoice.invoice_code, `বিক্রয় মেমো জেনারেট: বিল ৳${invoice.net_total}, জমা ৳${invoice.paid_amount}, বকেয়া ৳${invoice.due_amount}`);
+    this.logAudit('Sales Invoices', 'INSERT', invoice.invoice_code, `বিক্রয় মেমো: বিল ৳${invoice.net_total}, জমা ৳${invoice.paid_amount}, বকেয়া ৳${invoice.due_amount}`);
   }
 
   static recordStockAdjustment(adj: StockAdjustment): void {
@@ -628,7 +592,7 @@ export class DimKhataStore {
       let targetStock = stocks.find((s) => s.branch_id === adj.target_branch_id && s.category_id === adj.category_id);
       if (!targetStock) {
         targetStock = {
-          id: `stock-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          id: `stock-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           branch_id: adj.target_branch_id,
           category_id: adj.category_id,
           qty_pcs: 0,
@@ -637,14 +601,13 @@ export class DimKhataStore {
         };
         stocks.push(targetStock);
       }
-      const newTargetWac = calculateWeightedAverageCost(
+      targetStock.avg_landed_cost_per_pc = calculateWeightedAverageCost(
         targetStock.qty_pcs,
         targetStock.avg_landed_cost_per_pc,
         adj.qty_pcs,
         adj.unit_landed_cost
       );
       targetStock.qty_pcs += adj.qty_pcs;
-      targetStock.avg_landed_cost_per_pc = newTargetWac;
       targetStock.updated_at = new Date().toISOString();
     }
     setStored(STORAGE_KEYS.STOCKS, stocks);
@@ -652,16 +615,10 @@ export class DimKhataStore {
     const typeLabels = {
       WASTAGE_BROKEN: 'ভাঙা ডিমের ক্ষতি',
       WASTAGE_ROTTEN: 'পচা ডিমের ক্ষতি',
-      COURTESY_GIFT: 'সৌজন্যে/গিফটে দেওয়া ডিম',
+      COURTESY_GIFT: 'সৌজন্যে দেওয়া ডিম',
       BRANCH_TRANSFER: 'শাখা স্থানান্তর',
     };
-
-    this.logAudit(
-      'Stock Adjustments',
-      'INSERT',
-      adj.adjustment_code,
-      `${typeLabels[adj.adjustment_type]}: ${adj.qty_pcs} পিস (মূল্য: ৳${adj.total_cost_value})`
-    );
+    this.logAudit('Stock Adjustments', 'INSERT', adj.adjustment_code, `${typeLabels[adj.adjustment_type]}: ${adj.qty_pcs} পিস (৳${adj.total_cost_value})`);
   }
 
   static recordCustomerDueCollection(collection: CustomerDueCollection): void {
@@ -683,19 +640,12 @@ export class DimKhataStore {
       'DUE_COLLECTION',
       collection.amount,
       collection.receipt_code,
-      `বকেয়া কালেকশন: ${cust?.name || ''} (রসিদ: ${collection.receipt_code})`
+      `বকেয়া কালেকশন: ${cust?.name || ''} (${collection.receipt_code})`
     );
-
     this.logAudit('Due Collections', 'INSERT', collection.receipt_code, `বকেয়া আদায়: ${cust?.name} থেকে ৳${collection.amount}`);
   }
 
-  static recordSupplierPayment(
-    supplierId: string,
-    amount: number,
-    accountId: string,
-    branchId: string,
-    note?: string
-  ): string {
+  static recordSupplierPayment(supplierId: string, amount: number, accountId: string, branchId: string, note?: string): string {
     const paymentCode = this.getNextCode('SPAY');
     const suppliers = this.getSuppliers();
     const sup = suppliers.find((s) => s.id === supplierId);
@@ -713,8 +663,7 @@ export class DimKhataStore {
       paymentCode,
       note || `মহাজন বকেয়া পরিশোধ: ${sup?.name || ''} (${paymentCode})`
     );
-
-    this.logAudit('Supplier Payments', 'INSERT', paymentCode, `মহাজন পেমেন্ট: ${sup?.name} কে ৳${amount} পরিশোধ`);
+    this.logAudit('Supplier Payments', 'INSERT', paymentCode, `মহাজন পেমেন্ট: ${sup?.name} কে ৳${amount}`);
     return paymentCode;
   }
 
@@ -732,7 +681,6 @@ export class DimKhataStore {
       expense.expense_code,
       `খরচ: ${expense.title}`
     );
-
     this.logAudit('Expenses', 'INSERT', expense.expense_code, `খরচ এন্ট্রি: ${expense.title} (৳${expense.amount})`);
   }
 
@@ -742,17 +690,7 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.SALARY_ADVANCES, advances);
 
     const emp = this.getEmployees().find((e) => e.id === advance.employee_id);
-
-    this.postCashbook(
-      accountId,
-      branchId,
-      'CASH_OUT',
-      'SALARY',
-      advance.amount,
-      `ADV-${advance.id}`,
-      `অগ্রিম বেতন প্রদান: ${emp?.full_name || ''}`
-    );
-
+    this.postCashbook(accountId, branchId, 'CASH_OUT', 'SALARY', advance.amount, `ADV-${advance.id}`, `অগ্রিম বেতন: ${emp?.full_name || ''}`);
     this.logAudit('Salary Advance', 'INSERT', advance.id, `বেতন অগ্রিম: ${emp?.full_name} কে ৳${advance.amount}`);
   }
 
@@ -762,20 +700,10 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.PAYROLLS, payrolls);
 
     const emp = this.getEmployees().find((e) => e.id === record.employee_id);
-
     if (record.net_payable > 0) {
-      this.postCashbook(
-        accountId,
-        branchId,
-        'CASH_OUT',
-        'SALARY',
-        record.net_payable,
-        record.payroll_code,
-        `মাসিক বেতন পরিশোধ (${record.salary_month}): ${emp?.full_name || ''}`
-      );
+      this.postCashbook(accountId, branchId, 'CASH_OUT', 'SALARY', record.net_payable, record.payroll_code, `বেতন পরিশোধ (${record.salary_month}): ${emp?.full_name || ''}`);
     }
-
-    this.logAudit('Payroll', 'INSERT', record.payroll_code, `বেতন পরিশোধ: ${emp?.full_name} (মাস: ${record.salary_month}, নীট: ৳${record.net_payable})`);
+    this.logAudit('Payroll', 'INSERT', record.payroll_code, `বেতন পরিশোধ: ${emp?.full_name} (${record.salary_month}, ৳${record.net_payable})`);
   }
 
   static recordPartnerDrawing(drawing: PartnerDrawing, branchId: string): void {
@@ -784,42 +712,11 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.PARTNER_DRAWINGS, drawings);
 
     const partner = this.getPartners().find((p) => p.id === drawing.partner_id);
-
-    this.postCashbook(
-      drawing.account_id,
-      branchId,
-      'CASH_OUT',
-      'PARTNER_DRAWING',
-      drawing.amount,
-      `DRAW-${drawing.id}`,
-      `মালিকের ব্যক্তিগত উত্তোলন: ${partner?.name || ''}`
-    );
-
-    this.logAudit('Partner Drawings', 'INSERT', drawing.id, `ব্যক্তিগত উত্তোলন: ${partner?.name} তুলেছেন ৳${drawing.amount}`);
+    this.postCashbook(drawing.account_id, branchId, 'CASH_OUT', 'PARTNER_DRAWING', drawing.amount, `DRAW-${drawing.id}`, `মালিকের উত্তোলন: ${partner?.name || ''}`);
+    this.logAudit('Partner Drawings', 'INSERT', drawing.id, `ব্যক্তিগত উত্তোলন: ${partner?.name} (৳${drawing.amount})`);
   }
 
-  // ====================================================================
-  // 1-CLICK MONTHLY NET PROFIT & 2:1 PROFIT DISTRIBUTION (Req 13, 14)
-  // ====================================================================
-  static calculateMonthlySettlement(targetMonth: string): {
-    totalSalesRevenue: number;
-    totalCogs: number;
-    grossProfit: number;
-    totalOperatingExpenses: number;
-    totalSalaries: number;
-    totalWastageLoss: number;
-    totalCourtesyLoss: number;
-    netProfit: number;
-    distributions: {
-      partnerId: string;
-      partnerName: string;
-      shareWeight: number;
-      percentage: number;
-      grossShare: number;
-      drawingsDeducted: number;
-      netPayable: number;
-    }[];
-  } {
+  static calculateMonthlySettlement(targetMonth: string) {
     const sales = this.getSales().filter((s) => s.invoice_date.startsWith(targetMonth));
     let totalSalesRevenue = 0;
     let totalCogs = 0;
@@ -832,25 +729,22 @@ export class DimKhataStore {
     });
 
     const grossProfit = totalSalesRevenue - totalCogs;
-
-    const expenses = this.getExpenses().filter((e) => e.expense_date.startsWith(targetMonth) && !e.is_capital_asset);
-    const totalOperatingExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalOperatingExpenses = this.getExpenses()
+      .filter((e) => e.expense_date.startsWith(targetMonth) && !e.is_capital_asset)
+      .reduce((sum, e) => sum + e.amount, 0);
 
     const payrolls = this.getPayrolls().filter((p) => p.salary_month === targetMonth);
     const settledEmployeeIds = new Set(payrolls.map((p) => p.employee_id));
     const settledPayrollCost = payrolls.reduce((sum, p) => sum + p.net_payable + p.advances_deducted, 0);
-
     const unsettledAdvancesCost = this.getSalaryAdvances()
       .filter((a) => a.advance_date.startsWith(targetMonth) && !settledEmployeeIds.has(a.employee_id))
       .reduce((sum, a) => sum + a.amount, 0);
-
     const totalSalaries = settledPayrollCost + unsettledAdvancesCost;
 
     const adjustments = this.getAdjustments().filter((a) => a.adjustment_date.startsWith(targetMonth));
     const totalWastageLoss = adjustments
       .filter((a) => a.adjustment_type === 'WASTAGE_BROKEN' || a.adjustment_type === 'WASTAGE_ROTTEN')
       .reduce((sum, a) => sum + a.total_cost_value, 0);
-
     const totalCourtesyLoss = adjustments
       .filter((a) => a.adjustment_type === 'COURTESY_GIFT')
       .reduce((sum, a) => sum + a.total_cost_value, 0);
@@ -864,86 +758,78 @@ export class DimKhataStore {
     const distributions = partners.map((partner) => {
       const percentage = (partner.share_weight / totalWeight) * 100;
       const grossShare = Math.round(((netProfit * partner.share_weight) / totalWeight) * 100) / 100;
-      const partnerDrawings = drawings
-        .filter((d) => d.partner_id === partner.id)
-        .reduce((sum, d) => sum + d.amount, 0);
-      const netPayable = grossShare - partnerDrawings;
-
+      const drawingsDeducted = drawings.filter((d) => d.partner_id === partner.id).reduce((sum, d) => sum + d.amount, 0);
       return {
         partnerId: partner.id,
         partnerName: partner.name,
         shareWeight: partner.share_weight,
         percentage: Math.round(percentage * 10) / 10,
         grossShare,
-        drawingsDeducted: partnerDrawings,
-        netPayable,
+        drawingsDeducted,
+        netPayable: grossShare - drawingsDeducted,
       };
     });
 
+    const r = (n: number) => Math.round(n * 100) / 100;
     return {
-      totalSalesRevenue: Math.round(totalSalesRevenue * 100) / 100,
-      totalCogs: Math.round(totalCogs * 100) / 100,
-      grossProfit: Math.round(grossProfit * 100) / 100,
-      totalOperatingExpenses: Math.round(totalOperatingExpenses * 100) / 100,
-      totalSalaries: Math.round(totalSalaries * 100) / 100,
-      totalWastageLoss: Math.round(totalWastageLoss * 100) / 100,
-      totalCourtesyLoss: Math.round(totalCourtesyLoss * 100) / 100,
-      netProfit: Math.round(netProfit * 100) / 100,
+      totalSalesRevenue: r(totalSalesRevenue),
+      totalCogs: r(totalCogs),
+      grossProfit: r(grossProfit),
+      totalOperatingExpenses: r(totalOperatingExpenses),
+      totalSalaries: r(totalSalaries),
+      totalWastageLoss: r(totalWastageLoss),
+      totalCourtesyLoss: r(totalCourtesyLoss),
+      netProfit: r(netProfit),
       distributions,
     };
   }
 
-  // Backup & Restore
   static exportFullBackupJson(): string {
-    const backupData: Record<string, unknown> = {
-      COMPANY: this.getCompany(),
-      BRANCHES: this.getBranches(),
-      PARTNERS: this.getPartners(),
-      CATEGORIES: this.getCategories(),
-      DAILY_RATES: this.getDailyRates(),
-      STOCKS: this.getAllBranchStocks(),
-      CUSTOMERS: this.getCustomers(),
-      SUPPLIERS: this.getSuppliers(),
-      EMPLOYEES: this.getEmployees(),
-      ACCOUNTS: this.getAccounts(),
-      PURCHASES: this.getPurchases(),
-      SALES: this.getSales(),
-      ADJUSTMENTS: this.getAdjustments(),
-      DUE_COLLECTIONS: this.getDueCollections(),
-      EXPENSES: this.getExpenses(),
-      PARTNER_DRAWINGS: this.getPartnerDrawings(),
-      SALARY_ADVANCES: this.getSalaryAdvances(),
-      PAYROLLS: this.getPayrolls(),
-      CASHBOOK: this.getCashbook(),
-      AUDIT_LOGS: this.getAuditLogs(),
-      SEQUENCES: getStored(STORAGE_KEYS.SEQUENCES, {}),
-      SELECTED_BRANCH: this.getSelectedBranchId(),
-    };
-    return JSON.stringify(backupData, null, 2);
+    return JSON.stringify(
+      {
+        COMPANY: this.getCompany(),
+        BRANCHES: this.getBranches(),
+        PARTNERS: this.getPartners(),
+        CATEGORIES: this.getCategories(),
+        DAILY_RATES: this.getDailyRates(),
+        STOCKS: this.getAllBranchStocks(),
+        CUSTOMERS: this.getCustomers(),
+        SUPPLIERS: this.getSuppliers(),
+        EMPLOYEES: this.getEmployees(),
+        ACCOUNTS: this.getAccounts(),
+        PURCHASES: this.getPurchases(),
+        SALES: this.getSales(),
+        ADJUSTMENTS: this.getAdjustments(),
+        DUE_COLLECTIONS: this.getDueCollections(),
+        EXPENSES: this.getExpenses(),
+        PARTNER_DRAWINGS: this.getPartnerDrawings(),
+        SALARY_ADVANCES: this.getSalaryAdvances(),
+        PAYROLLS: this.getPayrolls(),
+        CASHBOOK: this.getCashbook(),
+        AUDIT_LOGS: this.getAuditLogs(),
+        SEQUENCES: getStored(STORAGE_KEYS.SEQUENCES, {}),
+        SELECTED_BRANCH: this.getSelectedBranchId(),
+      },
+      null,
+      2
+    );
   }
 
   static importFullBackupJson(jsonString: string): boolean {
     try {
       const data = JSON.parse(jsonString);
       Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
-        if (data[name] !== undefined) {
-          setStored(key, data[name]);
-        }
+        if (data[name] !== undefined) setStored(key, data[name]);
       });
       window.dispatchEvent(new Event('dimkhata_storage_change'));
       return true;
-    } catch (err) {
-      console.error('Import backup failed:', err);
+    } catch {
       return false;
     }
   }
 
-  // ====================================================================
-  // SUPABASE CLOUD SYNC (Single Source of Truth + Zero Dummy Data)
-  // ====================================================================
   private static sanitizeCloudRow(key: string, value: unknown): { cleaned: unknown; modified: boolean } {
     if (!Array.isArray(value)) return { cleaned: value, modified: false };
-
     let modified = false;
     let filtered = value.filter((item: any) => {
       if (item && typeof item.id === 'string' && LEGACY_DEMO_IDS.has(item.id)) {
@@ -953,7 +839,6 @@ export class DimKhataStore {
       return true;
     });
 
-    // Clean legacy demo stock quantities if found
     if (key === STORAGE_KEYS.STOCKS) {
       filtered = filtered.map((s: any) => {
         if (s && typeof s.qty_pcs === 'number' && LEGACY_DEMO_STOCK_QTYS.has(s.qty_pcs)) {
@@ -964,7 +849,6 @@ export class DimKhataStore {
       });
     }
 
-    // Clean legacy demo account balances if found
     if (key === STORAGE_KEYS.ACCOUNTS) {
       filtered = filtered.map((a: any) => {
         if (a && typeof a.current_balance === 'number' && LEGACY_DEMO_ACCOUNT_BALANCES.has(a.current_balance)) {
@@ -987,12 +871,8 @@ export class DimKhataStore {
     this.setCloudStatus('SYNCING');
 
     try {
-      const { data, error } = await supabase
-        .from('dimkhata_kv_store')
-        .select('key, value');
-
+      const { data, error } = await supabase.from('dimkhata_kv_store').select('key, value');
       if (error) {
-        console.warn('Supabase sync fetch warning:', error.message);
         if (error.message.includes('dimkhata_kv_store') || error.code === '42P01' || error.code === 'PGRST205') {
           this.setCloudStatus('NEEDS_SQL');
         } else {
@@ -1003,95 +883,68 @@ export class DimKhataStore {
 
       if (data && data.length > 0) {
         const sanitizedRowsToPush: { key: string; value: unknown; updated_at: string }[] = [];
-
         data.forEach((row: { key: string; value: unknown }) => {
           if (row.key && !SESSION_ONLY_KEYS.has(row.key)) {
             const { cleaned, modified } = this.sanitizeCloudRow(row.key, row.value);
             MEMORY_DB.set(row.key, cleaned);
             if (modified) {
-              sanitizedRowsToPush.push({
-                key: row.key,
-                value: cleaned,
-                updated_at: new Date().toISOString(),
-              });
+              sanitizedRowsToPush.push({ key: row.key, value: cleaned, updated_at: new Date().toISOString() });
             }
           }
         });
-
-        // If any legacy demo data was found in Supabase, overwrite it in Supabase immediately
         if (sanitizedRowsToPush.length > 0) {
           await supabase.from('dimkhata_kv_store').upsert(sanitizedRowsToPush, { onConflict: 'key' });
         }
-
         this.setCloudStatus('ONLINE');
         window.dispatchEvent(new Event('dimkhata_storage_change'));
       } else {
-        // Cloud table is empty on first connection — push clean structural defaults to Supabase
         const fullState = JSON.parse(this.exportFullBackupJson()) as Record<string, unknown>;
         const rowsToUpsert = Object.entries(STORAGE_KEYS)
           .filter(([, key]) => !SESSION_ONLY_KEYS.has(key))
           .map(([name, key]) => {
             const val = fullState[name] ?? {};
             MEMORY_DB.set(key, val);
-            return {
-              key,
-              value: val,
-              updated_at: new Date().toISOString(),
-            };
+            return { key, value: val, updated_at: new Date().toISOString() };
           });
-
-        const { error: upsertErr } = await supabase
-          .from('dimkhata_kv_store')
-          .upsert(rowsToUpsert, { onConflict: 'key' });
-
-        if (!upsertErr) {
-          this.setCloudStatus('ONLINE');
-        }
+        const { error: upsertErr } = await supabase.from('dimkhata_kv_store').upsert(rowsToUpsert, { onConflict: 'key' });
+        if (!upsertErr) this.setCloudStatus('ONLINE');
       }
 
       if (!this.realtimeSubscribed) {
         this.realtimeSubscribed = true;
         supabase
           .channel('dimkhata-cloud-sync')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'dimkhata_kv_store' },
-            (payload: any) => {
-              const row = payload.new as { key?: string; value?: unknown };
-              if (row && row.key && !SESSION_ONLY_KEYS.has(row.key)) {
-                const { cleaned } = this.sanitizeCloudRow(row.key, row.value);
-                MEMORY_DB.set(row.key, cleaned);
-                this.setCloudStatus('ONLINE');
-                window.dispatchEvent(new Event('dimkhata_storage_change'));
-              }
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'dimkhata_kv_store' }, (payload: any) => {
+            const row = payload.new as { key?: string; value?: unknown };
+            if (row && row.key && !SESSION_ONLY_KEYS.has(row.key)) {
+              const { cleaned } = this.sanitizeCloudRow(row.key, row.value);
+              MEMORY_DB.set(row.key, cleaned);
+              this.setCloudStatus('ONLINE');
+              window.dispatchEvent(new Event('dimkhata_storage_change'));
             }
-          )
+          })
           .subscribe();
       }
 
       return { synced: true, count: data?.length || 18 };
-    } catch (err) {
-      console.warn('Supabase sync exception:', err);
+    } catch {
       this.setCloudStatus('OFFLINE');
       return { synced: false, count: 0 };
     }
   }
 
-  /**
-   * Resets all transactional records in Memory and Supabase to a clean, zero-dummy production state.
-   */
   static resetToCleanProduction(): void {
     MEMORY_DB.clear();
-    setStored(STORAGE_KEYS.COMPANY, INITIAL_COMPANY_SETTINGS);
-    setStored(STORAGE_KEYS.BRANCHES, INITIAL_BRANCHES);
-    setStored(STORAGE_KEYS.PARTNERS, INITIAL_PARTNERS);
-    setStored(STORAGE_KEYS.CATEGORIES, INITIAL_EGG_CATEGORIES);
-    setStored(STORAGE_KEYS.DAILY_RATES, INITIAL_DAILY_RATES);
-    setStored(STORAGE_KEYS.STOCKS, INITIAL_INVENTORY_STOCKS);
+    setStored(STORAGE_KEYS.COMPANY, DEFAULT_COMPANY);
+    setStored(STORAGE_KEYS.BRANCHES, DEFAULT_BRANCHES);
+    setStored(STORAGE_KEYS.PARTNERS, DEFAULT_PARTNERS);
+    setStored(STORAGE_KEYS.CATEGORIES, DEFAULT_CATEGORIES);
+    setStored(STORAGE_KEYS.DAILY_RATES, DEFAULT_RATES);
+    setStored(STORAGE_KEYS.STOCKS, DEFAULT_STOCKS);
     setStored(STORAGE_KEYS.CUSTOMERS, []);
     setStored(STORAGE_KEYS.SUPPLIERS, []);
     setStored(STORAGE_KEYS.EMPLOYEES, []);
-    setStored(STORAGE_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
+    setStored(STORAGE_KEYS.ACCOUNTS, DEFAULT_ACCOUNTS);
     setStored(STORAGE_KEYS.PURCHASES, []);
     setStored(STORAGE_KEYS.SALES, []);
     setStored(STORAGE_KEYS.ADJUSTMENTS, []);
@@ -1102,24 +955,7 @@ export class DimKhataStore {
     setStored(STORAGE_KEYS.PAYROLLS, []);
     setStored(STORAGE_KEYS.CASHBOOK, []);
     setStored(STORAGE_KEYS.AUDIT_LOGS, []);
-    setStored(STORAGE_KEYS.SEQUENCES, {
-      EMP: 0,
-      CUST: 0,
-      SUP: 0,
-      INV: 0,
-      CHL: 0,
-      PUR: 0,
-      ADJ: 0,
-      EXP: 0,
-      REC: 0,
-      PAY: 0,
-      SPAY: 0,
-    });
+    setStored(STORAGE_KEYS.SEQUENCES, {});
     window.dispatchEvent(new Event('dimkhata_storage_change'));
-  }
-
-  // Backward-compatible alias
-  static resetToDemoData(): void {
-    this.resetToCleanProduction();
   }
 }

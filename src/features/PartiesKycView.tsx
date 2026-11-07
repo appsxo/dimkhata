@@ -1,18 +1,5 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Parties & KYC Verification (Apple Design System)
-// ====================================================================
-
 import React, { useState } from 'react';
-import {
-  Plus,
-  ShieldCheck,
-  Share2,
-  DollarSign,
-  Phone,
-  Building,
-  CreditCard,
-  Users,
-} from 'lucide-react';
+import { Plus, ShieldCheck, Share2, DollarSign, Phone, Building, CreditCard, Users } from 'lucide-react';
 import { Customer, Supplier, FinancialAccount, CompanySettings, KycDocument } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
@@ -20,12 +7,7 @@ import { shareDueReminderWhatsApp } from '../lib/whatsapp-share';
 import { useLanguage } from '../lib/i18n';
 import { sanitizeText } from '../lib/security';
 import { KycUploadModal } from '../components/modals/KycUploadModal';
-import {
-  AppleSectionHeader,
-  AppleOptionChips,
-  AppleSearchInput,
-  AppleModal,
-} from '../components/ui/AppleUI';
+import { AppleSectionHeader, AppleOptionChips, AppleSearchInput, AppleModal } from '../components/ui/AppleUI';
 
 interface PartiesKycViewProps {
   customers: Customer[];
@@ -50,8 +32,6 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
-  const [emergencyPhone, setEmergencyPhone] = useState('');
-  const [customerType] = useState<Customer['customer_type']>('WHOLESALE');
   const [presentAddress, setPresentAddress] = useState('');
   const [nidNumber, setNidNumber] = useState('');
   const [creditLimit, setCreditLimit] = useState(50000);
@@ -80,77 +60,62 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       s.phone.includes(searchQuery)
   );
 
-  const handleCreateCustomer = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !phone) {
-      alert(t('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!', 'Please enter Name and Phone Number!'));
-      return;
-    }
-
-    const code = DimKhataStore.getNextCode('CUST');
-    const newCust: Customer = {
-      id: `cust-${Date.now()}`,
-      customer_code: code,
-      name: sanitizeText(name, 100),
-      business_name: sanitizeText(businessName, 120),
-      phone: sanitizeText(phone, 30),
-      emergency_phone: sanitizeText(emergencyPhone, 30),
-      customer_type: customerType,
-      present_address: sanitizeText(presentAddress, 200),
-      nid_number: sanitizeText(nidNumber, 40),
-      kyc_docs: [],
-      credit_limit: creditLimit,
-      current_due: 0,
-      due_alert_days: 7,
-      is_active: true,
-      created_at: new Date().toISOString(),
-    };
-
-    DimKhataStore.saveCustomer(newCust);
-    alert(t(`কাস্টমার সফলভাবে নিবন্ধিত হয়েছে! ইউনিক আইডি: ${code}`, `Customer registered! ID: ${code}`));
-    setIsAddOpen(false);
-    resetForm();
-    onRefresh();
-  };
-
-  const handleCreateSupplier = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !phone) {
-      alert(t('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!', 'Please enter Name and Phone Number!'));
-      return;
-    }
-
-    const code = DimKhataStore.getNextCode('SUP');
-    const newSup: Supplier = {
-      id: `sup-${Date.now()}`,
-      supplier_code: code,
-      name: sanitizeText(name, 100),
-      farm_name: sanitizeText(businessName, 120),
-      phone: sanitizeText(phone, 30),
-      emergency_phone: sanitizeText(emergencyPhone, 30),
-      present_address: sanitizeText(presentAddress, 200),
-      nid_number: sanitizeText(nidNumber, 40),
-      kyc_docs: [],
-      current_payable: 0,
-      is_active: true,
-      created_at: new Date().toISOString(),
-    };
-
-    DimKhataStore.saveSupplier(newSup);
-    alert(t(`মহাজন সফলভাবে নিবন্ধিত হয়েছে! ইউনিক আইডি: ${code}`, `Supplier registered! ID: ${code}`));
-    setIsAddOpen(false);
-    resetForm();
-    onRefresh();
-  };
-
   const resetForm = () => {
     setName('');
     setBusinessName('');
     setPhone('');
-    setEmergencyPhone('');
     setPresentAddress('');
     setNidNumber('');
     setCreditLimit(50000);
+  };
+
+  const handleCreateParty = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !phone) {
+      alert(t('দয়া করে নাম ও মোবাইল নম্বর পূরণ করুন!', 'Please enter Name and Phone Number!'));
+      return;
+    }
+
+    if (activeTab === 'CUSTOMERS') {
+      const code = DimKhataStore.getNextCode('CUST');
+      DimKhataStore.saveCustomer({
+        id: `cust-${Date.now()}`,
+        customer_code: code,
+        name: sanitizeText(name, 100),
+        business_name: sanitizeText(businessName, 120),
+        phone: sanitizeText(phone, 30),
+        customer_type: 'WHOLESALE',
+        present_address: sanitizeText(presentAddress, 200),
+        nid_number: sanitizeText(nidNumber, 40),
+        kyc_docs: [],
+        credit_limit: creditLimit,
+        current_due: 0,
+        due_alert_days: 7,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      });
+      alert(t(`কাস্টমার নিবন্ধিত হয়েছে! আইডি: ${code}`, `Customer registered! ID: ${code}`));
+    } else {
+      const code = DimKhataStore.getNextCode('SUP');
+      DimKhataStore.saveSupplier({
+        id: `sup-${Date.now()}`,
+        supplier_code: code,
+        name: sanitizeText(name, 100),
+        farm_name: sanitizeText(businessName, 120),
+        phone: sanitizeText(phone, 30),
+        present_address: sanitizeText(presentAddress, 200),
+        nid_number: sanitizeText(nidNumber, 40),
+        kyc_docs: [],
+        current_payable: 0,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      });
+      alert(t(`মহাজন নিবন্ধিত হয়েছে! আইডি: ${code}`, `Supplier registered! ID: ${code}`));
+    }
+
+    setIsAddOpen(false);
+    resetForm();
+    onRefresh();
   };
 
   const handleKycAdded = (doc: KycDocument) => {
@@ -169,7 +134,7 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       }
     }
     onRefresh();
-    alert(t('কেওয়াইসি ডকুমেন্ট সফলভাবে যুক্ত হয়েছে!', 'KYC Document uploaded successfully!'));
+    alert(t('কেওয়াইসি ডকুমেন্ট যুক্ত হয়েছে!', 'KYC Document uploaded!'));
   };
 
   const handleSettleDue = (e: React.FormEvent) => {
@@ -185,11 +150,11 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       collection_date: new Date().toISOString().split('T')[0],
       amount: collectAmount,
       payment_account_id: collectAccountId,
-      note: 'বকেয়া কালেকশন সম্পন্ন',
+      note: t('বকেয়া কালেকশন সম্পন্ন', 'Due Collection'),
       created_at: new Date().toISOString(),
     });
 
-    alert(t(`সফল! ৳${collectAmount} বকেয়া আদায় হয়েছে। রসিদ নং: ${receiptCode}`, `Collected ৳${collectAmount}! Receipt: ${receiptCode}`));
+    alert(t(`সফল! ৳${collectAmount} বকেয়া আদায় হয়েছে। রসিদ: ${receiptCode}`, `Collected ৳${collectAmount}! Receipt: ${receiptCode}`));
     setCollectingCust(null);
     onRefresh();
   };
@@ -203,275 +168,166 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
       paySupAmount,
       paySupAccountId,
       'br-01',
-      `মহাজন বকেয়া পরিশোধ (${payingSup.name})`
+      `${t('মহাজন বকেয়া পরিশোধ', 'Supplier Payment')} (${payingSup.name})`
     );
 
-    alert(t(`সফল! মহাজনকে ৳${paySupAmount} পরিশোধ করা হয়েছে। ভাউচার নং: ${payCode}`, `Paid ৳${paySupAmount} to supplier! Voucher: ${payCode}`));
+    alert(t(`সফল! মহাজনকে ৳${paySupAmount} পরিশোধ করা হয়েছে। ভাউচার: ${payCode}`, `Paid ৳${paySupAmount} to supplier! Voucher: ${payCode}`));
     setPayingSup(null);
     onRefresh();
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AppleSectionHeader
-        eyebrow={t('বাকি খাতা ও কেওয়াইসি প্রোফাইল', 'Parties, KYC & Due Ledger')}
-        title={t('কাস্টমার ও মহাজন তালিকা (KYC & Due Ledger)', 'Customers & Suppliers (KYC & Dues)')}
-        subtitle={t(
-          'অটো ইউনিক আইডি (SE-CUST / SE-SUP), NID আপলোড, ১-ক্লিকে বকেয়া আদায় এবং WhatsApp তাগাদা',
-          'Auto unique IDs (SE-CUST / SE-SUP), NID verification, 1-click due collection & WhatsApp reminders'
-        )}
+        title={t('কাস্টমার ও মহাজন তালিকা (KYC & Due)', 'Customers & Suppliers (KYC & Dues)')}
+        subtitle={t('অটো আইডি (SE-CUST / SE-SUP), কেওয়াইসি আপলোড, বকেয়া আদায় ও WhatsApp তাগাদা', 'Auto IDs, KYC verification, 1-click due collection & WhatsApp reminders')}
         actions={
-          <button
-            onClick={() => setIsAddOpen(true)}
-            className="btn-primary py-2.5 px-5"
-          >
+          <button onClick={() => setIsAddOpen(true)} className="btn-primary py-2 px-4 text-[13px]">
             <Plus className="w-4 h-4" />
-            <span>
-              {activeTab === 'CUSTOMERS'
-                ? t('+ নতুন কাস্টমার নিবন্ধন', '+ Add Customer')
-                : t('+ নতুন খামারী নিবন্ধন', '+ Add Supplier')}
-            </span>
+            <span>{activeTab === 'CUSTOMERS' ? t('+ নতুন কাস্টমার', '+ Add Customer') : t('+ নতুন মহাজন', '+ Add Supplier')}</span>
           </button>
         }
       />
 
-      {/* Tabs & Search */}
-      <div className="card-apple p-3.5 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="card-apple p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <AppleOptionChips
           options={[
-            {
-              value: 'CUSTOMERS',
-              label: t(
-                `কাস্টমার ও পাইকার (${toBengaliNumber(customers.length)})`,
-                `Customers (${customers.length})`
-              ),
-            },
-            {
-              value: 'SUPPLIERS',
-              label: t(
-                `খামারী ও মহাজন (${toBengaliNumber(suppliers.length)})`,
-                `Suppliers (${suppliers.length})`
-              ),
-            },
+            { value: 'CUSTOMERS', label: t(`কাস্টমার (${toBengaliNumber(customers.length)})`, `Customers (${customers.length})`) },
+            { value: 'SUPPLIERS', label: t(`মহাজন (${toBengaliNumber(suppliers.length)})`, `Suppliers (${suppliers.length})`) },
           ]}
           value={activeTab}
           onChange={setActiveTab}
         />
-
         <AppleSearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder={t(
-            'নাম, আইডি বা মোবাইল নম্বর দিয়ে খুঁজুন...',
-            'Search by name, ID or phone...'
-          )}
+          placeholder={t('নাম, আইডি বা ফোন দিয়ে খুঁজুন...', 'Search name, ID or phone...')}
         />
       </div>
 
-      {/* CUSTOMERS LIST */}
-      {activeTab === 'CUSTOMERS' && (
+      {activeTab === 'CUSTOMERS' ? (
         filteredCustomers.length === 0 ? (
-          <div className="card-apple p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
-              <Users className="w-6 h-6" />
+          <div className="card-apple p-8 text-center space-y-2.5">
+            <div className="w-11 h-11 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
+              <Users className="w-5 h-5" />
             </div>
-            <h3 className="text-[18px] font-semibold text-[#1d1d1f]">
-              {t('কোনো কাস্টমার পাওয়া যায়নি', 'No Customers Found')}
-            </h3>
-            <p className="text-[13px] text-[#7a7a7a] max-w-md mx-auto">
-              {t(
-                'নতুন পাইকার বা খুচরা কাস্টমার নিবন্ধন করতে নিচের বাটনে ট্যাপ করুন (অটো আইডি: SE-CUST-001)।',
-                'Register your wholesale or retail customers with auto SE-CUST-001 IDs.'
-              )}
-            </p>
-            <button
-              type="button"
-              onClick={() => setIsAddOpen(true)}
-              className="btn-primary mx-auto mt-2"
-            >
+            <h3 className="text-[16px] font-semibold text-[#1d1d1f]">{t('কোনো কাস্টমার পাওয়া যায়নি', 'No Customers Found')}</h3>
+            <button type="button" onClick={() => setIsAddOpen(true)} className="btn-primary mx-auto mt-1 text-[13px]">
               <Plus className="w-4 h-4" />
-              <span>{t('+ নতুন কাস্টমার নিবন্ধন', '+ Add First Customer')}</span>
+              <span>{t('+ নতুন কাস্টমার নিবন্ধন', '+ Add Customer')}</span>
             </button>
           </div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCustomers.map((cust) => {
-            const hasKyc = cust.kyc_docs && cust.kyc_docs.length > 0;
-            const isDueOverLimit = cust.current_due >= cust.credit_limit;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCustomers.map((cust) => {
+              const hasKyc = cust.kyc_docs && cust.kyc_docs.length > 0;
+              const isDueOverLimit = cust.current_due >= cust.credit_limit;
+              return (
+                <div key={cust.id} className="card-apple p-4 sm:p-5 flex flex-col justify-between space-y-3.5">
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="badge-blue text-[11px] py-0 px-2">{cust.customer_code}</span>
+                        <h3 className="font-semibold text-[18px] text-[#1d1d1f] mt-1">{cust.name}</h3>
+                        {cust.business_name && <p className="text-[12px] text-[#7a7a7a]">{cust.business_name}</p>}
+                      </div>
+                      <button
+                        onClick={() => setKycEntity({ id: cust.id, name: cust.name, type: 'CUSTOMER' })}
+                        className="btn-outline text-[11px] min-h-[32px] py-1 px-2.5 gap-1"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#0066cc]" />
+                        <span>{hasKyc ? `${toBengaliNumber(cust.kyc_docs.length)} KYC` : '+ KYC'}</span>
+                      </button>
+                    </div>
 
-            return (
-              <div
-                key={cust.id}
-                className="card-apple p-5 flex flex-col justify-between space-y-4"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="badge-blue text-[11px] py-0 px-2">
-                        {cust.customer_code}
-                      </span>
-                      <h3 className="font-semibold text-[19px] text-[#1d1d1f] mt-1.5">
-                        {cust.name}
-                      </h3>
-                      {cust.business_name && (
-                        <p className="text-[12px] text-[#7a7a7a] font-normal">
-                          {cust.business_name}
-                        </p>
+                    <div className="mt-2.5 space-y-1 text-[13px] text-[#4e4e4e]">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-[#0066cc]" />
+                        <span>{toBengaliNumber(cust.phone)}</span>
+                      </div>
+                      {cust.present_address && (
+                        <div className="flex items-center gap-1.5 truncate">
+                          <Building className="w-3.5 h-3.5 text-[#7a7a7a] shrink-0" />
+                          <span className="truncate">{cust.present_address}</span>
+                        </div>
+                      )}
+                      {cust.nid_number && (
+                        <div className="flex items-center gap-1.5 text-[#7a7a7a] font-mono text-[11px]">
+                          <CreditCard className="w-3.5 h-3.5" />
+                          <span>NID: {cust.nid_number}</span>
+                        </div>
                       )}
                     </div>
-
-                    <button
-                      onClick={() =>
-                        setKycEntity({
-                          id: cust.id,
-                          name: cust.name,
-                          type: 'CUSTOMER',
-                        })
-                      }
-                      title="কেওয়াইসি ডকুমেন্ট আপলোড"
-                      className="btn-outline text-[11px] min-h-[34px] py-1 px-2.5 gap-1"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#0066cc]" />
-                      <span>{hasKyc ? `${toBengaliNumber(cust.kyc_docs.length)} KYC` : '+ KYC'}</span>
-                    </button>
                   </div>
 
-                  <div className="mt-3 space-y-1.5 text-[13px] text-[#4e4e4e]">
-                    <div className="flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-[#0066cc]" />
-                      <span>{toBengaliNumber(cust.phone)}</span>
+                  <div className="pt-2.5 border-t border-[#e0e0e0] space-y-2">
+                    <div className="flex justify-between items-center text-[12px] text-[#7a7a7a]">
+                      <span>{t('বাকির সীমা:', 'Credit Limit:')}</span>
+                      <span className="font-semibold text-[#1d1d1f]">{formatTaka(cust.credit_limit)}</span>
                     </div>
-                    {cust.present_address && (
-                      <div className="flex items-center gap-1.5 truncate">
-                        <Building className="w-3.5 h-3.5 text-[#7a7a7a] shrink-0" />
-                        <span className="truncate">{cust.present_address}</span>
-                      </div>
-                    )}
-                    {cust.nid_number && (
-                      <div className="flex items-center gap-1.5 text-[#7a7a7a] font-mono text-[11px]">
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>NID: {cust.nid_number}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between items-center bg-[#f5f5f7] p-2.5 rounded-[10px] border border-[#e0e0e0]">
+                      <span className="text-[12px] text-[#4e4e4e]">{t('বর্তমান বকেয়া:', 'Current Due:')}</span>
+                      <span className={`font-semibold text-[18px] ${isDueOverLimit ? 'text-[#d92916]' : 'text-[#1d1d1f]'}`}>
+                        {formatTaka(cust.current_due)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-0.5">
+                      <button onClick={() => shareDueReminderWhatsApp(cust, company)} className="btn-outline text-[12px] min-h-[38px] py-1">
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>{t('তাগাদা মেসেজ', 'WhatsApp')}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCollectingCust(cust);
+                          setCollectAmount(cust.current_due);
+                        }}
+                        disabled={cust.current_due <= 0}
+                        className="btn-primary text-[12px] min-h-[38px] py-1 disabled:opacity-40"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" />
+                        <span>{t('বকেয়া আদায়', 'Collect Due')}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Due & Credit Limit Box */}
-                <div className="pt-3 border-t border-[#e0e0e0] space-y-2.5">
-                  <div className="flex justify-between items-center text-[12px] text-[#7a7a7a]">
-                    <span>বাকির সীমা:</span>
-                    <span className="font-semibold text-[#1d1d1f]">
-                      {formatTaka(cust.credit_limit)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center bg-[#f5f5f7] p-3 rounded-[12px] border border-[#e0e0e0]">
-                    <span className="text-[12px] text-[#4e4e4e]">বর্তমান বকেয়া:</span>
-                    <span
-                      className={`font-semibold text-[20px] ${
-                        isDueOverLimit ? 'text-[#d92916]' : 'text-[#1d1d1f]'
-                      }`}
-                    >
-                      {formatTaka(cust.current_due)}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      onClick={() => shareDueReminderWhatsApp(cust, company)}
-                      className="btn-outline text-[12px] min-h-[40px] py-1.5"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>তাগাদা মেসেজ</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setCollectingCust(cust);
-                        setCollectAmount(cust.current_due);
-                      }}
-                      disabled={cust.current_due <= 0}
-                      className="btn-primary text-[12px] min-h-[40px] py-1.5 disabled:opacity-40"
-                    >
-                      <DollarSign className="w-3.5 h-3.5" />
-                      <span>বকেয়া আদায়</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        )
-      )}
-
-      {/* SUPPLIERS LIST */}
-      {activeTab === 'SUPPLIERS' && (
-        filteredSuppliers.length === 0 ? (
-          <div className="card-apple p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="text-[18px] font-semibold text-[#1d1d1f]">
-              {t('কোনো খামারী বা মহাজন পাওয়া যায়নি', 'No Suppliers Found')}
-            </h3>
-            <p className="text-[13px] text-[#7a7a7a] max-w-md mx-auto">
-              {t(
-                'নতুন খামারী বা মহাজন নিবন্ধন করতে নিচের বাটনে ট্যাপ করুন (অটো আইডি: SE-SUP-001)।',
-                'Register your egg farms or suppliers with auto SE-SUP-001 IDs.'
-              )}
-            </p>
-            <button
-              type="button"
-              onClick={() => setIsAddOpen(true)}
-              className="btn-primary mx-auto mt-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t('+ নতুন খামারী নিবন্ধন', '+ Add First Supplier')}</span>
-            </button>
+              );
+            })}
           </div>
-        ) : (
+        )
+      ) : filteredSuppliers.length === 0 ? (
+        <div className="card-apple p-8 text-center space-y-2.5">
+          <div className="w-11 h-11 rounded-full bg-[#f5f5f7] text-[#0066cc] flex items-center justify-center mx-auto">
+            <Users className="w-5 h-5" />
+          </div>
+          <h3 className="text-[16px] font-semibold text-[#1d1d1f]">{t('কোনো মহাজন পাওয়া যায়নি', 'No Suppliers Found')}</h3>
+          <button type="button" onClick={() => setIsAddOpen(true)} className="btn-primary mx-auto mt-1 text-[13px]">
+            <Plus className="w-4 h-4" />
+            <span>{t('+ নতুন মহাজন নিবন্ধন', '+ Add Supplier')}</span>
+          </button>
+        </div>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSuppliers.map((sup) => {
             const hasKyc = sup.kyc_docs && sup.kyc_docs.length > 0;
             return (
-              <div
-                key={sup.id}
-                className="card-apple p-5 flex flex-col justify-between space-y-4"
-              >
+              <div key={sup.id} className="card-apple p-4 sm:p-5 flex flex-col justify-between space-y-3.5">
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="badge-blue text-[11px] py-0 px-2">
-                        {sup.supplier_code}
-                      </span>
-                      <h3 className="font-semibold text-[19px] text-[#1d1d1f] mt-1.5">
-                        {sup.name}
-                      </h3>
-                      {sup.farm_name && (
-                        <p className="text-[12px] text-[#7a7a7a] font-normal">
-                          {sup.farm_name}
-                        </p>
-                      )}
+                      <span className="badge-blue text-[11px] py-0 px-2">{sup.supplier_code}</span>
+                      <h3 className="font-semibold text-[18px] text-[#1d1d1f] mt-1">{sup.name}</h3>
+                      {sup.farm_name && <p className="text-[12px] text-[#7a7a7a]">{sup.farm_name}</p>}
                     </div>
-
                     <button
-                      onClick={() =>
-                        setKycEntity({
-                          id: sup.id,
-                          name: sup.name,
-                          type: 'SUPPLIER',
-                        })
-                      }
-                      className="btn-outline text-[11px] min-h-[34px] py-1 px-2.5 gap-1"
+                      onClick={() => setKycEntity({ id: sup.id, name: sup.name, type: 'SUPPLIER' })}
+                      className="btn-outline text-[11px] min-h-[32px] py-1 px-2.5 gap-1"
                     >
                       <ShieldCheck className="w-3.5 h-3.5 text-[#0066cc]" />
                       <span>{hasKyc ? `${toBengaliNumber(sup.kyc_docs.length)} KYC` : '+ KYC'}</span>
                     </button>
                   </div>
 
-                  <div className="mt-3 space-y-1.5 text-[13px] text-[#4e4e4e]">
+                  <div className="mt-2.5 space-y-1 text-[13px] text-[#4e4e4e]">
                     <div className="flex items-center gap-1.5">
                       <Phone className="w-3.5 h-3.5 text-[#0066cc]" />
                       <span>{toBengaliNumber(sup.phone)}</span>
@@ -491,21 +347,18 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-[#e0e0e0] space-y-2.5">
-                  <div className="flex justify-between items-center bg-[#f5f5f7] p-3 rounded-[12px] border border-[#e0e0e0]">
-                    <span className="text-[12px] text-[#7a7a7a]">{t('মহাজন মোট পাবে:', 'Total Payable:')}</span>
-                    <span className="font-semibold text-[20px] text-[#1d1d1f]">
-                      {formatTaka(sup.current_payable)}
-                    </span>
+                <div className="pt-2.5 border-t border-[#e0e0e0] space-y-2">
+                  <div className="flex justify-between items-center bg-[#f5f5f7] p-2.5 rounded-[10px] border border-[#e0e0e0]">
+                    <span className="text-[12px] text-[#7a7a7a]">{t('মহাজন পাবে:', 'Total Payable:')}</span>
+                    <span className="font-semibold text-[18px] text-[#1d1d1f]">{formatTaka(sup.current_payable)}</span>
                   </div>
-
                   <button
                     onClick={() => {
                       setPayingSup(sup);
                       setPaySupAmount(sup.current_payable);
                     }}
                     disabled={sup.current_payable <= 0}
-                    className="btn-primary w-full text-[13px] min-h-[42px] py-2 disabled:opacity-40"
+                    className="btn-primary w-full text-[12px] min-h-[38px] py-1.5 disabled:opacity-40"
                   >
                     <DollarSign className="w-3.5 h-3.5" />
                     <span>{t('মহাজন বকেয়া পরিশোধ', 'Pay Supplier')}</span>
@@ -515,48 +368,38 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
             );
           })}
         </div>
-        )
       )}
 
-      {/* ADD PARTY MODAL */}
       <AppleModal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
-        title={activeTab === 'CUSTOMERS' ? 'নতুন কাস্টমার নিবন্ধন' : 'নতুন খামারী/মহাজন নিবন্ধন'}
-        subtitle="সফটওয়্যার স্বয়ংক্রিয়ভাবে ইউনিক আইডি (SE-CUST / SE-SUP) তৈরি করবে"
+        title={activeTab === 'CUSTOMERS' ? t('নতুন কাস্টমার নিবন্ধন (SE-CUST)', 'Add Customer (SE-CUST)') : t('নতুন মহাজন নিবন্ধন (SE-SUP)', 'Add Supplier (SE-SUP)')}
       >
-        <form
-          onSubmit={activeTab === 'CUSTOMERS' ? handleCreateCustomer : handleCreateSupplier}
-          className="space-y-3.5"
-        >
+        <form onSubmit={handleCreateParty} className="space-y-3.5">
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">নাম</label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('নাম', 'Full Name')}</label>
             <input
               type="text"
               required
-              placeholder="যেমন: হাজী রফিকুল ইসলাম"
+              placeholder={t('যেমন: হাজী রফিকুল ইসলাম', 'e.g., Hazi Rafiqul Islam')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input-apple w-full text-[14px]"
             />
           </div>
-
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              প্রতিষ্ঠান / খামারের নাম
-            </label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('প্রতিষ্ঠান / খামারের নাম', 'Business / Farm Name')}</label>
             <input
               type="text"
-              placeholder="যেমন: মদিনা ট্রেডার্স / শ্রীপুর পোল্ট্রি ফার্ম"
+              placeholder={t('যেমন: মদিনা ট্রেডার্স', 'e.g., Madina Traders')}
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               className="input-apple w-full text-[14px]"
             />
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">মোবাইল নম্বর</label>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('মোবাইল নম্বর', 'Phone Number')}</label>
               <input
                 type="tel"
                 required
@@ -567,22 +410,19 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
               />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">জাতীয় পরিচয়পত্র (NID)</label>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('জাতীয় পরিচয়পত্র (NID)', 'NID Number')}</label>
               <input
                 type="text"
-                placeholder="NID নম্বর"
+                placeholder="NID"
                 value={nidNumber}
                 onChange={(e) => setNidNumber(e.target.value)}
                 className="input-apple w-full text-[14px] font-mono"
               />
             </div>
           </div>
-
           {activeTab === 'CUSTOMERS' && (
             <div>
-              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-                সর্বোচ্চ বাকির সীমা (Credit Limit ৳)
-              </label>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('সর্বোচ্চ বাকির সীমা (৳)', 'Credit Limit (৳)')}</label>
               <input
                 type="number"
                 value={creditLimit}
@@ -591,49 +431,37 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
               />
             </div>
           )}
-
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">ঠিকানা</label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('ঠিকানা', 'Address')}</label>
             <input
               type="text"
-              placeholder="দোকান বা খামারের ঠিকানা"
+              placeholder={t('দোকান বা খামারের ঠিকানা', 'Shop or farm address')}
               value={presentAddress}
               onChange={(e) => setPresentAddress(e.target.value)}
               className="input-apple w-full text-[14px]"
             />
           </div>
-
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setIsAddOpen(false)}
-              className="btn-outline text-[13px] px-4"
-            >
-              বাতিল
+            <button type="button" onClick={() => setIsAddOpen(false)} className="btn-outline text-[13px] px-4">
+              {t('বাতিল', 'Cancel')}
             </button>
-            <button
-              type="submit"
-              className="btn-primary text-[13px] px-5"
-            >
-              সংরক্ষণ করুন
+            <button type="submit" className="btn-primary text-[13px] px-5">
+              {t('সংরক্ষণ করুন', 'Save')}
             </button>
           </div>
         </form>
       </AppleModal>
 
-      {/* DUE COLLECTION MODAL */}
       <AppleModal
         isOpen={Boolean(collectingCust)}
         onClose={() => setCollectingCust(null)}
-        title="বকেয়া জমা গ্রহণ"
-        subtitle={collectingCust ? `কাস্টমার: ${collectingCust.name} (${collectingCust.customer_code})` : ''}
+        title={t('বকেয়া জমা গ্রহণ', 'Collect Customer Due')}
+        subtitle={collectingCust ? `${collectingCust.name} (${collectingCust.customer_code})` : ''}
         maxWidth="max-w-sm"
       >
         <form onSubmit={handleSettleDue} className="space-y-3.5">
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              জমা টাকার পরিমাণ (৳)
-            </label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('জমা টাকার পরিমাণ (৳)', 'Collection Amount (৳)')}</label>
             <input
               type="number"
               required
@@ -642,55 +470,35 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
               className="input-apple w-full text-[15px] font-semibold"
             />
           </div>
-
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              কোন একাউন্টে জমা হবে?
-            </label>
-            <select
-              value={collectAccountId}
-              onChange={(e) => setCollectAccountId(e.target.value)}
-              className="input-apple w-full text-[14px]"
-            >
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('জমা একাউন্ট', 'Deposit Account')}</label>
+            <select value={collectAccountId} onChange={(e) => setCollectAccountId(e.target.value)} className="input-apple w-full text-[14px]">
               {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({formatTaka(a.current_balance)})
-                </option>
+                <option key={a.id} value={a.id}>{a.name} ({formatTaka(a.current_balance)})</option>
               ))}
             </select>
           </div>
-
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setCollectingCust(null)}
-              className="btn-outline text-[13px] px-4"
-            >
-              বাতিল
+            <button type="button" onClick={() => setCollectingCust(null)} className="btn-outline text-[13px] px-4">
+              {t('বাতিল', 'Cancel')}
             </button>
-            <button
-              type="submit"
-              className="btn-primary text-[13px] px-5"
-            >
-              জমা সম্পন্ন করুন
+            <button type="submit" className="btn-primary text-[13px] px-5">
+              {t('জমা সম্পন্ন করুন', 'Confirm')}
             </button>
           </div>
         </form>
       </AppleModal>
 
-      {/* SUPPLIER PAYMENT MODAL */}
       <AppleModal
         isOpen={Boolean(payingSup)}
         onClose={() => setPayingSup(null)}
-        title="মহাজন বকেয়া পরিশোধ"
-        subtitle={payingSup ? `খামারী/মহাজন: ${payingSup.name} (${payingSup.supplier_code})` : ''}
+        title={t('মহাজন বকেয়া পরিশোধ', 'Pay Supplier Payable')}
+        subtitle={payingSup ? `${payingSup.name} (${payingSup.supplier_code})` : ''}
         maxWidth="max-w-sm"
       >
         <form onSubmit={handlePaySupplier} className="space-y-3.5">
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              পরিশোধ টাকার পরিমাণ (৳)
-            </label>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('পরিশোধ টাকার পরিমাণ (৳)', 'Payment Amount (৳)')}</label>
             <input
               type="number"
               required
@@ -699,43 +507,25 @@ export const PartiesKycView: React.FC<PartiesKycViewProps> = ({
               className="input-apple w-full text-[15px] font-semibold"
             />
           </div>
-
           <div>
-            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
-              কোন একাউন্ট থেকে পেমেন্ট হবে?
-            </label>
-            <select
-              value={paySupAccountId}
-              onChange={(e) => setPaySupAccountId(e.target.value)}
-              className="input-apple w-full text-[14px]"
-            >
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">{t('পেমেন্ট একাউন্ট', 'Payment Account')}</label>
+            <select value={paySupAccountId} onChange={(e) => setPaySupAccountId(e.target.value)} className="input-apple w-full text-[14px]">
               {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({formatTaka(a.current_balance)})
-                </option>
+                <option key={a.id} value={a.id}>{a.name} ({formatTaka(a.current_balance)})</option>
               ))}
             </select>
           </div>
-
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setPayingSup(null)}
-              className="btn-outline text-[13px] px-4"
-            >
-              বাতিল
+            <button type="button" onClick={() => setPayingSup(null)} className="btn-outline text-[13px] px-4">
+              {t('বাতিল', 'Cancel')}
             </button>
-            <button
-              type="submit"
-              className="btn-primary text-[13px] px-5"
-            >
-              পেমেন্ট সম্পন্ন করুন
+            <button type="submit" className="btn-primary text-[13px] px-5">
+              {t('পেমেন্ট সম্পন্ন করুন', 'Confirm')}
             </button>
           </div>
         </form>
       </AppleModal>
 
-      {/* KYC Upload Modal */}
       {kycEntity && (
         <KycUploadModal
           isOpen={Boolean(kycEntity)}

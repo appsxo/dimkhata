@@ -49,7 +49,7 @@ export interface EggCategory {
   name_bn: string; // লাল ডিম (ফার্মের), প্যারাগন ডিম, etc.
   name_en: string;
   pcs_per_crate: number; // 30 default, 50 for quail
-  color_hex: string;
+  color_hex?: string;
   is_active: boolean;
   sort_order: number;
 }
@@ -178,15 +178,16 @@ export interface CashbookTransaction {
   account_id: string;
   branch_id: string;
   transaction_type: 'CASH_IN' | 'CASH_OUT' | 'CONTRA_TRANSFER';
-  category: 
-    | 'SALE_COLLECTION' 
-    | 'DUE_COLLECTION' 
-    | 'PURCHASE_PAYMENT' 
-    | 'EXPENSE' 
-    | 'SALARY' 
-    | 'PARTNER_DRAWING' 
-    | 'CAPITAL_ASSET' 
-    | 'INITIAL_BALANCE';
+  category:
+    | 'SALE_COLLECTION'
+    | 'DUE_COLLECTION'
+    | 'PURCHASE_PAYMENT'
+    | 'EXPENSE'
+    | 'SALARY'
+    | 'PARTNER_DRAWING'
+    | 'CAPITAL_ASSET'
+    | 'INITIAL_BALANCE'
+    | 'CONTRA_TRANSFER';
   amount: number;
   reference_id?: string; // Invoice code, Purchase code
   description?: string;

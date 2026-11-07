@@ -1,10 +1,3 @@
-// ====================================================================
-// DIMKHATA (ডিমখাতা) — Client-Side Zero-Cost Image Compressor (WebP)
-// Compresses 5-10MB smartphone photos to <60KB WebP before saving
-// ====================================================================
-
-import imageCompression from 'browser-image-compression';
-
 export interface CompressedImageResult {
   file: File;
   dataUrl: string;
@@ -13,12 +6,20 @@ export interface CompressedImageResult {
   compressionRatio: string;
 }
 
-export async function compressKycImage(file: File): Promise<CompressedImageResult> {
-  const originalSizeKb = Math.round(file.size / 1024);
+function readDataUrl(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
-  // If already small (< 70KB) and is image, read dataUrl directly
+export async function compressKycImage(file: File): Promise<CompressedImageResult> {
+  const originalSizeKb = Math.max(1, Math.round(file.size / 1024));
+
   if (file.size <= 70 * 1024) {
-    const dataUrl = await imageCompression.getDataUrlFromFile(file);
+    const dataUrl = await readDataUrl(file);
     return {
       file,
       dataUrl,
@@ -28,33 +29,44 @@ export async function compressKycImage(file: File): Promise<CompressedImageResul
     };
   }
 
-  const options = {
-    maxSizeMB: 0.07, // 70 KB target
-    maxWidthOrHeight: 1200, // Crisp for NID numbers & passport text
-    useWebWorker: true,
-    fileType: 'image/webp',
-    initialQuality: 0.75,
-  };
-
   try {
-    const compressedBlob = await imageCompression(file, options);
-    const compressedFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+    const srcUrl = await readDataUrl(file);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = srcUrl;
+    });
+
+    const maxDim = 1100;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const width = Math.max(1, Math.round(img.width * scale));
+    const height = Math.max(1, Math.round(img.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const dataUrl = canvas.toDataURL('image/webp', 0.72);
+    const approxBytes = Math.round((dataUrl.length * 3) / 4);
+    const compressedSizeKb = Math.max(1, Math.round(approxBytes / 1024));
+    const ratio = (originalSizeKb / compressedSizeKb).toFixed(1) + 'x';
+    const webpFile = new File([file], file.name.replace(/\.[^/.]+$/, '') + '.webp', {
       type: 'image/webp',
     });
-    const compressedSizeKb = Math.round(compressedFile.size / 1024);
-    const dataUrl = await imageCompression.getDataUrlFromFile(compressedFile);
-    const ratio = (originalSizeKb / Math.max(1, compressedSizeKb)).toFixed(1) + 'x';
 
     return {
-      file: compressedFile,
+      file: webpFile,
       dataUrl,
       originalSizeKb,
       compressedSizeKb,
       compressionRatio: ratio,
     };
-  } catch (err) {
-    console.warn('Image compression fallback:', err);
-    const dataUrl = await imageCompression.getDataUrlFromFile(file);
+  } catch {
+    const dataUrl = await readDataUrl(file);
     return {
       file,
       dataUrl,
