@@ -13,6 +13,22 @@ export interface SupabaseConfig {
   key: string;
 }
 
+function getEnvUrl(): string {
+  const directUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+  if (directUrl) return directUrl;
+  const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID || '').trim();
+  if (projectId) return `https://${projectId}.supabase.co`;
+  return '';
+}
+
+function getEnvKey(): string {
+  return (
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    ''
+  ).trim();
+}
+
 export function getStoredSupabaseConfig(): SupabaseConfig {
   if (typeof window !== 'undefined') {
     try {
@@ -31,16 +47,9 @@ export function getStoredSupabaseConfig(): SupabaseConfig {
     }
   }
 
-  const envUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-  const envKey = (
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    ''
-  ).trim();
-
   return {
-    url: envUrl,
-    key: envKey,
+    url: getEnvUrl(),
+    key: getEnvKey(),
   };
 }
 
@@ -87,16 +96,9 @@ export function clearStoredSupabaseConfig(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(SUPABASE_CONFIG_STORAGE_KEY);
   }
-  const envUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-  const envKey = (
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    ''
-  ).trim();
-
   activeConfig = {
-    url: envUrl,
-    key: envKey,
+    url: getEnvUrl(),
+    key: getEnvKey(),
   };
 
   supabase = isConfigured()

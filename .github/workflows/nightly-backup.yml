@@ -9,14 +9,19 @@ jobs:
   keep-alive:
     runs-on: ubuntu-latest
     env:
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || secrets.SUPABASE_URL }}
+      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID || secrets.SUPABASE_PROJECT_ID }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_PUBLISHABLE_KEY || secrets.SUPABASE_KEY }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
     steps:
       - name: Ping Supabase KV Store
         run: |
+          URL="${VITE_SUPABASE_URL}"
+          if [ -z "$URL" ] && [ -n "$VITE_SUPABASE_PROJECT_ID" ]; then
+            URL="https://${VITE_SUPABASE_PROJECT_ID}.supabase.co"
+          fi
           SB_KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-$VITE_SUPABASE_ANON_KEY}"
-          if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$SB_KEY" ]; then
+          if [ -n "$URL" ] && [ -n "$SB_KEY" ]; then
             curl -s -f -H "apikey: $SB_KEY" \
-              "$VITE_SUPABASE_URL/rest/v1/dimkhata_kv_store?select=key&limit=1" > /dev/null || true
+              "$URL/rest/v1/dimkhata_kv_store?select=key&limit=1" > /dev/null || true
           fi
