@@ -1,5 +1,5 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Wastage Loss & Courtesy Eggs (ElevenLabs Design)
+// DIMKHATA (ডিমখাতা) — Wastage Loss & Courtesy Eggs (Apple Design System)
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -7,6 +7,7 @@ import { AlertTriangle, Gift, CheckCircle2, History, ArrowRightLeft } from 'luci
 import { EggCategory, InventoryStock, Branch, StockAdjustment } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { AppleSectionHeader, AppleStatCard, AppleOptionChips } from '../components/ui/AppleUI';
 
 interface WastageCourtesyViewProps {
   categories: EggCategory[];
@@ -105,102 +106,53 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div>
-        <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
-          ড্যামেজ, পচা, সৌজন্য ডিম ও শাখা স্থানান্তর (Req 3, 7, 8)
-        </h2>
-        <p className="text-xs text-[#777169] mt-0.5">
-          ভাঙা বা নষ্ট ডিম ও স্থানীয় সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি সরাসরি লাভ-লোকসানে সমন্বয় এবং শাখাভিত্তিক স্টক ট্রান্সফার
-        </p>
-      </div>
+      <AppleSectionHeader
+        eyebrow="স্টক সমন্বয় ও লস ট্র্যাকিং"
+        title="ড্যামেজ, পচা, সৌজন্য ডিম ও শাখা স্থানান্তর"
+        subtitle="ভাঙা বা নষ্ট ডিম ও সৌজন্যে দেওয়া ডিমের আর্থিক ক্ষতি স্বয়ংক্রিয়ভাবে লাভ-লোকসানে যোগ হবে"
+      />
 
       {/* 2 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="card-editorial flex items-center justify-between">
-          <div>
-            <div className="text-[13px] font-medium text-[#777169]">চলতি মাসের মোট ভাঙা/পচা ক্ষতি</div>
-            <div className="font-serif font-light text-3xl text-[#0c0a09] mt-1">
-              {formatTaka(monthlyWastage)}
-            </div>
-            <div className="text-[11px] text-[#777169] mt-0.5">
-              Wastage Loss Expense হিসাবে বাদ পড়বে
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-[#f0efed] text-[#777169] flex items-center justify-center text-lg">
-            💔
-          </div>
-        </div>
+        <AppleStatCard
+          label="চলতি মাসের মোট ভাঙা/পচা ক্ষতি"
+          value={formatTaka(monthlyWastage)}
+          subtext="Wastage Loss Expense হিসাবে লাভ-লোকসানে বাদ পড়বে"
+          icon={<span>💔</span>}
+        />
 
-        <div className="card-editorial flex items-center justify-between">
-          <div>
-            <div className="text-[13px] font-medium text-[#777169]">চলতি মাসের মোট সৌজন্য ডিমের খরচ</div>
-            <div className="font-serif font-light text-3xl text-[#0c0a09] mt-1">
-              {formatTaka(monthlyCourtesy)}
-            </div>
-            <div className="text-[11px] text-[#777169] mt-0.5">
-              Courtesy Promo Expense হিসাবে বাদ পড়বে
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-[#f0efed] text-[#777169] flex items-center justify-center text-lg">
-            🎁
-          </div>
-        </div>
+        <AppleStatCard
+          label="চলতি মাসের মোট সৌজন্য ডিমের খরচ"
+          value={formatTaka(monthlyCourtesy)}
+          subtext="Courtesy Promo Expense হিসাবে লাভ-লোকসানে বাদ পড়বে"
+          icon={<span>🎁</span>}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form (2 Cols) */}
-        <div className="lg:col-span-2 card-editorial space-y-5">
-          {/* Tab Selector (Pill Geometry) */}
-          <div className="flex flex-wrap bg-[#f0efed] p-1 rounded-full text-xs font-medium gap-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab('WASTAGE')}
-              className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-1.5 transition ${
-                activeTab === 'WASTAGE'
-                  ? 'bg-[#292524] text-white shadow-xs'
-                  : 'text-[#4e4e4e] hover:text-[#0c0a09]'
-              }`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>ভাঙা ও পচা (Wastage)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('COURTESY')}
-              className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-1.5 transition ${
-                activeTab === 'COURTESY'
-                  ? 'bg-[#292524] text-white shadow-xs'
-                  : 'text-[#4e4e4e] hover:text-[#0c0a09]'
-              }`}
-            >
-              <Gift className="w-3.5 h-3.5" />
-              <span>সৌজন্য গিফট (Courtesy)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('TRANSFER')}
-              className={`flex-1 py-2 px-3 rounded-full flex items-center justify-center gap-1.5 transition ${
-                activeTab === 'TRANSFER'
-                  ? 'bg-[#292524] text-white shadow-xs'
-                  : 'text-[#4e4e4e] hover:text-[#0c0a09]'
-              }`}
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span>শাখা স্থানান্তর (Transfer)</span>
-            </button>
-          </div>
+        <div className="lg:col-span-2 card-apple p-5 sm:p-6 space-y-5">
+          {/* Option Chips */}
+          <AppleOptionChips
+            options={[
+              { value: 'WASTAGE', label: 'ভাঙা ও পচা (Wastage)', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+              { value: 'COURTESY', label: 'সৌজন্য গিফট (Courtesy)', icon: <Gift className="w-3.5 h-3.5" /> },
+              { value: 'TRANSFER', label: 'শাখা স্থানান্তর (Transfer)', icon: <ArrowRightLeft className="w-3.5 h-3.5" /> },
+            ]}
+            value={activeTab}
+            onChange={setActiveTab}
+          />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   {activeTab === 'TRANSFER' ? 'উৎস শাখা (যেখান থেকে যাবে)' : 'শাখা / গোডাউন'}
                 </label>
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -211,13 +163,13 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   ডিমের ক্যাটাগরি
                 </label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -228,29 +180,29 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   তারিখ
                 </label>
                 <input
                   type="date"
                   value={adjustmentDate}
                   onChange={(e) => setAdjustmentDate(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 />
               </div>
             </div>
 
             {activeTab === 'WASTAGE' ? (
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  ড্যামেজের ধরন
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1.5">
+                  ড্যামেজের ধরন নির্বাচন করুন
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label
-                    className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer text-xs font-medium transition ${
+                    className={`p-3.5 rounded-[12px] border flex items-center gap-2.5 cursor-pointer text-[13px] font-semibold transition ${
                       wastageType === 'WASTAGE_BROKEN'
-                        ? 'bg-[#fafafa] border-[#0c0a09] text-[#0c0a09]'
-                        : 'border-[#e7e5e4] text-[#4e4e4e]'
+                        ? 'bg-[#0066cc]/8 border-[#0066cc] text-[#0066cc]'
+                        : 'border-[#d2d2d7] bg-white text-[#1d1d1f]'
                     }`}
                   >
                     <input
@@ -258,16 +210,16 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                       name="wastageType"
                       checked={wastageType === 'WASTAGE_BROKEN'}
                       onChange={() => setWastageType('WASTAGE_BROKEN')}
-                      className="text-[#0c0a09] focus:ring-[#0c0a09]"
+                      className="text-[#0066cc] focus:ring-[#0071e3]"
                     />
                     <span>পরিবহনে বা নামানোর সময় ভাঙা</span>
                   </label>
 
                   <label
-                    className={`p-3 rounded-xl border flex items-center gap-2 cursor-pointer text-xs font-medium transition ${
+                    className={`p-3.5 rounded-[12px] border flex items-center gap-2.5 cursor-pointer text-[13px] font-semibold transition ${
                       wastageType === 'WASTAGE_ROTTEN'
-                        ? 'bg-[#fafafa] border-[#0c0a09] text-[#0c0a09]'
-                        : 'border-[#e7e5e4] text-[#4e4e4e]'
+                        ? 'bg-[#0066cc]/8 border-[#0066cc] text-[#0066cc]'
+                        : 'border-[#d2d2d7] bg-white text-[#1d1d1f]'
                     }`}
                   >
                     <input
@@ -275,7 +227,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                       name="wastageType"
                       checked={wastageType === 'WASTAGE_ROTTEN'}
                       onChange={() => setWastageType('WASTAGE_ROTTEN')}
-                      className="text-[#0c0a09] focus:ring-[#0c0a09]"
+                      className="text-[#0066cc] focus:ring-[#0071e3]"
                     />
                     <span>গরমে নষ্ট / পচা ডিম (Expiry)</span>
                   </label>
@@ -283,27 +235,27 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
               </div>
             ) : activeTab === 'COURTESY' ? (
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   কাকে সৌজন্যে দেওয়া হলো (প্রাপক / কারণ)
                 </label>
                 <input
                   type="text"
-                  placeholder="উদা: স্থানীয় মেহমান আপ্যায়ন / প্রশাসন / খামারী শুভেচ্ছা"
+                  placeholder="উদা: স্থানীয় মেহমান আপ্যায়ন / খামারী শুভেচ্ছা"
                   value={recipientOrReason}
                   onChange={(e) => setRecipientOrReason(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 />
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                  <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                     গন্তব্য শাখা (যেখানে জমা হবে)
                   </label>
                   <select
                     value={targetBranchId}
                     onChange={(e) => setTargetBranchId(e.target.value)}
-                    className="input-editorial w-full text-xs"
+                    className="input-apple w-full text-[14px]"
                   >
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -313,7 +265,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
+                  <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                     ট্রান্সফার নোট / বাহন
                   </label>
                   <input
@@ -321,37 +273,37 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                     placeholder="উদা: নিজস্ব ভ্যানে যাত্রাবাড়ী গোডাউনে প্রেরণ"
                     value={recipientOrReason}
                     onChange={(e) => setRecipientOrReason(e.target.value)}
-                    className="input-editorial w-full text-xs"
+                    className="input-apple w-full text-[14px]"
                   />
                 </div>
               </div>
             )}
 
             {/* Quantity */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#fafafa] p-4 rounded-xl border border-[#e7e5e4]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#f5f5f7] p-4 rounded-[12px] border border-[#e0e0e0]">
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   পরিমাণ (পিস) | শাখায় মজুদ: {toBengaliNumber(currentStock?.qty_pcs || 0)} পিস
                 </label>
                 <input
                   type="number"
                   value={qtyPcs}
                   onChange={(e) => setQtyPcs(Number(e.target.value) || 0)}
-                  className="input-editorial w-full text-sm font-semibold"
+                  className="input-apple w-full text-[15px] font-semibold"
                 />
-                <div className="text-[11px] text-[#777169] mt-1">
+                <div className="text-[11px] text-[#7a7a7a] mt-1">
                   মোট: {toBengaliNumber(qtyPcs)} পিস ({toBengaliNumber(Math.floor(qtyPcs / crateSize))} খাঁচি {toBengaliNumber(qtyPcs % crateSize)} পিস)
                 </div>
               </div>
 
               <div>
-                <div className="text-xs text-[#777169]">
+                <div className="text-[12px] text-[#7a7a7a]">
                   {activeTab === 'TRANSFER' ? 'স্থানান্তরিত স্টকের ল্যান্ডেড মূল্য' : 'আর্থিক ক্ষতির মূল্য (স্বয়ংক্রিয় ল্যান্ডেড দর)'}
                 </div>
-                <div className="font-serif font-light text-2xl text-[#0c0a09] mt-1">
+                <div className="font-semibold text-[24px] text-[#1d1d1f] mt-1">
                   {formatTaka(totalCostValue)}
                 </div>
-                <div className="text-[10px] text-[#777169] mt-1">
+                <div className="text-[11px] text-[#0066cc] font-semibold mt-0.5">
                   (প্রতি পিসের বর্তমান কেনা খরচ: ৳{toBengaliNumber(currentUnitLandedCost.toFixed(2))})
                 </div>
               </div>
@@ -359,7 +311,7 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
 
             <button
               type="submit"
-              className="btn-primary w-full h-11"
+              className="btn-primary w-full py-3 text-[15px]"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>
@@ -372,15 +324,15 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
         </div>
 
         {/* Adjustments History */}
-        <div className="card-editorial p-4 space-y-3">
-          <h4 className="text-xs font-medium text-[#777169] uppercase tracking-wider flex items-center gap-1.5">
-            <History className="w-3.5 h-3.5" />
+        <div className="card-apple p-4 sm:p-5 space-y-3">
+          <h4 className="text-[12px] font-semibold text-[#7a7a7a] uppercase tracking-wider flex items-center gap-1.5">
+            <History className="w-3.5 h-3.5 text-[#0066cc]" />
             <span>সাম্প্রতিক রেকর্ডসমূহ</span>
           </h4>
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {adjustments.length === 0 ? (
-              <div className="text-xs text-[#a8a29e] text-center py-6">
+              <div className="text-xs text-[#7a7a7a] text-center py-6">
                 কোনো রেকর্ড নেই
               </div>
             ) : (
@@ -391,20 +343,20 @@ export const WastageCourtesyView: React.FC<WastageCourtesyViewProps> = ({
                 return (
                   <div
                     key={a.id}
-                    className="p-3 bg-[#fafafa] rounded-lg border border-[#e7e5e4] text-xs flex justify-between items-center"
+                    className="p-3 bg-[#f5f5f7] rounded-[12px] border border-[#e0e0e0] text-xs flex justify-between items-center"
                   >
                     <div>
-                      <div className="font-medium text-[#0c0a09] flex items-center gap-1.5">
-                        <span>{isWastage ? 'ভাঙা/পচা' : isTransfer ? 'শাখা স্থানান্তর' : 'সৌজন্য'}</span>
-                        <span className="text-[#a8a29e]">•</span>
+                      <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                        <span className="text-[#0066cc]">{isWastage ? 'ভাঙা/পচা' : isTransfer ? 'শাখা স্থানান্তর' : 'সৌজন্য'}</span>
+                        <span className="text-[#7a7a7a]">•</span>
                         <span>{cat?.name_bn}</span>
                       </div>
-                      <div className="text-[11px] text-[#777169] mt-0.5">
+                      <div className="text-[11px] text-[#7a7a7a] mt-0.5">
                         {toBengaliNumber(a.adjustment_date)} | {toBengaliNumber(a.qty_pcs)} পিস
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium text-[#0c0a09]">{formatTaka(a.total_cost_value)}</div>
+                      <div className="font-semibold text-[#1d1d1f]">{formatTaka(a.total_cost_value)}</div>
                     </div>
                   </div>
                 );

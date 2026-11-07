@@ -1,5 +1,5 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Daily Market Rates Modal (ElevenLabs Design)
+// DIMKHATA (ডিমখাতা) — Daily Market Rates Modal (Apple Design System)
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -71,106 +71,107 @@ export const DailyRateModal: React.FC<DailyRateModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-[#e7e5e4] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4">
+      <div className="bg-white rounded-t-[20px] sm:rounded-[18px] max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-[#e0e0e0]">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#fafafa] border-b border-[#e7e5e4] flex items-center justify-between">
+        <div className="px-5 py-4 bg-[#f5f5f7] border-b border-[#e0e0e0] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#f0efed] border border-[#e7e5e4] flex items-center justify-center text-sm">
-              <Sparkles className="w-4 h-4 text-[#292524]" />
+            <div className="w-9 h-9 rounded-full bg-[#0066cc]/10 text-[#0066cc] flex items-center justify-center">
+              <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif font-light text-2xl text-[#0c0a09] leading-tight">
+              <h3 className="font-semibold text-[20px] text-[#1d1d1f] leading-tight">
                 আজকের বাজার দর আপডেট ({toBengaliNumber(todayStr)})
               </h3>
-              <p className="text-xs text-[#777169]">
+              <p className="text-[12px] text-[#7a7a7a]">
                 ৫টি ক্যাটাগরির দৈনিক কেনা, পাইকারি ও খুচরা দর নির্ধারণ করুন
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-[#f0efed] transition"
+            className="btn-icon-circle text-[#1d1d1f]"
+            aria-label="বন্ধ করুন"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-4 divide-y divide-[#f0efed]">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 divide-y divide-[#e0e0e0]">
           {categories.map((cat) => {
             const current = rates[cat.id] || { buying: 0, wholesale: 0, retail: 0 };
             return (
               <div key={cat.id} className="pt-4 first:pt-0 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-serif font-light text-xl text-[#0c0a09]">
+                    <span className="font-semibold text-[18px] text-[#1d1d1f]">
                       {cat.name_bn}
                     </span>
-                    <span className="text-xs text-[#777169]">({cat.name_en})</span>
+                    <span className="text-[12px] text-[#7a7a7a]">({cat.name_en})</span>
                   </div>
-                  <span className="badge-pill text-[10px] py-0 px-2">
+                  <span className="badge-blue text-[10px] py-0 px-2">
                     ১ খাঁচি = {toBengaliNumber(cat.pcs_per_crate)} পিস
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {/* Buying Rate */}
-                  <div className="bg-[#fafafa] p-3 rounded-xl border border-[#e7e5e4]">
-                    <label className="block text-[11px] font-medium text-[#777169] mb-1">
+                  <div className="bg-[#f5f5f7] p-3 rounded-[12px] border border-[#e0e0e0]">
+                    <label className="block text-[11px] font-semibold text-[#4e4e4e] mb-1">
                       কেনা দর (পিস)
                     </label>
                     <div className="relative">
-                      <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
+                      <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
                       <input
                         type="number"
                         step="0.05"
                         value={current.buying}
                         onChange={(e) => handleRateChange(cat.id, 'buying', e.target.value)}
-                        className="input-editorial w-full pl-6 text-sm font-semibold"
+                        className="input-apple w-full pl-6 text-[14px] font-semibold"
                       />
                     </div>
-                    <div className="mt-1 text-[10px] text-[#777169]">
+                    <div className="mt-1 text-[10px] text-[#7a7a7a]">
                       ১০০ পিস: ৳{toBengaliNumber(Math.round(current.buying * 100))}
                     </div>
                   </div>
 
                   {/* Wholesale Rate */}
-                  <div className="bg-[#fafafa] p-3 rounded-xl border border-[#e7e5e4]">
-                    <label className="block text-[11px] font-medium text-[#0c0a09] mb-1">
+                  <div className="bg-[#0066cc]/5 p-3 rounded-[12px] border border-[#0066cc]/30">
+                    <label className="block text-[11px] font-semibold text-[#0066cc] mb-1">
                       পাইকারি দর (পিস)
                     </label>
                     <div className="relative">
-                      <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
+                      <span className="absolute left-2.5 top-3 text-xs text-[#0066cc]">৳</span>
                       <input
                         type="number"
                         step="0.05"
                         value={current.wholesale}
                         onChange={(e) => handleRateChange(cat.id, 'wholesale', e.target.value)}
-                        className="input-editorial w-full pl-6 text-sm font-semibold"
+                        className="input-apple w-full pl-6 text-[14px] font-semibold"
                       />
                     </div>
-                    <div className="mt-1 text-[10px] text-[#777169]">
+                    <div className="mt-1 text-[10px] text-[#4e4e4e]">
                       ১ খাঁচি: ৳{toBengaliNumber(Math.round(current.wholesale * cat.pcs_per_crate))}
                     </div>
                   </div>
 
                   {/* Retail Rate */}
-                  <div className="bg-[#fafafa] p-3 rounded-xl border border-[#e7e5e4]">
-                    <label className="block text-[11px] font-medium text-[#777169] mb-1">
+                  <div className="bg-[#f5f5f7] p-3 rounded-[12px] border border-[#e0e0e0]">
+                    <label className="block text-[11px] font-semibold text-[#4e4e4e] mb-1">
                       খুচরা দর (পিস)
                     </label>
                     <div className="relative">
-                      <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
+                      <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
                       <input
                         type="number"
                         step="0.05"
                         value={current.retail}
                         onChange={(e) => handleRateChange(cat.id, 'retail', e.target.value)}
-                        className="input-editorial w-full pl-6 text-sm font-semibold"
+                        className="input-apple w-full pl-6 text-[14px] font-semibold"
                       />
                     </div>
-                    <div className="mt-1 text-[10px] text-[#777169]">
+                    <div className="mt-1 text-[10px] text-[#7a7a7a]">
                       ১ হালি: ৳{toBengaliNumber((current.retail * 4).toFixed(1))}
                     </div>
                   </div>
@@ -181,18 +182,18 @@ export const DailyRateModal: React.FC<DailyRateModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-[#fafafa] border-t border-[#e7e5e4] flex items-center justify-end gap-2.5">
+        <div className="p-4 bg-[#f5f5f7] border-t border-[#e0e0e0] flex items-center justify-end gap-2.5">
           <button
             onClick={onClose}
-            className="btn-outline text-xs h-9 px-4"
+            className="btn-outline text-[13px] px-4"
           >
             বাতিল
           </button>
           <button
             onClick={handleSave}
-            className="btn-primary text-xs h-9 px-5"
+            className="btn-primary text-[13px] px-5"
           >
-            <Save className="w-3.5 h-3.5" />
+            <Save className="w-4 h-4" />
             <span>বাজার দর সংরক্ষণ করুন</span>
           </button>
         </div>

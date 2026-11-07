@@ -127,3 +127,21 @@ VALUES
     ('00000000-0000-0000-0000-000000000034', 'ইসলামী ব্যাংক বাংলাদেশ (IBBL)', 'BANK', '2050-12345678', 120000.00, FALSE, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
+-- 5. Cloud Sync Table Policy for GitHub Pages (Publishable Key / Anon Access)
+ALTER TABLE public.dimkhata_kv_store ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow publishable key sync on dimkhata_kv_store" ON public.dimkhata_kv_store;
+CREATE POLICY "Allow publishable key sync on dimkhata_kv_store"
+    ON public.dimkhata_kv_store
+    FOR ALL
+    TO anon, authenticated
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow keep-alive ping on company_settings" ON public.company_settings;
+CREATE POLICY "Allow keep-alive ping on company_settings"
+    ON public.company_settings
+    FOR SELECT
+    TO anon, authenticated
+    USING (true);
+
+

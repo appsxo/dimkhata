@@ -101,6 +101,11 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    // Initial cloud sync + real-time subscription with Supabase
+    DimKhataStore.syncWithSupabase();
+  }, []);
+
+  useEffect(() => {
     window.addEventListener('dimkhata_storage_change', reloadData);
     return () => window.removeEventListener('dimkhata_storage_change', reloadData);
   }, [selectedBranchId]);
@@ -147,8 +152,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] text-[#0c0a09] flex flex-col font-sans">
-      {/* Top Navbar */}
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] flex flex-col font-sans">
+      {/* Apple Two-Row Top Navbar */}
       <Navbar
         branches={branches}
         selectedBranchId={selectedBranchId}
@@ -157,10 +162,12 @@ export const App: React.FC = () => {
         onToggleUserRole={handleToggleUserRole}
         onOpenRatesModal={() => setIsDailyRateModalOpen(true)}
         onRefresh={reloadData}
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
       />
 
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left Sidebar */}
+        {/* Desktop Rail & Mobile Sticky Dock */}
         <Sidebar
           currentTab={currentTab}
           onSelectTab={setCurrentTab}
@@ -168,7 +175,7 @@ export const App: React.FC = () => {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-3 sm:p-6 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-6 pb-24 md:pb-10 overflow-y-auto max-w-7xl w-full mx-auto">
           {currentTab === 'dashboard' && (
             <DashboardView
               categories={categories}

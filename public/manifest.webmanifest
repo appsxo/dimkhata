@@ -1,15 +1,16 @@
 {
-  "name": "DimKhata | শরিফ এন্ড ইমান এন্টারপ্রাইজ",
+  "name": "DimKhata — শরিফ এন্ড ইমান এন্টারপ্রাইজ",
   "short_name": "DimKhata",
-  "description": "ডিমের পাইকারি ও খুচরা হিসাব সফটওয়্যার (Enterprise Version)",
+  "description": "ডিমের পাইকারি ও খুচরা ব্যবসার কমপ্লিট ডিজিটাল হিসাব ও ইনভেন্টরি সফটওয়্যার",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f5f5f5",
-  "theme_color": "#292524",
+  "background_color": "#f5f5f7",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥚</text></svg>",
-      "sizes": "192x192 512x512",
+      "sizes": "192x192",
       "type": "image/svg+xml"
     }
   ]

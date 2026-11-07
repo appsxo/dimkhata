@@ -1,12 +1,13 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Payroll & Employee HR (ElevenLabs Design)
+// DIMKHATA (ডিমখাতা) — Payroll & Employee HR (Apple Design System)
 // ====================================================================
 
 import React, { useState } from 'react';
-import { Briefcase, Plus, DollarSign, Calendar, Printer } from 'lucide-react';
+import { Plus, DollarSign, Calendar, Printer } from 'lucide-react';
 import { Employee, SalaryAdvance, PayrollRecord, FinancialAccount, Branch } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { AppleSectionHeader, AppleModal } from '../components/ui/AppleUI';
 
 interface PayrollHrViewProps {
   employees: Employee[];
@@ -22,7 +23,6 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
   advances,
   payrolls,
   accounts,
-  branches,
   onRefresh,
 }) => {
   const currentMonthStr = new Date().toISOString().slice(0, 7);
@@ -130,34 +130,29 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
-            কর্মচারীদের বেতন ও অ্যাডভান্স (Payroll Management)
-          </h2>
-          <p className="text-xs text-[#777169] mt-0.5">
-            কর্মচারী আইডি (SE-EMP), মাসিক বেতন, অগ্রিম কর্তন ও বেতন রসিদ প্রিন্ট
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsAdvanceOpen(true)}
-            className="btn-outline text-xs h-9 px-4"
-          >
-            <DollarSign className="w-3.5 h-3.5 text-[#777169]" />
-            <span>অগ্রিম বেতন (Advance)</span>
-          </button>
-          <button
-            onClick={() => setIsAddEmpOpen(true)}
-            className="btn-primary text-xs h-9 px-4"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>নতুন কর্মচারী নিয়োগ</span>
-          </button>
-        </div>
-      </div>
+      <AppleSectionHeader
+        eyebrow="কর্মচারী ও এইচআর ব্যবস্থাপনা"
+        title="কর্মচারীদের বেতন ও অ্যাডভান্স (Payroll)"
+        subtitle="কর্মচারী আইডি (SE-EMP), মাসিক বেতন, অগ্রিম কর্তন ও বেতন রসিদ প্রিন্ট"
+        actions={
+          <>
+            <button
+              onClick={() => setIsAdvanceOpen(true)}
+              className="btn-outline text-[13px] px-4"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>অগ্রিম বেতন (Advance)</span>
+            </button>
+            <button
+              onClick={() => setIsAddEmpOpen(true)}
+              className="btn-primary text-[13px] px-4"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ নতুন কর্মচারী নিয়োগ</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Employees Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -173,18 +168,18 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
           return (
             <div
               key={emp.id}
-              className="card-editorial flex flex-col justify-between space-y-4"
+              className="card-apple p-5 flex flex-col justify-between space-y-4"
             >
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="badge-pill text-[10px] py-0 px-2">
+                    <span className="badge-blue text-[11px] py-0 px-2">
                       {emp.employee_code}
                     </span>
-                    <h3 className="font-serif font-light text-xl text-[#0c0a09] mt-1.5">
+                    <h3 className="font-semibold text-[19px] text-[#1d1d1f] mt-1.5">
                       {emp.full_name}
                     </h3>
-                    <p className="text-xs text-[#777169]">
+                    <p className="text-[12px] text-[#7a7a7a]">
                       {emp.designation}
                     </p>
                   </div>
@@ -193,25 +188,25 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                   </span>
                 </div>
 
-                <div className="mt-3 space-y-1.5 text-xs text-[#4e4e4e]">
+                <div className="mt-3 space-y-1.5 text-[13px] text-[#4e4e4e]">
                   <div className="flex justify-between">
-                    <span className="text-[#777169]">মোবাইল:</span>
+                    <span className="text-[#7a7a7a]">মোবাইল:</span>
                     <span>{toBengaliNumber(emp.phone)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#777169]">নির্ধারিত মূল বেতন:</span>
-                    <span className="font-medium text-[#0c0a09]">{formatTaka(emp.base_salary)}</span>
+                    <span className="text-[#7a7a7a]">নির্ধারিত মূল বেতন:</span>
+                    <span className="font-semibold text-[#1d1d1f]">{formatTaka(emp.base_salary)}</span>
                   </div>
-                  <div className="flex justify-between bg-[#fafafa] p-2 rounded-lg border border-[#e7e5e4] text-[#0c0a09]">
+                  <div className="flex justify-between bg-[#f5f5f7] p-2.5 rounded-[10px] border border-[#e0e0e0] text-[#1d1d1f]">
                     <span>চলতি মাসের অগ্রিম:</span>
-                    <span className="font-medium">- {formatTaka(totalAdvancesTaken)}</span>
+                    <span className="font-semibold text-[#d92916]">- {formatTaka(totalAdvancesTaken)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#f0efed]">
+              <div className="pt-3 border-t border-[#e0e0e0]">
                 {isPayrollPaid ? (
-                  <div className="py-2 bg-[#fafafa] text-[#16a34a] text-xs font-medium rounded-full text-center border border-[#e7e5e4]">
+                  <div className="py-2 bg-[#f5f5f7] text-[#15803d] text-[12px] font-semibold rounded-[980px] text-center border border-[#e0e0e0]">
                     ✓ চলতি মাসের বেতন পরিশোধিত
                   </div>
                 ) : (
@@ -220,9 +215,9 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                       setSelectedEmpForPayroll(emp);
                       setIsPayrollModalOpen(true);
                     }}
-                    className="btn-primary w-full text-xs h-9"
+                    className="btn-primary w-full text-[13px] min-h-[42px]"
                   >
-                    <Calendar className="w-3.5 h-3.5" />
+                    <Calendar className="w-4 h-4" />
                     <span>মাসিক পে-রোল প্রস্তুত ও পরিশোধ</span>
                   </button>
                 )}
@@ -233,29 +228,29 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
       </div>
 
       {/* Recent Salary Slips */}
-      <div className="card-editorial space-y-4">
-        <h3 className="font-serif font-light text-2xl text-[#0c0a09] flex items-center gap-2">
-          <Printer className="w-4 h-4 text-[#777169]" />
+      <div className="card-apple p-5 sm:p-6 space-y-4">
+        <h3 className="font-semibold text-[20px] text-[#1d1d1f] flex items-center gap-2">
+          <Printer className="w-4 h-4 text-[#0066cc]" />
           <span>পরিশোধিত বেতন রসিদসমূহ (Salary Slips)</span>
         </h3>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[#e7e5e4] text-[#777169] text-left bg-[#fafafa]">
-                <th className="py-2.5 px-3">রসিদ কোড</th>
-                <th className="py-2.5 px-3">কর্মচারীর নাম</th>
-                <th className="py-2.5 px-3">বেতন মাস</th>
-                <th className="py-2.5 px-3">মূল বেতন</th>
-                <th className="py-2.5 px-3">অগ্রিম কর্তন</th>
-                <th className="py-2.5 px-3 text-right">নীট প্রদেয়</th>
-                <th className="py-2.5 px-3 text-center">রসিদ</th>
+              <tr className="border-b border-[#e0e0e0] text-[#7a7a7a] text-left bg-[#f5f5f7]">
+                <th className="py-2.5 px-3 font-semibold">রসিদ কোড</th>
+                <th className="py-2.5 px-3 font-semibold">কর্মচারীর নাম</th>
+                <th className="py-2.5 px-3 font-semibold">বেতন মাস</th>
+                <th className="py-2.5 px-3 font-semibold">মূল বেতন</th>
+                <th className="py-2.5 px-3 font-semibold">অগ্রিম কর্তন</th>
+                <th className="py-2.5 px-3 font-semibold text-right">নীট প্রদেয়</th>
+                <th className="py-2.5 px-3 font-semibold text-center">রসিদ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#f0efed]">
+            <tbody className="divide-y divide-[#e0e0e0]">
               {payrolls.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-[#a8a29e]">
+                  <td colSpan={7} className="py-8 text-center text-[#7a7a7a]">
                     এখনো কোনো বেতন রসিদ তৈরি হয়নি।
                   </td>
                 </tr>
@@ -263,29 +258,29 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 payrolls.map((p) => {
                   const emp = employees.find((e) => e.id === p.employee_id);
                   return (
-                    <tr key={p.id} className="hover:bg-[#fafafa]">
-                      <td className="py-2.5 px-3 font-mono font-medium text-[#0c0a09]">
+                    <tr key={p.id} className="hover:bg-[#f5f5f7]">
+                      <td className="py-2.5 px-3 font-mono font-semibold text-[#0066cc]">
                         {p.payroll_code}
                       </td>
-                      <td className="py-2.5 px-3 font-medium text-[#0c0a09]">
+                      <td className="py-2.5 px-3 font-semibold text-[#1d1d1f]">
                         {emp?.full_name}
                       </td>
-                      <td className="py-2.5 px-3 text-[#777169] font-mono">
+                      <td className="py-2.5 px-3 text-[#7a7a7a] font-mono">
                         {p.salary_month}
                       </td>
                       <td className="py-2.5 px-3 text-[#4e4e4e]">
                         {formatTaka(p.base_salary)}
                       </td>
-                      <td className="py-2.5 px-3 text-[#777169]">
+                      <td className="py-2.5 px-3 text-[#d92916]">
                         - {formatTaka(p.advances_deducted)}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-medium text-[#0c0a09]">
+                      <td className="py-2.5 px-3 text-right font-semibold text-[#1d1d1f]">
                         {formatTaka(p.net_payable)}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <button
                           onClick={() => setSlipRecord(p)}
-                          className="btn-outline text-[11px] h-7 px-3"
+                          className="btn-outline text-[11px] min-h-[32px] py-1 px-3"
                         >
                           স্লিপ দেখুন
                         </button>
@@ -299,116 +294,254 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
         </div>
       </div>
 
-      {/* SALARY ADVANCE MODAL */}
-      {isAdvanceOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-[#e7e5e4]">
-            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
-              অগ্রিম বেতন (Advance) প্রদান
-            </h3>
-
-            <form onSubmit={handleSaveAdvance} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  কর্মচারী নির্বাচন
-                </label>
-                <select
-                  value={advEmpId}
-                  onChange={(e) => setAdvEmpId(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                >
-                  {employees.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.full_name} ({e.employee_code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  অগ্রিম টাকার পরিমাণ (৳)
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={advAmount}
-                  onChange={(e) => setAdvAmount(Number(e.target.value) || 0)}
-                  className="input-editorial w-full text-sm font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  উৎস একাউন্ট
-                </label>
-                <select
-                  value={advAccountId}
-                  onChange={(e) => setAdvAccountId(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                >
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({formatTaka(a.current_balance)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  কারণ / বিবরণ
-                </label>
-                <input
-                  type="text"
-                  placeholder="উদা: পারিবারিক খরচ / চিকিৎসা"
-                  value={advPurpose}
-                  onChange={(e) => setAdvPurpose(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAdvanceOpen(false)}
-                  className="btn-outline text-xs h-9 px-4"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary text-xs h-9 px-5"
-                >
-                  অগ্রিম প্রদান করুন
-                </button>
-              </div>
-            </form>
+      {/* ADD NEW EMPLOYEE MODAL */}
+      <AppleModal
+        isOpen={isAddEmpOpen}
+        onClose={() => setIsAddEmpOpen(false)}
+        title="নতুন কর্মচারী নিয়োগ (SE-EMP)"
+        subtitle="সফটওয়্যার স্বয়ংক্রিয়ভাবে কর্মচারী আইডি (SE-EMP-00X) জেনারেট করবে"
+      >
+        <form onSubmit={handleCreateEmployee} className="space-y-3.5">
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              কর্মচারীর পূর্ণ নাম
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="যেমন: মো: সুমন মিয়া"
+              value={empName}
+              onChange={(e) => setEmpName(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                পদবি (Designation)
+              </label>
+              <input
+                type="text"
+                required
+                value={designation}
+                onChange={(e) => setDesignation(e.target.value)}
+                className="input-apple w-full text-[14px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                মোবাইল নম্বর
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="018xxxxxxxx"
+                value={empPhone}
+                onChange={(e) => setEmpPhone(e.target.value)}
+                className="input-apple w-full text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                মাসিক মূল বেতন (৳)
+              </label>
+              <input
+                type="number"
+                required
+                value={baseSalary}
+                onChange={(e) => setBaseSalary(Number(e.target.value) || 0)}
+                className="input-apple w-full text-[14px] font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                জাতীয় পরিচয়পত্র (NID)
+              </label>
+              <input
+                type="text"
+                placeholder="NID নম্বর"
+                value={nidNumber}
+                onChange={(e) => setNidNumber(e.target.value)}
+                className="input-apple w-full text-[14px] font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsAddEmpOpen(false)}
+              className="btn-outline text-[13px] px-4"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              className="btn-primary text-[13px] px-5"
+            >
+              কর্মচারী নিবন্ধন করুন
+            </button>
+          </div>
+        </form>
+      </AppleModal>
+
+      {/* SALARY ADVANCE MODAL */}
+      <AppleModal
+        isOpen={isAdvanceOpen}
+        onClose={() => setIsAdvanceOpen(false)}
+        title="অগ্রিম বেতন (Advance) প্রদান"
+        maxWidth="max-w-sm"
+      >
+        <form onSubmit={handleSaveAdvance} className="space-y-3.5">
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              কর্মচারী নির্বাচন
+            </label>
+            <select
+              value={advEmpId}
+              onChange={(e) => setAdvEmpId(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            >
+              {employees.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.full_name} ({e.employee_code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              অগ্রিম টাকার পরিমাণ (৳)
+            </label>
+            <input
+              type="number"
+              required
+              value={advAmount}
+              onChange={(e) => setAdvAmount(Number(e.target.value) || 0)}
+              className="input-apple w-full text-[15px] font-semibold"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              উৎস একাউন্ট
+            </label>
+            <select
+              value={advAccountId}
+              onChange={(e) => setAdvAccountId(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            >
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({formatTaka(a.current_balance)})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              কারণ / বিবরণ
+            </label>
+            <input
+              type="text"
+              placeholder="উদা: পারিবারিক খরচ / চিকিৎসা"
+              value={advPurpose}
+              onChange={(e) => setAdvPurpose(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsAdvanceOpen(false)}
+              className="btn-outline text-[13px] px-4"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              className="btn-primary text-[13px] px-5"
+            >
+              অগ্রিম প্রদান করুন
+            </button>
+          </div>
+        </form>
+      </AppleModal>
 
       {/* MONTHLY PAYROLL PROCESS MODAL */}
-      {isPayrollModalOpen && selectedEmpForPayroll && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-[#e7e5e4]">
-            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
-              মাসিক বেতন পে-রোল প্রস্তুত ({toBengaliNumber(currentMonthStr)})
-            </h3>
-            <p className="text-xs text-[#777169]">
-              কর্মচারী: <strong>{selectedEmpForPayroll.full_name}</strong> ({selectedEmpForPayroll.employee_code})
-            </p>
+      <AppleModal
+        isOpen={Boolean(isPayrollModalOpen && selectedEmpForPayroll)}
+        onClose={() => setIsPayrollModalOpen(false)}
+        title={`মাসিক বেতন পে-রোল প্রস্তুত (${toBengaliNumber(currentMonthStr)})`}
+        subtitle={selectedEmpForPayroll ? `কর্মচারী: ${selectedEmpForPayroll.full_name} (${selectedEmpForPayroll.employee_code})` : ''}
+      >
+        {selectedEmpForPayroll && (
+          <form onSubmit={handleProcessPayroll} className="space-y-3.5">
+            <div className="bg-[#f5f5f7] p-3.5 rounded-[12px] border border-[#e0e0e0] space-y-2 text-[13px]">
+              <div className="flex justify-between text-[#4e4e4e]">
+                <span>নির্ধারিত মূল বেতন:</span>
+                <span className="font-semibold text-[#1d1d1f]">{formatTaka(selectedEmpForPayroll.base_salary)}</span>
+              </div>
+              <div className="flex justify-between text-[#d92916]">
+                <span>চলতি মাসের অগ্রিম কর্তন:</span>
+                <span>
+                  - {formatTaka(
+                    advances
+                      .filter(
+                        (a) =>
+                          a.employee_id === selectedEmpForPayroll.id &&
+                          a.advance_date.startsWith(currentMonthStr)
+                      )
+                      .reduce((sum, a) => sum + a.amount, 0)
+                  )}
+                </span>
+              </div>
+            </div>
 
-            <form onSubmit={handleProcessPayroll} className="space-y-3">
-              <div className="bg-[#fafafa] p-3.5 rounded-xl border border-[#e7e5e4] space-y-2 text-xs">
-                <div className="flex justify-between text-[#4e4e4e]">
-                  <span>নির্ধারিত মূল বেতন:</span>
-                  <span className="font-medium text-[#0c0a09]">{formatTaka(selectedEmpForPayroll.base_salary)}</span>
-                </div>
-                <div className="flex justify-between text-[#777169]">
-                  <span>চলতি মাসের অগ্রিম কর্তন:</span>
-                  <span>
-                    - {formatTaka(
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                বোনাস / বকশিশ
+              </label>
+              <input
+                type="number"
+                value={bonus}
+                onChange={(e) => setBonus(Number(e.target.value) || 0)}
+                className="input-apple w-full text-[14px] font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                পেমেন্ট মাধ্যম (একাউন্ট)
+              </label>
+              <select
+                value={payrollAccountId}
+                onChange={(e) => setPayrollAccountId(e.target.value)}
+                className="input-apple w-full text-[14px]"
+              >
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({formatTaka(a.current_balance)})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="p-3.5 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] flex justify-between items-center text-[14px] font-semibold text-[#1d1d1f]">
+              <span>নীট প্রদেয় বেতন:</span>
+              <span className="font-semibold text-[22px] text-[#0066cc]">
+                {formatTaka(
+                  Math.max(
+                    0,
+                    selectedEmpForPayroll.base_salary +
+                      bonus -
                       advances
                         .filter(
                           (a) =>
@@ -416,115 +549,65 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                             a.advance_date.startsWith(currentMonthStr)
                         )
                         .reduce((sum, a) => sum + a.amount, 0)
-                    )}
-                  </span>
-                </div>
-              </div>
+                  )
+                )}
+              </span>
+            </div>
 
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  বোনাস / বকশিশ
-                </label>
-                <input
-                  type="number"
-                  value={bonus}
-                  onChange={(e) => setBonus(Number(e.target.value) || 0)}
-                  className="input-editorial w-full text-xs font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  পেমেন্ট মাধ্যম (একাউন্ট)
-                </label>
-                <select
-                  value={payrollAccountId}
-                  onChange={(e) => setPayrollAccountId(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                >
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({formatTaka(a.current_balance)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl flex justify-between items-center text-sm font-medium text-[#0c0a09]">
-                <span>নীট প্রদেয় বেতন:</span>
-                <span className="font-serif font-light text-2xl">
-                  {formatTaka(
-                    Math.max(
-                      0,
-                      selectedEmpForPayroll.base_salary +
-                        bonus -
-                        advances
-                          .filter(
-                            (a) =>
-                              a.employee_id === selectedEmpForPayroll.id &&
-                              a.advance_date.startsWith(currentMonthStr)
-                          )
-                          .reduce((sum, a) => sum + a.amount, 0)
-                    )
-                  )}
-                </span>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPayrollModalOpen(false)}
-                  className="btn-outline text-xs h-9 px-4"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary text-xs h-9 px-5"
-                >
-                  বেতন পরিশোধ ও রসিদ তৈরি
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsPayrollModalOpen(false)}
+                className="btn-outline text-[13px] px-4"
+              >
+                বাতিল
+              </button>
+              <button
+                type="submit"
+                className="btn-primary text-[13px] px-5"
+              >
+                বেতন পরিশোধ ও রসিদ তৈরি
+              </button>
+            </div>
+          </form>
+        )}
+      </AppleModal>
 
       {/* SALARY SLIP MODAL */}
       {slipRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-4 print-card border border-[#e7e5e4]">
-            <div className="text-center border-b pb-3 border-[#e7e5e4]">
-              <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-3">
+          <div className="bg-white rounded-[18px] max-w-md w-full p-8 space-y-4 print-card border border-[#e0e0e0]">
+            <div className="text-center border-b pb-3 border-[#e0e0e0]">
+              <h3 className="font-semibold text-[22px] text-[#1d1d1f]">
                 শরিফ এন্ড ইমান এন্টারপ্রাইজ
               </h3>
-              <div className="text-xs text-[#777169] uppercase tracking-wider mt-1">
+              <div className="text-[12px] text-[#7a7a7a] uppercase tracking-wider mt-1">
                 মাসিক বেতন রসিদ (Salary Slip)
               </div>
             </div>
 
-            <div className="text-xs space-y-1.5 py-1 text-[#4e4e4e]">
+            <div className="text-[13px] space-y-1.5 py-1 text-[#4e4e4e]">
               <div className="flex justify-between">
-                <span className="text-[#777169]">রসিদ নম্বর:</span>
-                <span className="font-mono text-[#0c0a09]">{slipRecord.payroll_code}</span>
+                <span className="text-[#7a7a7a]">রসিদ নম্বর:</span>
+                <span className="font-mono text-[#0066cc] font-semibold">{slipRecord.payroll_code}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#777169]">কর্মচারী:</span>
-                <span className="font-medium text-[#0c0a09]">
+                <span className="text-[#7a7a7a]">কর্মচারী:</span>
+                <span className="font-semibold text-[#1d1d1f]">
                   {employees.find((e) => e.id === slipRecord.employee_id)?.full_name}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#777169]">বেতন মাস:</span>
-                <span className="font-medium">{slipRecord.salary_month}</span>
+                <span className="text-[#7a7a7a]">বেতন মাস:</span>
+                <span className="font-semibold">{slipRecord.salary_month}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#777169]">পরিশোধের তারিখ:</span>
+                <span className="text-[#7a7a7a]">পরিশোধের তারিখ:</span>
                 <span>{toBengaliNumber(slipRecord.payment_date)}</span>
               </div>
             </div>
 
-            <div className="border-t border-b border-[#e7e5e4] py-3 space-y-1.5 text-xs text-[#4e4e4e]">
+            <div className="border-t border-b border-[#e0e0e0] py-3 space-y-1.5 text-[13px] text-[#4e4e4e]">
               <div className="flex justify-between">
                 <span>মূল বেতন:</span>
                 <span>{formatTaka(slipRecord.base_salary)}</span>
@@ -536,22 +619,22 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
                 </div>
               )}
               {slipRecord.advances_deducted > 0 && (
-                <div className="flex justify-between text-[#777169]">
+                <div className="flex justify-between text-[#d92916]">
                   <span>অগ্রিম কর্তন:</span>
                   <span>- {formatTaka(slipRecord.advances_deducted)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-medium text-[#0c0a09] border-t border-[#e7e5e4] pt-2">
+              <div className="flex justify-between text-[15px] font-semibold text-[#1d1d1f] border-t border-[#e0e0e0] pt-2">
                 <span>নীট প্রাপ্ত বেতন:</span>
-                <span className="font-serif font-light text-2xl">{formatTaka(slipRecord.net_payable)}</span>
+                <span className="font-semibold text-[22px] text-[#0066cc]">{formatTaka(slipRecord.net_payable)}</span>
               </div>
             </div>
 
-            <div className="flex justify-between text-xs text-center text-[#777169] pt-6">
-              <div className="border-t border-[#a8a29e] w-28 mx-auto">
+            <div className="flex justify-between text-xs text-center text-[#7a7a7a] pt-6">
+              <div className="border-t border-[#7a7a7a] w-28 mx-auto pt-1">
                 কর্মচারীর স্বাক্ষর
               </div>
-              <div className="border-t border-[#a8a29e] w-28 mx-auto">
+              <div className="border-t border-[#7a7a7a] w-28 mx-auto pt-1">
                 মালিকের স্বাক্ষর
               </div>
             </div>
@@ -559,15 +642,15 @@ export const PayrollHrView: React.FC<PayrollHrViewProps> = ({
             <div className="flex justify-end gap-2 pt-4 no-print">
               <button
                 onClick={() => setSlipRecord(null)}
-                className="btn-outline text-xs h-9 px-4"
+                className="btn-outline text-[13px] px-4"
               >
                 বন্ধ করুন
               </button>
               <button
                 onClick={() => window.print()}
-                className="btn-primary text-xs h-9 px-5"
+                className="btn-primary text-[13px] px-5"
               >
-                <Printer className="w-3.5 h-3.5" />
+                <Printer className="w-4 h-4" />
                 <span>প্রিন্ট করুন</span>
               </button>
             </div>

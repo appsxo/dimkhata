@@ -1,117 +1,343 @@
 @import "tailwindcss";
 
+:root {
+  /* Apple Design System Color Tokens (DESIGN.md) */
+  --color-primary: #0066cc;
+  --color-primary-focus: #0071e3;
+  --color-primary-on-dark: #2997ff;
+  --color-ink: #1d1d1f;
+  --color-body: #1d1d1f;
+  --color-body-on-dark: #ffffff;
+  --color-body-muted: #cccccc;
+  --color-ink-muted-80: #333333;
+  --color-ink-muted-48: #7a7a7a;
+  --color-divider-soft: #f0f0f0;
+  --color-hairline: #e0e0e0;
+  --color-canvas: #ffffff;
+  --color-canvas-parchment: #f5f5f7;
+  --color-surface-pearl: #fafafc;
+  --color-surface-tile-1: #272729;
+  --color-surface-tile-2: #2a2a2c;
+  --color-surface-tile-3: #252527;
+  --color-surface-black: #000000;
+  --color-surface-chip-translucent: rgba(210, 210, 215, 0.64);
+  --color-on-primary: #ffffff;
+  --color-on-dark: #ffffff;
+}
+
 @layer base {
   body {
-    font-family: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f5f5f5;
-    color: #0c0a09;
-    letter-spacing: 0.16px;
+    font-family: 'SF Pro Text', system-ui, -apple-system, BlinkMacSystemFont, 'Inter', 'Hind Siliguri', sans-serif;
+    background-color: var(--color-canvas-parchment);
+    color: var(--color-ink);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.47;
+    letter-spacing: -0.374px;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, .font-editorial {
-    font-family: 'EB Garamond', 'Waldenburg', 'Times New Roman', serif;
-    font-weight: 300;
+  h1, h2, h3, .font-display, .font-serif, .font-editorial {
+    font-family: 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, 'Inter', 'Hind Siliguri', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.28px;
+  }
+
+  /* Apple Design System Mandate: Weight 500 is absent (ladder is 300/400/600/700) */
+  .font-medium {
+    font-weight: 600 !important;
+  }
+
+  /* Apple Design System Mandate: Zero shadows on cards, buttons, or UI chrome */
+  .shadow-xs, .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: none !important;
   }
 }
 
-/* Atmospheric Gradient Orbs (Pure brand decoration - never button or text fills) */
-.orb-mint {
-  background: radial-gradient(circle, #a7e5d3 0%, rgba(167, 229, 211, 0) 70%);
-}
-.orb-peach {
-  background: radial-gradient(circle, #f4c5a8 0%, rgba(244, 197, 168, 0) 70%);
-}
-.orb-lavender {
-  background: radial-gradient(circle, #c8b8e0 0%, rgba(200, 184, 224, 0) 70%);
-}
-.orb-sky {
-  background: radial-gradient(circle, #a8c8e8 0%, rgba(168, 200, 232, 0) 70%);
-}
-.orb-rose {
-  background: radial-gradient(circle, #e8b8c4 0%, rgba(232, 184, 196, 0) 70%);
+/* ====================================================================
+   APPLE DESIGN SYSTEM COMPONENTS (DESIGN.md)
+   ==================================================================== */
+
+/* {component.global-nav}: 44px Pure Black Top Bar */
+.apple-global-nav {
+  background-color: var(--color-surface-black);
+  color: var(--color-on-dark);
+  height: 44px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.12px;
 }
 
-/* ElevenLabs Editorial Component Helpers */
+/* {component.sub-nav-frosted}: 52px Frosted Glass Sub-Nav */
+.apple-sub-nav {
+  background-color: rgba(245, 245, 247, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  color: var(--color-ink);
+  min-height: 52px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* {component.floating-sticky-bar}: Mobile & Bottom Sticky Frosted Bar */
+.apple-floating-sticky-bar {
+  background-color: rgba(245, 245, 247, 0.86);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  color: var(--color-ink);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* {component.button-primary}: Action Blue #0066cc Full Pill CTA */
 .btn-primary {
-  background-color: #292524;
-  color: #ffffff;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
   border-radius: 9999px;
-  font-family: 'Inter', 'Hind Siliguri', sans-serif;
+  font-family: 'SF Pro Text', system-ui, -apple-system, 'Inter', 'Hind Siliguri', sans-serif;
   font-size: 15px;
-  font-weight: 500;
-  height: 40px;
+  font-weight: 400;
+  line-height: 1.24;
+  letter-spacing: -0.224px;
+  min-height: 44px;
+  padding: 11px 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.14s ease;
+}
+.btn-primary:active {
+  transform: scale(0.95);
+}
+.btn-primary:focus-visible {
+  outline: 2px solid var(--color-primary-focus);
+  outline-offset: 2px;
+}
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* {component.button-secondary-pill}: Ghost Action Blue Pill */
+.btn-outline,
+.btn-secondary-pill {
+  background-color: var(--color-canvas);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+  font-family: 'SF Pro Text', system-ui, -apple-system, 'Inter', 'Hind Siliguri', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.24;
+  letter-spacing: -0.224px;
+  min-height: 44px;
   padding: 10px 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
-.btn-primary:hover {
-  background-color: #0c0a09;
+.btn-outline:active,
+.btn-secondary-pill:active {
+  transform: scale(0.95);
+}
+.btn-outline:focus-visible,
+.btn-secondary-pill:focus-visible {
+  outline: 2px solid var(--color-primary-focus);
+  outline-offset: 2px;
 }
 
-.btn-outline {
-  background-color: transparent;
-  color: #0c0a09;
-  border: 1px solid #d6d3d1;
+/* {component.button-pearl-capsule}: Secondary Card Capsule Button */
+.btn-pearl {
+  background-color: var(--color-surface-pearl);
+  color: var(--color-ink-muted-80);
+  border: 3px solid var(--color-divider-soft);
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.29;
+  letter-spacing: -0.224px;
+  min-height: 40px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.14s ease;
+}
+.btn-pearl:active {
+  transform: scale(0.95);
+}
+
+/* {component.button-dark-utility}: Compact Dark Utility Button */
+.btn-dark-utility {
+  background-color: var(--color-ink);
+  color: var(--color-on-dark);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.29;
+  letter-spacing: -0.224px;
+  padding: 8px 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.14s ease;
+}
+.btn-dark-utility:active {
+  transform: scale(0.95);
+}
+
+/* {component.button-icon-circular}: 44x44 Circular Control Button */
+.btn-icon-circle {
+  background-color: var(--color-surface-chip-translucent);
+  color: var(--color-ink);
+  width: 44px;
+  height: 44px;
   border-radius: 9999px;
-  font-family: 'Inter', 'Hind Siliguri', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  height: 40px;
-  padding: 9px 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.14s ease;
+}
+.btn-icon-circle:active {
+  transform: scale(0.95);
+}
+
+/* {component.store-utility-card}: White Utility Card (18px radius, 1px #e0e0e0 hairline, zero shadow) */
+.card-editorial,
+.card-apple {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: none;
+}
+@media (min-width: 640px) {
+  .card-editorial,
+  .card-apple {
+    padding: 24px;
+  }
+}
+
+/* {component.product-tile-dark}: Near-Black Tile (#272729) */
+.tile-dark {
+  background-color: var(--color-surface-tile-1);
+  color: var(--color-on-dark);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: none;
+}
+
+.tile-dark-2 {
+  background-color: var(--color-surface-tile-2);
+  color: var(--color-on-dark);
+  border-radius: 11px;
+  padding: 16px;
+}
+
+/* {component.configurator-option-chip} & {component.configurator-option-chip-selected} */
+.chip-option {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: -0.224px;
+  min-height: 44px;
+  padding: 10px 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease;
 }
-.btn-outline:hover {
-  border-color: #0c0a09;
-  background-color: #f0efed;
+.chip-option:active {
+  transform: scale(0.95);
+}
+.chip-option-selected {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 2px solid var(--color-primary-focus);
+  font-weight: 600;
 }
 
+/* Apple Badge Pill */
 .badge-pill {
-  background-color: #f0efed;
-  color: #0c0a09;
+  background-color: var(--color-canvas-parchment);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.96px;
-  text-transform: uppercase;
+  letter-spacing: -0.12px;
   padding: 4px 10px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.card-editorial {
-  background-color: #ffffff;
-  border: 1px solid #e7e5e4;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+/* Apple Form Inputs & {component.search-input} */
+.input-editorial,
+.input-apple {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
+  border-radius: 11px;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.224px;
+  font-family: 'SF Pro Text', system-ui, -apple-system, 'Inter', 'Hind Siliguri', sans-serif;
+  transition: border-color 0.14s ease;
 }
-.card-editorial:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+.input-editorial:focus,
+.input-apple:focus {
+  outline: 2px solid var(--color-primary-focus);
+  outline-offset: -1px;
+  border-color: var(--color-primary-focus);
 }
 
-.input-editorial {
-  background-color: #ffffff;
-  color: #0c0a09;
-  border: 1px solid #d6d3d1;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 15px;
-  font-family: 'Inter', 'Hind Siliguri', sans-serif;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+.search-apple {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  height: 44px;
+  padding: 10px 20px 10px 38px;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.224px;
 }
-.input-editorial:focus {
-  outline: none;
-  border-color: #0c0a09;
-  box-shadow: 0 0 0 1px #0c0a09;
+.search-apple:focus {
+  outline: 2px solid var(--color-primary-focus);
+  outline-offset: -1px;
+}
+
+/* Text Links ({component.text-link} & {component.text-link-on-dark}) */
+.apple-link {
+  color: var(--color-primary);
+  font-weight: 400;
+  cursor: pointer;
+}
+.apple-link-dark {
+  color: var(--color-primary-on-dark);
+  font-weight: 400;
+  cursor: pointer;
 }
 
 /* Custom Print Styles for Sales Invoices, Challans, Salary Slips & P&L Reports */
@@ -119,6 +345,7 @@
   body {
     background: white !important;
     color: black !important;
+    font-size: 13px !important;
   }
 
   .no-print,
@@ -130,7 +357,6 @@
     display: block !important;
   }
 
-  /* When a modal with .print-card (Invoice, Challan, or Salary Slip) is open, isolate it for printing */
   body:has(.fixed .print-card) * {
     visibility: hidden;
   }

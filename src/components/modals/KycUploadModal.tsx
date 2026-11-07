@@ -1,10 +1,10 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — KYC Document Upload Modal (Req 2)
+// DIMKHATA (ডিমখাতা) — KYC Document Upload Modal (Apple Design System)
 // Features Client-Side WebP Compression (5MB -> <60KB) for Zero-Cost
 // ====================================================================
 
 import React, { useState } from 'react';
-import { X, Upload, CheckCircle2, ShieldCheck, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { compressKycImage, CompressedImageResult } from '../../lib/image-compressor';
 import { KycDocument } from '../../types';
 
@@ -66,42 +66,43 @@ export const KycUploadModal: React.FC<KycUploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-      <div className="bg-white rounded-2xl shadow-xl border border-stone-200 max-w-lg w-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-0 sm:p-4">
+      <div className="bg-white rounded-t-[20px] sm:rounded-[18px] border border-[#e0e0e0] max-w-lg w-full flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 bg-[#fafafa] border-b border-stone-200 flex items-center justify-between">
+        <div className="px-5 py-4 bg-[#f5f5f7] border-b border-[#e0e0e0] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-800">
+            <div className="w-9 h-9 rounded-full bg-[#0066cc]/10 text-[#0066cc] flex items-center justify-center">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif font-light text-lg text-stone-900 leading-tight">
+              <h3 className="font-semibold text-[18px] text-[#1d1d1f] leading-tight">
                 কেওয়াইসি (KYC) ভেরিফিকেশন আপলোড
               </h3>
-              <p className="text-xs text-stone-500 mt-0.5">
-                গ্রাহক/কর্মচারী: <span className="text-stone-800 font-medium">{entityName}</span>
+              <p className="text-[12px] text-[#7a7a7a] mt-0.5">
+                গ্রাহক/কর্মচারী: <span className="text-[#1d1d1f] font-semibold">{entityName}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-stone-200/60 transition text-stone-500 hover:text-stone-800"
+            className="btn-icon-circle text-[#1d1d1f]"
+            aria-label="বন্ধ করুন"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className="p-5 sm:p-6 space-y-4">
           {/* Doc Type Selector */}
           <div>
-            <label className="block text-xs font-medium text-stone-600 mb-1.5">
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1.5">
               ডকুমেন্টের ধরন নির্বাচন করুন
             </label>
             <select
               value={docType}
               onChange={(e) => setDocType(e.target.value as KycDocument['doc_type'])}
-              className="input-editorial w-full text-xs font-medium text-stone-800"
+              className="input-apple w-full text-[14px]"
             >
               {Object.entries(docTypeLabels).map(([key, label]) => (
                 <option key={key} value={key}>
@@ -112,7 +113,7 @@ export const KycUploadModal: React.FC<KycUploadModalProps> = ({
           </div>
 
           {/* File Upload Box */}
-          <div className="border-2 border-dashed border-stone-300 hover:border-stone-500 rounded-xl p-5 text-center transition bg-[#fafafa]">
+          <div className="border-2 border-dashed border-[#d2d2d7] hover:border-[#0066cc] rounded-[12px] p-5 text-center transition bg-[#f5f5f7]">
             <input
               type="file"
               accept="image/*"
@@ -125,14 +126,14 @@ export const KycUploadModal: React.FC<KycUploadModalProps> = ({
               htmlFor="kyc-file-input"
               className="cursor-pointer flex flex-col items-center justify-center gap-2.5"
             >
-              <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 text-stone-700 flex items-center justify-center shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-white border border-[#e0e0e0] text-[#0066cc] flex items-center justify-center">
                 <Upload className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-xs font-semibold text-stone-900 hover:underline">
+                <span className="text-[13px] font-semibold text-[#0066cc] hover:underline">
                   ফটো বা ডকুমেন্ট নির্বাচন করুন
                 </span>
-                <p className="text-[11px] text-stone-400 mt-0.5">
+                <p className="text-[11px] text-[#7a7a7a] mt-0.5">
                   ক্যামেরা দিয়ে তোলা ৫-১০ মেগাবাইট ছবি স্বয়ংক্রিয়ভাবে সংকুচিত (&lt;৬০ KB WebP) হবে
                 </p>
               </div>
@@ -141,8 +142,8 @@ export const KycUploadModal: React.FC<KycUploadModalProps> = ({
 
           {/* Compression Status & Preview */}
           {compressing && (
-            <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-center text-xs text-stone-700 flex items-center justify-center gap-2">
-              <span className="w-3.5 h-3.5 border-2 border-stone-800 border-t-transparent rounded-full animate-spin" />
+            <div className="p-3 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] text-center text-xs text-[#1d1d1f] flex items-center justify-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-[#0066cc] border-t-transparent rounded-full animate-spin" />
               <span>ছবি অপ্টিমাইজ ও কম্প্রেস করা হচ্ছে...</span>
             </div>
           )}
@@ -150,18 +151,18 @@ export const KycUploadModal: React.FC<KycUploadModalProps> = ({
           {result && !compressing && (
             <div className="space-y-3">
               {/* Savings Badge */}
-              <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-between text-xs text-stone-800">
-                <div className="flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-stone-700 shrink-0" />
+              <div className="p-3 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] flex items-center justify-between text-xs text-[#1d1d1f]">
+                <div className="flex items-center gap-1.5 font-semibold text-[#15803d]">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>কম্প্রেশন সফল: {result.compressionRatio} সাইজ কমানো হয়েছে</span>
                 </div>
-                <div className="font-semibold text-stone-900">
+                <div className="font-semibold text-[#1d1d1f]">
                   {result.originalSizeKb} KB ➔ {result.compressedSizeKb} KB
                 </div>
               </div>
 
               {/* Preview Image */}
-              <div className="relative rounded-xl overflow-hidden border border-stone-200 bg-stone-50 max-h-48 flex items-center justify-center">
+              <div className="relative rounded-[12px] overflow-hidden border border-[#e0e0e0] bg-[#f5f5f7] max-h-48 flex items-center justify-center">
                 <img
                   src={result.dataUrl}
                   alt="KYC Preview"
@@ -173,17 +174,17 @@ export const KycUploadModal: React.FC<KycUploadModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 bg-[#fafafa] border-t border-stone-200 flex items-center justify-end gap-2.5">
+        <div className="px-5 py-3.5 bg-[#f5f5f7] border-t border-[#e0e0e0] flex items-center justify-end gap-2.5">
           <button
             onClick={onClose}
-            className="btn-outline px-4 py-2 text-xs font-medium"
+            className="btn-outline px-4 text-[13px]"
           >
             বাতিল
           </button>
           <button
             onClick={handleSave}
             disabled={!result || compressing}
-            className="btn-primary flex items-center gap-1.5 px-5 py-2 text-xs font-medium disabled:opacity-40"
+            className="btn-primary px-5 text-[13px] disabled:opacity-40"
           >
             <ShieldCheck className="w-4 h-4" />
             <span>কেওয়াইসি সংরক্ষণ করুন</span>

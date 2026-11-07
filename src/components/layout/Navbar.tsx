@@ -1,21 +1,26 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Editorial Top Navigation (ElevenLabs Design System)
-// Canvas: #f5f5f5 | Ink: #0c0a09 | CTAs: Near-black ink pill (#292524)
+// DIMKHATA (ডিমখাতা) — Apple Two-Row Top Navigation (DESIGN.md)
+// Row 1: {component.global-nav} (#000000, height 44px, 12px/400)
+// Row 2: {component.sub-nav-frosted} (#f5f5f7/82% blur, height 52px)
 // ====================================================================
 
-import React from 'react';
-import { 
-  Building2, 
-  UserCheck, 
-  RotateCcw, 
-  Download, 
-  Upload, 
-  ShieldCheck, 
+import React, { useState } from 'react';
+import {
+  UserCheck,
+  RotateCcw,
+  Download,
+  Upload,
+  ShieldCheck,
   Store,
-  Sparkles
+  Sparkles,
+  Plus,
+  Cloud,
+  Check,
 } from 'lucide-react';
 import { DimKhataStore } from '../../lib/storage-store';
+import { isSupabaseConfigured } from '../../lib/supabase';
 import { Branch, UserProfile } from '../../types';
+import { NavTabId } from './Sidebar';
 
 interface NavbarProps {
   branches: Branch[];
@@ -25,7 +30,23 @@ interface NavbarProps {
   onToggleUserRole: () => void;
   onOpenRatesModal: () => void;
   onRefresh: () => void;
+  currentTab?: NavTabId;
+  onSelectTab?: (tab: NavTabId) => void;
 }
+
+const TAB_TITLES: Record<NavTabId, string> = {
+  dashboard: 'ড্যাশবোর্ড ও লাইভ স্টক',
+  'sales-pos': 'বিক্রয় মেমো ও চালান (POS)',
+  sourcing: 'মহাজন থেকে ডিম কেনা',
+  'daily-pricing': 'আজকের বাজার দর',
+  parties: 'কাস্টমার ও মহাজন খাতা (KYC)',
+  'wastage-courtesy': 'ভাঙা, সৌজন্য ও শাখা ট্রান্সফার',
+  expenses: 'দোকান ও গাড়ির খরচ',
+  cashbook: 'ক্যাশবুক ও ব্যাংক একাউন্ট',
+  payroll: 'কর্মচারী ও বেতন হিসাব',
+  'profit-settlement': 'লাভ-লোকসান ও ২:১ বণ্টন',
+  'audit-branches': 'শাখা ও ডিজিটাল অডিট লগ',
+};
 
 export const Navbar: React.FC<NavbarProps> = ({
   branches,
@@ -35,8 +56,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleUserRole,
   onOpenRatesModal,
   onRefresh,
+  currentTab = 'dashboard',
+  onSelectTab,
 }) => {
   const company = DimKhataStore.getCompany();
+  const [syncing, setSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+
+  const handleCloudSync = async () => {
+    if (!isSupabaseConfigured) {
+      alert('ক্লাউড সিঙ্ক ব্যবহারের জন্য GitHub Secrets-এ VITE_SUPABASE_URL এবং VITE_SUPABASE_PUBLISHABLE_KEY যুক্ত করুন। বর্তমানে লোকাল ব্রাউজার মোডে সব তথ্য সংরক্ষিত হচ্ছে।');
+      return;
+    }
+    setSyncing(true);
+    const res = await DimKhataStore.syncWithSupabase();
+    setSyncing(false);
+    if (res.synced) {
+      setSyncDone(true);
+      onRefresh();
+      setTimeout(() => setSyncDone(false), 2500);
+    }
+  };
 
   const handleDownloadBackup = () => {
     const json = DimKhataStore.exportFullBackupJson();
@@ -66,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const handleResetDemo = () => {
-    if (confirm('আপনি কি নিশ্চিত যে ডেমো ডাটাবেজ রিসেট করতে চান? আপনার টেস্ট ডাটা মুছে যাবে।')) {
+    if (confirm('আপনি কি নিশ্চিত যে প্রাথমিক ডেমো ডাটা রিসেট করতে চান?')) {
       DimKhataStore.resetToDemoData();
       alert('সফলভাবে প্রাথমিক ডেমো ডাটা লোড হয়েছে!');
       onRefresh();
@@ -74,106 +114,164 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="bg-[#f5f5f5]/90 backdrop-blur-md border-b border-[#e7e5e4] text-[#0c0a09] sticky top-0 z-40 h-16 no-print">
-      <div className="max-w-[1240px] mx-auto px-4 sm:px-8 h-full flex items-center justify-between gap-3">
-        {/* Brand & Wordmark (Editorial Display) */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#f0efed] border border-[#e7e5e4] flex items-center justify-center text-lg shrink-0">
-            🥚
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h1 className="font-serif font-light text-xl tracking-tight text-[#0c0a09] leading-tight">
-                {company.company_name_bn}
-              </h1>
-              <span className="badge-pill text-[10px] py-0.5 px-2">
-                Enterprise
-              </span>
-            </div>
-            <p className="text-[12px] text-[#777169] hidden sm:block font-normal -mt-0.5">
-              {company.company_name_en} — {company.tagline}
-            </p>
-          </div>
-        </div>
+    <div className="sticky top-0 z-40 no-print">
+      {/* ROW 1: {component.global-nav} — 44px Pure Black Top Bar */}
+      <div className="apple-global-nav px-3 sm:px-6 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-3">
+          {/* Brand Identity */}
+          <button
+            type="button"
+            onClick={() => onSelectTab?.('dashboard')}
+            className="flex items-center gap-2 text-white shrink-0 cursor-pointer active:scale-95 transition"
+          >
+            <span className="text-[15px]">🥚</span>
+            <span className="font-semibold text-[13px] tracking-[-0.12px]">
+              {company.company_name_bn}
+            </span>
+            <span className="hidden md:inline text-[#cccccc] text-[11px]">
+              • ডিমখাতা ERP
+            </span>
+          </button>
 
-        {/* Center / Right Controls */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Branch Switcher (Pill geometry) */}
-          <div className="flex items-center bg-white border border-[#e7e5e4] rounded-full px-3 py-1.5 text-xs text-[#292524] shadow-xs">
-            <Store className="w-3.5 h-3.5 mr-1.5 text-[#777169]" />
-            <select
-              value={selectedBranchId}
-              onChange={(e) => onSelectBranch(e.target.value)}
-              className="bg-transparent font-medium focus:outline-none cursor-pointer pr-2 text-xs"
-            >
-              <option value="ALL">সকল শাখা (একত্রিত হিসাব)</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} ({b.branch_code})
+          {/* Global Utility Controls */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {/* Branch Selector */}
+            <div className="flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px]">
+              <Store className="w-3 h-3 text-[#2997ff] shrink-0" />
+              <select
+                value={selectedBranchId}
+                onChange={(e) => onSelectBranch(e.target.value)}
+                aria-label="শাখা নির্বাচন"
+                className="bg-transparent text-white focus:outline-none cursor-pointer text-[11px] max-w-[125px] sm:max-w-none truncate"
+              >
+                <option value="ALL" className="bg-[#1d1d1f] text-white">
+                  সকল শাখা (একত্রিত)
                 </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Quick Rate Update Button (Primary Ink Pill) */}
-          <button
-            onClick={onOpenRatesModal}
-            className="btn-primary text-xs h-9 px-4 hidden sm:inline-flex"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>বাজার দর আপডেট</span>
-          </button>
-
-          {/* User Role Switcher (Pill geometry) */}
-          <button
-            onClick={onToggleUserRole}
-            title="ক্লিক করে অ্যাডমিন ও স্টাফ ভিউ পরিবর্তন করুন"
-            className="btn-outline text-xs h-9 px-3.5 gap-2"
-          >
-            {currentUser.role === 'ADMIN' ? (
-              <ShieldCheck className="w-3.5 h-3.5 text-[#292524]" />
-            ) : (
-              <UserCheck className="w-3.5 h-3.5 text-[#777169]" />
-            )}
-            <div className="flex flex-col text-left">
-              <span className="leading-tight text-[12px] font-medium text-[#0c0a09]">{currentUser.full_name}</span>
-              <span className="text-[9px] text-[#777169] uppercase font-semibold tracking-wider">
-                {currentUser.role === 'ADMIN' ? 'অ্যাডমিন' : 'স্টাফ'}
-              </span>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id} className="bg-[#1d1d1f] text-white">
+                    {b.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </button>
 
-          {/* Backup & Tools Menu */}
-          <div className="flex items-center gap-1 bg-white border border-[#e7e5e4] rounded-full p-1 shadow-xs">
+            {/* Cloud Sync Status Button */}
             <button
-              onClick={handleDownloadBackup}
-              title="সম্পূর্ণ ব্যাকআপ JSON ডাউনলোড করুন"
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-[#f0efed] transition"
+              type="button"
+              onClick={handleCloudSync}
+              title={
+                isSupabaseConfigured
+                  ? 'Supabase ক্লাউডের সাথে লাইভ সিঙ্ক করুন'
+                  : 'অফলাইন লোকাল স্টোরেজ সক্রিয়'
+              }
+              className="flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition"
             >
-              <Download className="w-3.5 h-3.5" />
+              {syncDone ? (
+                <Check className="w-3 h-3 text-[#2997ff]" />
+              ) : (
+                <Cloud
+                  className={`w-3 h-3 ${
+                    isSupabaseConfigured ? 'text-[#2997ff]' : 'text-[#cccccc]'
+                  } ${syncing ? 'animate-pulse' : ''}`}
+                />
+              )}
+              <span className="hidden sm:inline">
+                {syncing
+                  ? 'সিঙ্ক হচ্ছে...'
+                  : syncDone
+                  ? 'সিঙ্ক সম্পন্ন'
+                  : isSupabaseConfigured
+                  ? 'ক্লাউড অনলাইন'
+                  : 'লোকাল মোড'}
+              </span>
             </button>
-            <label
-              title="ব্যাকআপ রিস্টোর করুন"
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-[#f0efed] transition cursor-pointer"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <input
-                type="file"
-                accept=".json"
-                className="hidden"
-                onChange={handleUploadBackup}
-              />
-            </label>
+
+            {/* User Role Switcher (Admin vs Staff) */}
             <button
-              onClick={handleResetDemo}
-              title="ডেমো ডাটা রিসেট করুন"
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#dc2626] hover:bg-rose-50 transition"
+              type="button"
+              onClick={onToggleUserRole}
+              title="ক্লিক করে মালিক (অ্যাডমিন) ও কর্মচারী (স্টাফ) মোড পরিবর্তন করুন"
+              className="flex items-center gap-1.5 bg-[#272729] text-white rounded-full px-2.5 py-1 text-[11px] cursor-pointer active:scale-95 transition"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              {currentUser.role === 'ADMIN' ? (
+                <ShieldCheck className="w-3 h-3 text-[#2997ff]" />
+              ) : (
+                <UserCheck className="w-3 h-3 text-[#cccccc]" />
+              )}
+              <span className="font-semibold">
+                {currentUser.role === 'ADMIN' ? 'মালিক (শরিফ)' : 'স্টাফ (কাওসার)'}
+              </span>
             </button>
+
+            {/* Backup & Restore Icons */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleDownloadBackup}
+                title="সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড (JSON)"
+                className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+              <label
+                title="ব্যাকআপ ফাইল রিস্টোর করুন"
+                className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <input
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleUploadBackup}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleResetDemo}
+                title="ডেমো ডাটা রিসেট"
+                className="w-7 h-7 rounded-full bg-[#272729] text-[#cccccc] hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </header>
+
+      {/* ROW 2: {component.sub-nav-frosted} — 52px Frosted Parchment Bar */}
+      <div className="apple-sub-nav px-3 sm:px-6 flex items-center">
+        <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-3 py-1.5">
+          {/* Active Category / Module Name in {typography.tagline} (21px / 600) */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <h1 className="text-[17px] sm:text-[21px] font-semibold text-[#1d1d1f] tracking-[0.231px] truncate">
+              {TAB_TITLES[currentTab] || 'ডিমখাতা'}
+            </h1>
+          </div>
+
+          {/* Right Quick Actions: Secondary Pill + Primary Action Blue Pill */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={onOpenRatesModal}
+              className="btn-secondary-pill !min-h-[34px] !py-1.5 !px-3.5 !text-[13px]"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>আজকের দর</span>
+            </button>
+
+            {currentTab !== 'sales-pos' && onSelectTab && (
+              <button
+                type="button"
+                onClick={() => onSelectTab('sales-pos')}
+                className="btn-primary !min-h-[34px] !py-1.5 !px-3.5 !text-[13px]"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>বিক্রয় মেমো</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

@@ -45,6 +45,7 @@ import {
   INITIAL_AUDIT_LOGS,
 } from './mock-data';
 import { calculateWeightedAverageCost } from './egg-units';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 const STORAGE_KEYS = {
   COMPANY: 'dimkhata_company',
@@ -72,7 +73,12 @@ const STORAGE_KEYS = {
   SELECTED_BRANCH: 'dimkhata_selected_branch',
 };
 
-// Safe LocalStorage helpers
+const LOCAL_ONLY_KEYS = new Set<string>([
+  STORAGE_KEYS.ACTIVE_USER,
+  STORAGE_KEYS.SELECTED_BRANCH,
+]);
+
+// Safe LocalStorage + Supabase Cloud Sync helpers
 function getStored<T>(key: string, defaultValue: T): T {
   try {
     const item = localStorage.getItem(key);
@@ -83,10 +89,23 @@ function getStored<T>(key: string, defaultValue: T): T {
   }
 }
 
+function pushKeyToSupabase(key: string, value: unknown): void {
+  if (!isSupabaseConfigured || !supabase || LOCAL_ONLY_KEYS.has(key)) return;
+  supabase
+    .from('dimkhata_kv_store')
+    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    .then(({ error }) => {
+      if (error) {
+        console.warn(`Supabase cloud sync warning for ${key}:`, error.message);
+      }
+    });
+}
+
 function setStored<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     window.dispatchEvent(new Event('dimkhata_storage_change'));
+    pushKeyToSupabase(key, value);
   } catch (err) {
     console.error(`Error saving key ${key}:`, err);
   }
@@ -846,17 +865,32 @@ export class DimKhataStore {
     };
   }
 
-  // Backup & Restore
+  // Backup & Restore (Always exports complete dataset including default collections)
   static exportFullBackupJson(): string {
-    const backupData: Record<string, unknown> = {};
-    Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
-      try {
-        const val = localStorage.getItem(key);
-        if (val) backupData[name] = JSON.parse(val);
-      } catch (err) {
-        console.error(err);
-      }
-    });
+    const backupData: Record<string, unknown> = {
+      COMPANY: this.getCompany(),
+      BRANCHES: this.getBranches(),
+      PARTNERS: this.getPartners(),
+      CATEGORIES: this.getCategories(),
+      DAILY_RATES: this.getDailyRates(),
+      STOCKS: this.getAllBranchStocks(),
+      CUSTOMERS: this.getCustomers(),
+      SUPPLIERS: this.getSuppliers(),
+      EMPLOYEES: this.getEmployees(),
+      ACCOUNTS: this.getAccounts(),
+      PURCHASES: this.getPurchases(),
+      SALES: this.getSales(),
+      ADJUSTMENTS: this.getAdjustments(),
+      DUE_COLLECTIONS: this.getDueCollections(),
+      EXPENSES: this.getExpenses(),
+      PARTNER_DRAWINGS: this.getPartnerDrawings(),
+      SALARY_ADVANCES: this.getSalaryAdvances(),
+      PAYROLLS: this.getPayrolls(),
+      CASHBOOK: this.getCashbook(),
+      AUDIT_LOGS: this.getAuditLogs(),
+      SEQUENCES: getStored(STORAGE_KEYS.SEQUENCES, {}),
+      SELECTED_BRANCH: this.getSelectedBranchId(),
+    };
     return JSON.stringify(backupData, null, 2);
   }
 
@@ -865,7 +899,7 @@ export class DimKhataStore {
       const data = JSON.parse(jsonString);
       Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
         if (data[name] !== undefined) {
-          localStorage.setItem(key, JSON.stringify(data[name]));
+          setStored(key, data[name]);
         }
       });
       window.dispatchEvent(new Event('dimkhata_storage_change'));
@@ -873,6 +907,70 @@ export class DimKhataStore {
     } catch (err) {
       console.error('Import backup failed:', err);
       return false;
+    }
+  }
+
+  // Two-Way Cloud Sync with Supabase (GitHub Pages + Supabase Free Tier)
+  private static realtimeSubscribed = false;
+
+  static async syncWithSupabase(): Promise<{ synced: boolean; count: number }> {
+    if (!isSupabaseConfigured || !supabase) {
+      return { synced: false, count: 0 };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('dimkhata_kv_store')
+        .select('key, value');
+
+      if (error) {
+        console.warn('Supabase sync fetch skipped:', error.message);
+        return { synced: false, count: 0 };
+      }
+
+      if (data && data.length > 0) {
+        data.forEach((row: { key: string; value: unknown }) => {
+          if (row.key && !LOCAL_ONLY_KEYS.has(row.key)) {
+            localStorage.setItem(row.key, JSON.stringify(row.value));
+          }
+        });
+        window.dispatchEvent(new Event('dimkhata_storage_change'));
+      } else {
+        // Cloud table is empty on first connection — push initial local state to Supabase
+        const fullState = JSON.parse(this.exportFullBackupJson()) as Record<string, unknown>;
+        const rowsToUpsert = Object.entries(STORAGE_KEYS)
+          .filter(([, key]) => !LOCAL_ONLY_KEYS.has(key))
+          .map(([name, key]) => ({
+            key,
+            value: fullState[name] ?? {},
+            updated_at: new Date().toISOString(),
+          }));
+
+        await supabase.from('dimkhata_kv_store').upsert(rowsToUpsert, { onConflict: 'key' });
+      }
+
+      if (!this.realtimeSubscribed) {
+        this.realtimeSubscribed = true;
+        supabase
+          .channel('dimkhata-cloud-sync')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'dimkhata_kv_store' },
+            (payload: any) => {
+              const row = payload.new as { key?: string; value?: unknown };
+              if (row && row.key && !LOCAL_ONLY_KEYS.has(row.key)) {
+                localStorage.setItem(row.key, JSON.stringify(row.value));
+                window.dispatchEvent(new Event('dimkhata_storage_change'));
+              }
+            }
+          )
+          .subscribe();
+      }
+
+      return { synced: true, count: data?.length || 18 };
+    } catch (err) {
+      console.warn('Supabase sync exception:', err);
+      return { synced: false, count: 0 };
     }
   }
 
@@ -897,4 +995,5 @@ export class DimKhataStore {
     window.dispatchEvent(new Event('dimkhata_storage_change'));
   }
 }
+
 

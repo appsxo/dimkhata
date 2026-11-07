@@ -1,5 +1,5 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Live Cashbook & Banking (ElevenLabs Design)
+// DIMKHATA (ডিমখাতা) — Live Cashbook & Banking (Apple Design System)
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -7,6 +7,7 @@ import { Wallet, Plus, RefreshCcw, Building, Smartphone, Settings } from 'lucide
 import { FinancialAccount, CashbookTransaction, Branch, CompanySettings } from '../types';
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
+import { AppleSectionHeader, AppleModal } from '../components/ui/AppleUI';
 
 interface CashbookBankingViewProps {
   accounts: FinancialAccount[];
@@ -123,84 +124,79 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
   const getAccountIcon = (type: FinancialAccount['account_type']) => {
     switch (type) {
       case 'CASH':
-        return <Wallet className="w-4 h-4 text-[#292524]" />;
+        return <Wallet className="w-4 h-4 text-[#0066cc]" />;
       case 'MFS':
-        return <Smartphone className="w-4 h-4 text-[#292524]" />;
+        return <Smartphone className="w-4 h-4 text-[#0066cc]" />;
       case 'BANK':
-        return <Building className="w-4 h-4 text-[#292524]" />;
+        return <Building className="w-4 h-4 text-[#0066cc]" />;
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
-            প্রতিষ্ঠান ও ব্যাংক একাউন্ট (Live Cashbook)
-          </h2>
-          <p className="text-xs text-[#777169] mt-0.5">
-            দোকানের ক্যাশ ড্রয়ার, ব্যাংক ও মোবাইল ব্যাংকিং (বিকাশ/নগদ) লাইভ সিঙ্ক ও ব্র্যান্ডিং প্রোফাইল
-          </p>
-        </div>
+      <AppleSectionHeader
+        eyebrow="প্রতিষ্ঠান ও ডিজিটাল ব্যাংকিং"
+        title="ক্যাশবুক ও ব্যাংক একাউন্ট (Live Cashbook)"
+        subtitle="দোকানের ক্যাশ ড্রয়ার, ব্যাংক ও মোবাইল ব্যাংকিং (বিকাশ/নগদ) লাইভ সিঙ্ক ও মেমো ব্র্যান্ডিং"
+        actions={
+          <>
+            <button
+              onClick={() => {
+                setCompanyForm(DimKhataStore.getCompany());
+                setIsCompanyOpen(true);
+              }}
+              className="btn-outline text-[13px] px-4"
+            >
+              <Settings className="w-4 h-4" />
+              <span>প্রতিষ্ঠান ব্র্যান্ডিং</span>
+            </button>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => {
-              setCompanyForm(DimKhataStore.getCompany());
-              setIsCompanyOpen(true);
-            }}
-            className="btn-outline text-xs h-9 px-3.5"
-          >
-            <Settings className="w-3.5 h-3.5 text-[#777169]" />
-            <span>প্রতিষ্ঠান ব্র্যান্ডিং</span>
-          </button>
+            <button
+              onClick={() => setIsAddAccOpen(true)}
+              className="btn-outline text-[13px] px-4"
+            >
+              <Plus className="w-4 h-4" />
+              <span>নতুন একাউন্ট যোগ</span>
+            </button>
 
-          <button
-            onClick={() => setIsAddAccOpen(true)}
-            className="btn-outline text-xs h-9 px-3.5"
-          >
-            <Plus className="w-3.5 h-3.5 text-[#777169]" />
-            <span>নতুন একাউন্ট যোগ</span>
-          </button>
-
-          <button
-            onClick={() => setIsContraOpen(true)}
-            className="btn-primary text-xs h-9 px-4"
-          >
-            <RefreshCcw className="w-3.5 h-3.5" />
-            <span>ফান্ড ট্রান্সফার</span>
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={() => setIsContraOpen(true)}
+              className="btn-primary text-[13px] px-5"
+            >
+              <RefreshCcw className="w-4 h-4" />
+              <span>ফান্ড ট্রান্সফার</span>
+            </button>
+          </>
+        }
+      />
 
       {/* Account Balances Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {accounts.map((acc) => (
           <div
             key={acc.id}
-            className="card-editorial flex flex-col justify-between"
+            className="card-apple p-5 flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
               <div>
-                <span className="badge-pill text-[10px] py-0 px-2">
+                <span className="badge-blue text-[10px] py-0 px-2">
                   {acc.account_type === 'MFS' ? 'মোবাইল ব্যাংকিং' : acc.account_type === 'BANK' ? 'ব্যাংক হিসাব' : 'ক্যাশ ড্রয়ার'}
                 </span>
-                <h3 className="font-medium text-sm text-[#0c0a09] mt-2">{acc.name}</h3>
+                <h3 className="font-semibold text-[16px] text-[#1d1d1f] mt-2">{acc.name}</h3>
                 {acc.account_number && (
-                  <p className="text-[11px] font-mono text-[#777169] mt-0.5">
+                  <p className="text-[11px] font-mono text-[#7a7a7a] mt-0.5">
                     {acc.account_number}
                   </p>
                 )}
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#f0efed] border border-[#e7e5e4] flex items-center justify-center">
+              <div className="w-9 h-9 rounded-full bg-[#f5f5f7] flex items-center justify-center">
                 {getAccountIcon(acc.account_type)}
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-[#f0efed]">
-              <div className="text-[11px] text-[#777169]">বর্তমান লাইভ স্থিতি</div>
-              <div className="font-serif font-light text-2xl text-[#0c0a09] mt-0.5">
+            <div className="mt-4 pt-3 border-t border-[#e0e0e0]">
+              <div className="text-[11px] text-[#7a7a7a]">বর্তমান লাইভ স্থিতি</div>
+              <div className="font-semibold text-[22px] text-[#1d1d1f] mt-0.5">
                 {formatTaka(acc.current_balance)}
               </div>
             </div>
@@ -209,13 +205,13 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
       </div>
 
       {/* Live Cashbook Transactions Stream */}
-      <div className="card-editorial space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0efed] pb-3">
+      <div className="card-apple p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e0e0e0] pb-3.5">
           <div>
-            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
+            <h3 className="font-semibold text-[20px] text-[#1d1d1f]">
               মূল ক্যাশ বই ও লেনদেন হিস্ট্রি (Live Cashbook)
             </h3>
-            <p className="text-xs text-[#777169]">
+            <p className="text-[12px] text-[#7a7a7a]">
               প্রতিটি মেমো, কালেকশন, মহাজন পেমেন্ট ও খরচের ডিজিটাল সিঙ্ক রেকর্ড
             </p>
           </div>
@@ -225,7 +221,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             <select
               value={filterAccount}
               onChange={(e) => setFilterAccount(e.target.value)}
-              className="input-editorial text-xs h-9 py-1"
+              className="input-apple text-[13px] py-1.5"
             >
               <option value="ALL">সকল একাউন্ট</option>
               {accounts.map((a) => (
@@ -238,7 +234,7 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="input-editorial text-xs h-9 py-1"
+              className="input-apple text-[13px] py-1.5"
             >
               <option value="ALL">সকল ধরন</option>
               <option value="CASH_IN">জমা (Cash In)</option>
@@ -249,20 +245,20 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
 
         {/* Transactions Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[#e7e5e4] text-[#777169] text-left bg-[#fafafa]">
-                <th className="py-2.5 px-3 font-medium">তারিখ ও সময়</th>
-                <th className="py-2.5 px-3 font-medium">একাউন্ট</th>
-                <th className="py-2.5 px-3 font-medium">খাত / বিবরণ</th>
-                <th className="py-2.5 px-3 font-medium">রেফারেন্স</th>
-                <th className="py-2.5 px-3 font-medium text-right">টাকার অঙ্ক</th>
+              <tr className="border-b border-[#e0e0e0] text-[#7a7a7a] text-left bg-[#f5f5f7]">
+                <th className="py-2.5 px-3 font-semibold">তারিখ</th>
+                <th className="py-2.5 px-3 font-semibold">একাউন্ট</th>
+                <th className="py-2.5 px-3 font-semibold">খাত / বিবরণ</th>
+                <th className="py-2.5 px-3 font-semibold">রেফারেন্স</th>
+                <th className="py-2.5 px-3 font-semibold text-right">টাকার অঙ্ক</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#f0efed]">
+            <tbody className="divide-y divide-[#e0e0e0]">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-[#a8a29e]">
+                  <td colSpan={5} className="py-8 text-center text-[#7a7a7a]">
                     কোনো লেনদেন রেকর্ড পাওয়া যায়নি।
                   </td>
                 </tr>
@@ -271,22 +267,22 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
                   const acc = accounts.find((a) => a.id === tx.account_id);
                   const isCashIn = tx.transaction_type === 'CASH_IN';
                   return (
-                    <tr key={tx.id} className="hover:bg-[#fafafa] transition">
-                      <td className="py-2.5 px-3 text-[#777169] whitespace-nowrap">
+                    <tr key={tx.id} className="hover:bg-[#f5f5f7] transition">
+                      <td className="py-2.5 px-3 text-[#7a7a7a] whitespace-nowrap">
                         {toBengaliNumber(tx.transaction_date.slice(0, 10))}
                       </td>
-                      <td className="py-2.5 px-3 font-medium text-[#0c0a09]">
+                      <td className="py-2.5 px-3 font-semibold text-[#1d1d1f]">
                         {acc?.name || 'ক্যাশ'}
                       </td>
                       <td className="py-2.5 px-3 text-[#4e4e4e]">
                         {tx.description || tx.category}
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#777169]">
+                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#0066cc]">
                         {tx.reference_id || '---'}
                       </td>
                       <td
-                        className={`py-2.5 px-3 text-right font-medium whitespace-nowrap ${
-                          isCashIn ? 'text-[#16a34a]' : 'text-[#0c0a09]'
+                        className={`py-2.5 px-3 text-right font-semibold whitespace-nowrap ${
+                          isCashIn ? 'text-[#15803d]' : 'text-[#1d1d1f]'
                         }`}
                       >
                         {isCashIn ? '+' : '-'} {formatTaka(tx.amount)}
@@ -301,275 +297,262 @@ export const CashbookBankingView: React.FC<CashbookBankingViewProps> = ({
       </div>
 
       {/* CONTRA TRANSFER MODAL */}
-      {isContraOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-[#e7e5e4]">
-            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
-              ফান্ড ট্রান্সফার (Contra Transfer)
-            </h3>
-            <p className="text-xs text-[#777169]">
-              যেমন: ক্যাশ ড্রয়ার থেকে টাকা ব্যাংকে জমা বা বিকাশ ক্যাশ-ইন
-            </p>
-
-            <form onSubmit={handleContraTransfer} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  উৎস একাউন্ট (টাকা যাবে)
-                </label>
-                <select
-                  value={fromAccount}
-                  onChange={(e) => setFromAccount(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                >
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({formatTaka(a.current_balance)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  গন্তব্য একাউন্ট (জমা হবে)
-                </label>
-                <select
-                  value={toAccount}
-                  onChange={(e) => setToAccount(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                >
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({formatTaka(a.current_balance)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  টাকার পরিমাণ (৳)
-                </label>
-                <input
-                  type="number"
-                  required
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(Number(e.target.value) || 0)}
-                  className="input-editorial w-full text-sm font-semibold"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsContraOpen(false)}
-                  className="btn-outline text-xs h-9 px-4"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary text-xs h-9 px-5"
-                >
-                  ট্রান্সফার সম্পন্ন করুন
-                </button>
-              </div>
-            </form>
+      <AppleModal
+        isOpen={isContraOpen}
+        onClose={() => setIsContraOpen(false)}
+        title="ফান্ড ট্রান্সফার (Contra Transfer)"
+        subtitle="ক্যাশ ড্রয়ার থেকে টাকা ব্যাংকে জমা বা বিকাশ ক্যাশ-ইন"
+      >
+        <form onSubmit={handleContraTransfer} className="space-y-3.5">
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              উৎস একাউন্ট (টাকা যাবে)
+            </label>
+            <select
+              value={fromAccount}
+              onChange={(e) => setFromAccount(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            >
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({formatTaka(a.current_balance)})
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              গন্তব্য একাউন্ট (জমা হবে)
+            </label>
+            <select
+              value={toAccount}
+              onChange={(e) => setToAccount(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            >
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({formatTaka(a.current_balance)})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              টাকার পরিমাণ (৳)
+            </label>
+            <input
+              type="number"
+              required
+              value={transferAmount}
+              onChange={(e) => setTransferAmount(Number(e.target.value) || 0)}
+              className="input-apple w-full text-[15px] font-semibold"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsContraOpen(false)}
+              className="btn-outline text-[13px] px-4"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              className="btn-primary text-[13px] px-5"
+            >
+              ট্রান্সফার সম্পন্ন করুন
+            </button>
+          </div>
+        </form>
+      </AppleModal>
 
       {/* ADD NEW FINANCIAL ACCOUNT MODAL */}
-      {isAddAccOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-[#e7e5e4]">
-            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
-              নতুন ব্যাংক বা ডিজিটাল একাউন্ট যোগ
-            </h3>
-
-            <form onSubmit={handleAddAccount} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  একাউন্টের নাম
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="যেমন: ডাচ-বাংলা ব্যাংক / রকেট মার্চেন্ট"
-                  value={accName}
-                  onChange={(e) => setAccName(e.target.value)}
-                  className="input-editorial w-full text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
-                    একাউন্টের ধরন
-                  </label>
-                  <select
-                    value={accType}
-                    onChange={(e) => setAccType(e.target.value as any)}
-                    className="input-editorial w-full text-xs"
-                  >
-                    <option value="BANK">ব্যাংক হিসাব</option>
-                    <option value="MFS">মোবাইল ব্যাংকিং (MFS)</option>
-                    <option value="CASH">ক্যাশ ড্রয়ার</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
-                    একাউন্ট / মোবাইল নম্বর
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="হিসাব নম্বর"
-                    value={accNumber}
-                    onChange={(e) => setAccNumber(e.target.value)}
-                    className="input-editorial w-full text-xs font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  প্রারম্ভিক ব্যালেন্স (Opening Balance ৳)
-                </label>
-                <input
-                  type="number"
-                  value={accInitialBalance}
-                  onChange={(e) => setAccInitialBalance(Number(e.target.value) || 0)}
-                  className="input-editorial w-full text-sm font-semibold"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddAccOpen(false)}
-                  className="btn-outline text-xs h-9 px-4"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary text-xs h-9 px-5"
-                >
-                  সংরক্ষণ করুন
-                </button>
-              </div>
-            </form>
+      <AppleModal
+        isOpen={isAddAccOpen}
+        onClose={() => setIsAddAccOpen(false)}
+        title="নতুন ব্যাংক বা ডিজিটাল একাউন্ট যোগ"
+      >
+        <form onSubmit={handleAddAccount} className="space-y-3.5">
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              একাউন্টের নাম
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="যেমন: ডাচ-বাংলা ব্যাংক / রকেট মার্চেন্ট"
+              value={accName}
+              onChange={(e) => setAccName(e.target.value)}
+              className="input-apple w-full text-[14px]"
+            />
           </div>
-        </div>
-      )}
 
-      {/* COMPANY BRANDING PROFILE MODAL (Requirement 5) */}
-      {isCompanyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-[#e7e5e4]">
-            <h3 className="font-serif font-light text-2xl text-[#0c0a09]">
-              প্রতিষ্ঠানের ব্র্যান্ডিং ও মেমো প্রোফাইল (Req 5)
-            </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                একাউন্টের ধরন
+              </label>
+              <select
+                value={accType}
+                onChange={(e) => setAccType(e.target.value as any)}
+                className="input-apple w-full text-[14px]"
+              >
+                <option value="BANK">ব্যাংক হিসাব</option>
+                <option value="MFS">মোবাইল ব্যাংকিং (MFS)</option>
+                <option value="CASH">ক্যাশ ড্রয়ার</option>
+              </select>
+            </div>
 
-            <form onSubmit={handleSaveCompany} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
-                    প্রতিষ্ঠানের নাম (বাংলা)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={companyForm.company_name_bn}
-                    onChange={(e) => setCompanyForm({ ...companyForm, company_name_bn: e.target.value })}
-                    className="input-editorial w-full text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
-                    প্রতিষ্ঠানের নাম (English)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={companyForm.company_name_en}
-                    onChange={(e) => setCompanyForm({ ...companyForm, company_name_en: e.target.value })}
-                    className="input-editorial w-full text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  ট্যাগলাইন / স্লোগান
-                </label>
-                <input
-                  type="text"
-                  value={companyForm.tagline}
-                  onChange={(e) => setCompanyForm({ ...companyForm, tagline: e.target.value })}
-                  className="input-editorial w-full text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
-                    মোবাইল নম্বরসমূহ
-                  </label>
-                  <input
-                    type="text"
-                    value={companyForm.phone}
-                    onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
-                    className="input-editorial w-full text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#292524] mb-1">
-                    প্রধান আড়ত ও ঠিকানা
-                  </label>
-                  <input
-                    type="text"
-                    value={companyForm.address}
-                    onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
-                    className="input-editorial w-full text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
-                  ইনভয়েস/মেমো ফুটার নোট
-                </label>
-                <input
-                  type="text"
-                  value={companyForm.invoice_footer_note}
-                  onChange={(e) =>
-                    setCompanyForm({ ...companyForm, invoice_footer_note: e.target.value })
-                  }
-                  className="input-editorial w-full text-xs"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCompanyOpen(false)}
-                  className="btn-outline text-xs h-9 px-4"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary text-xs h-9 px-5"
-                >
-                  ব্র্যান্ডিং আপডেট করুন
-                </button>
-              </div>
-            </form>
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                একাউন্ট / মোবাইল নম্বর
+              </label>
+              <input
+                type="text"
+                placeholder="হিসাব নম্বর"
+                value={accNumber}
+                onChange={(e) => setAccNumber(e.target.value)}
+                className="input-apple w-full text-[14px] font-mono"
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              প্রারম্ভিক ব্যালেন্স (Opening Balance ৳)
+            </label>
+            <input
+              type="number"
+              value={accInitialBalance}
+              onChange={(e) => setAccInitialBalance(Number(e.target.value) || 0)}
+              className="input-apple w-full text-[15px] font-semibold"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsAddAccOpen(false)}
+              className="btn-outline text-[13px] px-4"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              className="btn-primary text-[13px] px-5"
+            >
+              সংরক্ষণ করুন
+            </button>
+          </div>
+        </form>
+      </AppleModal>
+
+      {/* COMPANY BRANDING PROFILE MODAL */}
+      <AppleModal
+        isOpen={isCompanyOpen}
+        onClose={() => setIsCompanyOpen(false)}
+        title="প্রতিষ্ঠানের ব্র্যান্ডিং ও মেমো প্রোফাইল"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleSaveCompany} className="space-y-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                প্রতিষ্ঠানের নাম (বাংলা)
+              </label>
+              <input
+                type="text"
+                required
+                value={companyForm.company_name_bn}
+                onChange={(e) => setCompanyForm({ ...companyForm, company_name_bn: e.target.value })}
+                className="input-apple w-full text-[14px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                প্রতিষ্ঠানের নাম (English)
+              </label>
+              <input
+                type="text"
+                required
+                value={companyForm.company_name_en}
+                onChange={(e) => setCompanyForm({ ...companyForm, company_name_en: e.target.value })}
+                className="input-apple w-full text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              ট্যাগলাইন / স্লোগান
+            </label>
+            <input
+              type="text"
+              value={companyForm.tagline}
+              onChange={(e) => setCompanyForm({ ...companyForm, tagline: e.target.value })}
+              className="input-apple w-full text-[14px]"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                মোবাইল নম্বরসমূহ
+              </label>
+              <input
+                type="text"
+                value={companyForm.phone}
+                onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
+                className="input-apple w-full text-[14px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                প্রধান আড়ত ও ঠিকানা
+              </label>
+              <input
+                type="text"
+                value={companyForm.address}
+                onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
+                className="input-apple w-full text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+              ইনভয়েস/মেমো ফুটার নোট
+            </label>
+            <input
+              type="text"
+              value={companyForm.invoice_footer_note}
+              onChange={(e) =>
+                setCompanyForm({ ...companyForm, invoice_footer_note: e.target.value })
+              }
+              className="input-apple w-full text-[14px]"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsCompanyOpen(false)}
+              className="btn-outline text-[13px] px-4"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              className="btn-primary text-[13px] px-5"
+            >
+              ব্র্যান্ডিং আপডেট করুন
+            </button>
+          </div>
+        </form>
+      </AppleModal>
     </div>
   );
 };

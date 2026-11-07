@@ -412,3 +412,11 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
     client_ip TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- 18. Unified Cloud State Store for Serverless GitHub Pages + Supabase Real-Time Sync
+CREATE TABLE IF NOT EXISTS public.dimkhata_kv_store (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+

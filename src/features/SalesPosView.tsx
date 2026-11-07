@@ -1,5 +1,5 @@
 // ====================================================================
-// DIMKHATA (ডিমখাতা) — Sales POS & Delivery Challan (ElevenLabs Design)
+// DIMKHATA (ডিমখাতা) — Sales POS & Delivery Challan (Apple Design System)
 // ====================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -27,6 +27,7 @@ import {
 import { DimKhataStore } from '../lib/storage-store';
 import { formatTaka, toBengaliNumber } from '../lib/egg-units';
 import { shareInvoiceWhatsApp } from '../lib/whatsapp-share';
+import { AppleSectionHeader, AppleOptionChips } from '../components/ui/AppleUI';
 
 interface SalesPosViewProps {
   customers: Customer[];
@@ -278,58 +279,36 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-serif font-light text-3xl text-[#0c0a09] tracking-tight">
-            বিক্রয় মেমো ও ডেলিভারি চালান (POS System)
-          </h2>
-          <p className="text-xs text-[#777169] mt-0.5">
-            পাইকারি ও খুচরা রেটে দ্রুত মেমো তৈরি, বাকির লিমিট সতর্কতা ও ১-ক্লিকে চালান প্রিন্ট
-          </p>
-        </div>
-
-        {/* Wholesale vs Retail Toggle (Pill Geometry) */}
-        <div className="flex items-center bg-[#f0efed] p-1 rounded-full text-xs font-medium">
-          <button
-            type="button"
-            onClick={() => handleSaleTypeChange('WHOLESALE')}
-            className={`px-4 py-1.5 rounded-full transition ${
-              saleType === 'WHOLESALE'
-                ? 'bg-[#292524] text-white shadow-xs'
-                : 'text-[#4e4e4e] hover:text-[#0c0a09]'
-            }`}
-          >
-            পাইকারি বিক্রয়
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSaleTypeChange('RETAIL')}
-            className={`px-4 py-1.5 rounded-full transition ${
-              saleType === 'RETAIL'
-                ? 'bg-[#292524] text-white shadow-xs'
-                : 'text-[#4e4e4e] hover:text-[#0c0a09]'
-            }`}
-          >
-            খুচরা বিক্রয়
-          </button>
-        </div>
-      </div>
+      <AppleSectionHeader
+        eyebrow="পাইকারি ও খুচরা বিক্রয়"
+        title="বিক্রয় মেমো ও ডেলিভারি চালান (POS)"
+        subtitle="১-ক্লিকে পাইকারি ও খুচরা রেটে মেমো তৈরি, বাকির সীমা সতর্কতা এবং প্রিন্ট ও WhatsApp শেয়ার"
+        actions={
+          <AppleOptionChips
+            options={[
+              { value: 'WHOLESALE', label: 'পাইকারি বিক্রয়' },
+              { value: 'RETAIL', label: 'খুচরা বিক্রয়' },
+            ]}
+            value={saleType}
+            onChange={handleSaleTypeChange}
+          />
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Memo Form (2 Cols) */}
-        <div className="lg:col-span-2 card-editorial space-y-5">
+        <div className="lg:col-span-2 card-apple p-5 sm:p-6 space-y-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Customer & Branch */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   কাস্টমার নির্বাচন (SE-CUST)
                 </label>
                 <select
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 >
                   {customers.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -340,13 +319,13 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   শাখা / গোডাউন
                 </label>
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 >
                   {branches.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -357,141 +336,169 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   তারিখ
                 </label>
                 <input
                   type="date"
                   value={invoiceDate}
                   onChange={(e) => setInvoiceDate(e.target.value)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 />
               </div>
             </div>
 
             {/* Credit Limit Alert Banner */}
             {selectedCustomer && (
-              <div className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl text-xs flex items-center justify-between text-[#4e4e4e]">
+              <div className="p-3 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] text-[13px] flex flex-wrap items-center justify-between gap-2 text-[#4e4e4e]">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-[#777169] shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-[#0066cc] shrink-0" />
                   <span>
-                    বর্তমান বকেয়া: <strong className="text-[#0c0a09]">{formatTaka(selectedCustomer.current_due)}</strong> | বাকির সীমা: <strong className="text-[#0c0a09]">{formatTaka(selectedCustomer.credit_limit)}</strong>
+                    পূর্বের বকেয়া: <strong className="text-[#1d1d1f] font-semibold">{formatTaka(selectedCustomer.current_due)}</strong> | বাকির সীমা: <strong className="text-[#1d1d1f] font-semibold">{formatTaka(selectedCustomer.credit_limit)}</strong>
                   </span>
                 </div>
                 {isCreditExceeded && (
-                  <span className="text-[#dc2626] font-semibold text-[11px]">
-                    ⚠️ বাকির সীমা অতিক্রম
+                  <span className="text-[#d92916] font-semibold text-[12px]">
+                    ⚠️ বাকির সীমা অতিক্রম করছে
                   </span>
                 )}
               </div>
             )}
 
             {/* Item Rows */}
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-[#0c0a09]">
+                <label className="text-[13px] font-semibold text-[#1d1d1f]">
                   বিক্রয়কৃত ডিমের তালিকা (Egg Items)
                 </label>
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="btn-outline text-xs h-8 px-3"
+                  className="btn-outline text-[12px] py-1.5 px-3 min-h-[36px]"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>আইটেম যোগ করুন</span>
+                  <span>+ আরও ডিম যোগ করুন</span>
                 </button>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {items.map((item, idx) => {
                   const pcs = getItemPcs(item);
                   const cat = categories.find((c) => c.id === item.categoryId);
                   return (
                     <div
                       key={idx}
-                      className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
+                      className="p-3.5 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] space-y-2.5"
                     >
-                      <div className="sm:col-span-4">
-                        <select
-                          value={item.categoryId}
-                          onChange={(e) => handleCategoryChange(idx, e.target.value)}
-                          className="input-editorial w-full text-xs py-1.5"
-                        >
-                          {categories.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name_bn}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                        <div className="sm:col-span-4">
+                          <select
+                            value={item.categoryId}
+                            onChange={(e) => handleCategoryChange(idx, e.target.value)}
+                            className="input-apple w-full text-[14px]"
+                          >
+                            {categories.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name_bn}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                      <div className="sm:col-span-4 flex items-center gap-1.5">
-                        <input
-                          type="number"
-                          value={item.qtyInput}
-                          onChange={(e) => {
-                            const val = Number(e.target.value) || 0;
-                            setItems((prev) => {
-                              const copy = [...prev];
-                              copy[idx].qtyInput = val;
-                              return copy;
-                            });
-                          }}
-                          className="input-editorial w-20 text-xs font-semibold py-1.5"
-                        />
-                        <select
-                          value={item.inputType}
-                          onChange={(e) => {
-                            const val = e.target.value as 'CRATE' | 'PCS';
-                            setItems((prev) => {
-                              const copy = [...prev];
-                              copy[idx].inputType = val;
-                              return copy;
-                            });
-                          }}
-                          className="input-editorial text-xs py-1.5"
-                        >
-                          <option value="CRATE">খাঁচি ({cat?.pcs_per_crate || 30})</option>
-                          <option value="PCS">পিস</option>
-                        </select>
-                        <span className="text-[11px] text-[#777169] font-mono">
-                          ={toBengaliNumber(pcs)}
-                        </span>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <div className="relative">
+                        <div className="sm:col-span-4 flex items-center gap-1.5">
                           <input
                             type="number"
-                            step="0.05"
-                            value={item.unitPrice}
+                            value={item.qtyInput}
                             onChange={(e) => {
                               const val = Number(e.target.value) || 0;
                               setItems((prev) => {
                                 const copy = [...prev];
-                                copy[idx].unitPrice = val;
+                                copy[idx].qtyInput = val;
                                 return copy;
                               });
                             }}
-                            className="input-editorial w-full pl-6 text-xs font-semibold py-1.5"
+                            className="input-apple w-20 text-[15px] font-semibold"
                           />
-                          <span className="absolute left-2.5 top-2 text-xs text-[#777169]">৳</span>
+                          <select
+                            value={item.inputType}
+                            onChange={(e) => {
+                              const val = e.target.value as 'CRATE' | 'PCS';
+                              setItems((prev) => {
+                                const copy = [...prev];
+                                copy[idx].inputType = val;
+                                return copy;
+                              });
+                            }}
+                            className="input-apple text-[13px] flex-1"
+                          >
+                            <option value="CRATE">খাঁচি ({cat?.pcs_per_crate || 30})</option>
+                            <option value="PCS">পিস</option>
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.05"
+                              value={item.unitPrice}
+                              onChange={(e) => {
+                                const val = Number(e.target.value) || 0;
+                                setItems((prev) => {
+                                  const copy = [...prev];
+                                  copy[idx].unitPrice = val;
+                                  return copy;
+                                });
+                              }}
+                              className="input-apple w-full pl-6 text-[14px] font-semibold"
+                            />
+                            <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
+                          <span className="text-[14px] font-semibold text-[#1d1d1f]">
+                            {formatTaka(pcs * item.unitPrice)}
+                          </span>
+                          {items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItem(idx)}
+                              className="text-[#7a7a7a] hover:text-[#d92916] text-xs px-1.5 py-1"
+                            >
+                              ✕
+                            </button>
+                          )}
                         </div>
                       </div>
 
-                      <div className="sm:col-span-2 flex items-center justify-between">
-                        <span className="text-xs font-medium text-[#0c0a09]">
-                          {formatTaka(pcs * item.unitPrice)}
+                      {/* Quick 1-Tap Mobile Quantity Presets */}
+                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-[#e0e0e0]/70">
+                        <span className="text-[11px] text-[#7a7a7a]">
+                          মোট ডিম: <strong className="text-[#1d1d1f] font-semibold">{toBengaliNumber(pcs)} পিস</strong>
                         </span>
-                        {items.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(idx)}
-                            className="text-[#a8a29e] hover:text-[#dc2626] text-xs px-1"
-                          >
-                            ✕
-                          </button>
-                        )}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[1, 5, 10, 20, 50].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => {
+                                setItems((prev) => {
+                                  const copy = [...prev];
+                                  copy[idx].qtyInput = preset;
+                                  return copy;
+                                });
+                              }}
+                              className={`px-2.5 py-1 rounded-[980px] text-[11px] font-semibold transition ${
+                                item.qtyInput === preset
+                                  ? 'bg-[#0066cc] text-white'
+                                  : 'bg-white border border-[#d2d2d7] text-[#1d1d1f] hover:border-[#0066cc]'
+                              }`}
+                            >
+                              {toBengaliNumber(preset)} {item.inputType === 'CRATE' ? 'খাঁচি' : 'পিস'}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   );
@@ -500,67 +507,67 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
             </div>
 
             {/* Challan Section Checkbox */}
-            <div className="p-3 bg-[#fafafa] border border-[#e7e5e4] rounded-xl space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="p-3.5 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[12px] space-y-2.5">
+              <label className="flex items-center gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeChallan}
                   onChange={(e) => setIncludeChallan(e.target.checked)}
-                  className="rounded text-[#0c0a09] focus:ring-[#0c0a09] w-4 h-4"
+                  className="rounded text-[#0066cc] focus:ring-[#0071e3] w-4 h-4"
                 />
-                <span className="text-xs font-medium text-[#0c0a09] flex items-center gap-1.5">
-                  <Truck className="w-4 h-4 text-[#777169]" />
+                <span className="text-[13px] font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-[#0066cc]" />
                   <span>আলাদা ডেলিভারি চালান প্রিন্ট করুন (Delivery Challan)</span>
                 </span>
               </label>
 
               {includeChallan && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                   <input
                     type="text"
                     placeholder="গাড়ি / ভ্যান নম্বর"
                     value={vehicleNumber}
                     onChange={(e) => setVehicleNumber(e.target.value)}
-                    className="input-editorial text-xs py-1.5"
+                    className="input-apple text-[13px]"
                   />
                   <input
                     type="text"
                     placeholder="ড্রাইভারের নাম"
                     value={driverName}
                     onChange={(e) => setDriverName(e.target.value)}
-                    className="input-editorial text-xs py-1.5"
+                    className="input-apple text-[13px]"
                   />
                   <input
                     type="text"
                     placeholder="ড্রাইভারের ফোন"
                     value={driverPhone}
                     onChange={(e) => setDriverPhone(e.target.value)}
-                    className="input-editorial text-xs py-1.5"
+                    className="input-apple text-[13px]"
                   />
                 </div>
               )}
             </div>
 
             {/* Payment & Discount */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#f0efed]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-[#e0e0e0]">
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   বিশেষ ছাড় / ডিসকাউন্ট
                 </label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
+                  <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
                   <input
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                    className="input-editorial w-full pl-6 text-xs font-semibold"
+                    className="input-apple w-full pl-6 text-[14px] font-semibold"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-medium text-[#292524]">
+                  <label className="block text-[12px] font-semibold text-[#1d1d1f]">
                     নগদ জমা / পেইড
                   </label>
                   <button
@@ -569,30 +576,30 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                       setPaidAmount(netTotal);
                       if (paymentMethod === 'DUE') handlePaymentMethodChange('CASH');
                     }}
-                    className="text-[10px] font-semibold text-[#292524] bg-[#f0efed] hover:bg-[#e7e5e4] px-2 py-0.5 rounded-full transition"
+                    className="text-[11px] font-semibold text-[#0066cc] bg-[#0066cc]/10 hover:bg-[#0066cc]/20 px-2.5 py-0.5 rounded-[980px] transition"
                   >
-                    পূর্ণ বিল
+                    পূর্ণ বিল জমা
                   </button>
                 </div>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-2.5 text-xs text-[#777169]">৳</span>
+                  <span className="absolute left-2.5 top-3 text-xs text-[#7a7a7a]">৳</span>
                   <input
                     type="number"
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
-                    className="input-editorial w-full pl-6 text-xs font-semibold"
+                    className="input-apple w-full pl-6 text-[14px] font-semibold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   পেমেন্ট মাধ্যম
                 </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => handlePaymentMethodChange(e.target.value as any)}
-                  className="input-editorial w-full text-xs"
+                  className="input-apple w-full text-[14px]"
                 >
                   <option value="CASH">ক্যাশ নগদ</option>
                   <option value="BKASH">বিকাশ (bKash)</option>
@@ -603,14 +610,14 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#292524] mb-1">
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
                   জমা একাউন্ট (সিঙ্ক)
                 </label>
                 <select
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
                   disabled={paymentMethod === 'DUE' || paidAmount <= 0}
-                  className="input-editorial w-full text-xs disabled:opacity-50"
+                  className="input-apple w-full text-[14px] disabled:opacity-50"
                 >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -623,24 +630,24 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
 
             <button
               type="submit"
-              className="btn-primary w-full h-11"
+              className="btn-primary w-full py-3 text-[15px]"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>মেমো তৈরি করুন ও প্রিন্ট ভিউ দেখুন</span>
+              <span>মেমো সংরক্ষণ করুন ও প্রিন্ট ভিউ দেখুন</span>
             </button>
           </form>
         </div>
 
-        {/* Right Summary (Dark-Inverted Surface Card: #0c0a09) */}
+        {/* Right Summary ({component.product-tile-dark} #272729) */}
         <div className="space-y-4">
-          <div className="bg-[#0c0a09] text-white rounded-2xl p-6 shadow-xl space-y-4">
-            <h3 className="font-serif font-light text-xl text-white border-b border-white/10 pb-3">
+          <div className="tile-dark p-6 space-y-4">
+            <h3 className="font-semibold text-[20px] text-white border-b border-white/10 pb-3">
               মেমোর মোট বিল হিসাব
             </h3>
-            <div className="space-y-2.5 text-xs text-[#a8a29e]">
+            <div className="space-y-2.5 text-[13px] text-white/75">
               <div className="flex justify-between">
                 <span>সাবটোটাল:</span>
-                <span className="text-white font-medium">{formatTaka(subtotal)}</span>
+                <span className="text-white font-semibold">{formatTaka(subtotal)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-rose-300">
@@ -648,15 +655,15 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                   <span>- {formatTaka(discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-medium text-white border-t border-white/10 pt-3">
+              <div className="flex justify-between text-[16px] font-semibold text-white border-t border-white/10 pt-3">
                 <span>মোট বিল:</span>
-                <span className="font-serif font-light text-xl text-white">{formatTaka(netTotal)}</span>
+                <span className="font-semibold text-[22px] text-[#2997ff]">{formatTaka(netTotal)}</span>
               </div>
-              <div className="flex justify-between text-[#16a34a]">
+              <div className="flex justify-between text-emerald-400">
                 <span>জমা প্রদান:</span>
-                <span className="font-medium">{formatTaka(paidAmount)}</span>
+                <span className="font-semibold">{formatTaka(paidAmount)}</span>
               </div>
-              <div className="flex justify-between text-white font-medium border-t border-white/10 pt-2 text-sm">
+              <div className="flex justify-between text-white font-semibold border-t border-white/10 pt-2.5 text-[14px]">
                 <span>চলতি বকেয়া:</span>
                 <span>{formatTaka(dueAmount)}</span>
               </div>
@@ -664,15 +671,15 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
           </div>
 
           {/* Recent Sales List */}
-          <div className="card-editorial p-4 space-y-3">
-            <h4 className="text-xs font-medium text-[#777169] uppercase tracking-wider flex items-center gap-1.5">
-              <Receipt className="w-3.5 h-3.5" />
+          <div className="card-apple p-4 sm:p-5 space-y-3">
+            <h4 className="text-[12px] font-semibold text-[#7a7a7a] uppercase tracking-wider flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5 text-[#0066cc]" />
               <span>আজকের মেমো তালিকা</span>
             </h4>
 
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {sales.length === 0 ? (
-                <div className="text-xs text-[#a8a29e] text-center py-4">
+                <div className="text-xs text-[#7a7a7a] text-center py-4">
                   কোনো মেমো তৈরি হয়নি
                 </div>
               ) : (
@@ -681,14 +688,14 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                   return (
                     <div
                       key={inv.id}
-                      className="p-3 bg-[#fafafa] rounded-lg border border-[#e7e5e4] hover:border-[#0c0a09] text-xs flex justify-between items-center transition"
+                      className="p-3 bg-[#f5f5f7] rounded-[12px] border border-[#e0e0e0] hover:border-[#0066cc] text-xs flex justify-between items-center transition"
                     >
                       <div>
-                        <div className="font-medium text-[#0c0a09] flex items-center gap-1.5">
-                          <span>{inv.invoice_code}</span>
-                          <span className="text-[#a8a29e]">({cust?.name})</span>
+                        <div className="font-semibold text-[#1d1d1f] flex items-center gap-1.5">
+                          <span className="text-[#0066cc] font-mono">{inv.invoice_code}</span>
+                          <span className="text-[#7a7a7a]">({cust?.name})</span>
                         </div>
-                        <div className="text-[11px] text-[#777169] mt-0.5">
+                        <div className="text-[11px] text-[#7a7a7a] mt-0.5">
                           বিল: {formatTaka(inv.net_total)} | বকেয়া: {formatTaka(inv.due_amount)}
                         </div>
                       </div>
@@ -699,16 +706,16 @@ export const SalesPosView: React.FC<SalesPosViewProps> = ({
                             if (cust) shareInvoiceWhatsApp(inv, cust, company);
                           }}
                           title="WhatsApp এ পাঠান"
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-white transition"
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-[#4e4e4e] hover:text-[#0066cc] hover:bg-white transition"
                         >
-                          <Share2 className="w-3.5 h-3.5" />
+                          <Share2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => onSelectInvoiceForPrint(inv)}
                           title="প্রিন্ট করুন"
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[#777169] hover:text-[#0c0a09] hover:bg-white transition"
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-[#4e4e4e] hover:text-[#0066cc] hover:bg-white transition"
                         >
-                          <Printer className="w-3.5 h-3.5" />
+                          <Printer className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

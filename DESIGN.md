@@ -1,135 +1,310 @@
-# DimKhata (ডিমখাতা) Design System — Editorial Magazine & Atmospheric Orbs
-Based on the ElevenLabs Editorial Design System Specification (`version: alpha`)
+---
+version: alpha
+name: Apple
+website: "https://www.apple.com"
+description: A photography-first interface that turns marketing into a museum gallery. Edge-to-edge product tiles alternate light and dark canvases, framed by SF Pro Display headlines with negative letter-spacing and a single Action Blue (#0066cc) interactive color. UI chrome recedes so the product can speak — no decorative gradients, no shadows on chrome, only the one signature drop-shadow under product imagery resting on a surface.
 
+seo:
+  title: "Apple Design System for React: Action Blue and SF Pro"
+  metaDescription: "Apple's restraint: Action Blue #0066cc on every link and pill, SF Pro type, and light and dark tiles stacked edge to edge. For React and AI tools."
+  highlights:
+    - "Single interactive color — Action Blue #0066cc is every link, every pill CTA, every focus signal; no secondary brand accent exists"
+    - "Photography-first chrome — UI recedes so the product can speak; exactly one drop-shadow in the system, reserved for product imagery"
+    - "Alternating tile rhythm — full-bleed light and dark canvases stack edge-to-edge; the color change itself is the section divider"
+    - "Body at 17px, not 16px — display headlines carry negative letter-spacing for the signature Apple-tight cadence"
+    - "Weight 500 is absent — the type ladder runs 300/400/600/700, with the rare weight 300 reserved for airy moments"
+  tags:
+    - "Consumer Electronics"
+    - "Mobile Platforms"
+  lastUpdated: "2026-05-12"
+  author:
+    name: "Dov Azencot"
+    url: "https://x.com/dovazencot"
+  opening: |
+    Apple's web presence is a masterclass in reverent product photography framed by near-invisible UI. Every page is a stack of edge-to-edge product tiles — alternating light and dark canvases, each centered on a hero headline, a one-line tagline, two tiny blue pill CTAs, and an impossibly crisp product render. Nothing competes with the product. Typography is confident but quiet; color is either pure white, an off-white parchment, or a near-black tile; interactive elements are a single, quiet Action Blue at #0066cc. Density is unusually low even by contemporary SaaS standards.
+
+    This page captures Apple's marketing system as a DESIGN.md file — Google Labs' open spec for machine-readable design tokens. Inside: 21 color tokens covering the one signature blue, three near-black tile variants, white and parchment canvases, and a muted text ladder; 16 typography tokens running entirely on SF Pro Display (for display sizes) and SF Pro Text (for body and UI), with weight 500 deliberately absent from the ladder; seven radius tokens that hierarchically split between zero (full-bleed tiles) and pill (every interactive element); and 24 component definitions covering buttons, product tiles, the two-row navigation, store utility cards, the iPhone configurator, and a floating sticky purchase bar.
+
+colors:
+  primary: "#0066cc"
+  primary-focus: "#0071e3"
+  primary-on-dark: "#2997ff"
+  ink: "#1d1d1f"
+  body: "#1d1d1f"
+  body-on-dark: "#ffffff"
+  body-muted: "#cccccc"
+  ink-muted-80: "#333333"
+  ink-muted-48: "#7a7a7a"
+  divider-soft: "#f0f0f0"
+  hairline: "#e0e0e0"
+  canvas: "#ffffff"
+  canvas-parchment: "#f5f5f7"
+  surface-pearl: "#fafafc"
+  surface-tile-1: "#272729"
+  surface-tile-2: "#2a2a2c"
+  surface-tile-3: "#252527"
+  surface-black: "#000000"
+  surface-chip-translucent: "#d2d2d7"
+  on-primary: "#ffffff"
+  on-dark: "#ffffff"
+
+typography:
+  hero-display:
+    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
+    fontSize: 56px
+    fontWeight: 600
+    lineHeight: 1.07
+    letterSpacing: -0.28px
+  display-lg:
+    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
+    fontSize: 40px
+    fontWeight: 600
+    lineHeight: 1.1
+    letterSpacing: 0
+  display-md:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 34px
+    fontWeight: 600
+    lineHeight: 1.47
+    letterSpacing: -0.374px
+  lead:
+    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
+    fontSize: 28px
+    fontWeight: 400
+    lineHeight: 1.14
+    letterSpacing: 0.196px
+  lead-airy:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 24px
+    fontWeight: 300
+    lineHeight: 1.5
+    letterSpacing: 0
+  tagline:
+    fontFamily: "SF Pro Display, system-ui, -apple-system, sans-serif"
+    fontSize: 21px
+    fontWeight: 600
+    lineHeight: 1.19
+    letterSpacing: 0.231px
+  body-strong:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 17px
+    fontWeight: 600
+    lineHeight: 1.24
+    letterSpacing: -0.374px
+  body:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 17px
+    fontWeight: 400
+    lineHeight: 1.47
+    letterSpacing: -0.374px
+  dense-link:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 17px
+    fontWeight: 400
+    lineHeight: 2.41
+    letterSpacing: 0
+  caption:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.43
+    letterSpacing: -0.224px
+  caption-strong:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 14px
+    fontWeight: 600
+    lineHeight: 1.29
+    letterSpacing: -0.224px
+  button-large:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 18px
+    fontWeight: 300
+    lineHeight: 1.0
+    letterSpacing: 0
+  button-utility:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.29
+    letterSpacing: -0.224px
+  fine-print:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.0
+    letterSpacing: -0.12px
+  micro-legal:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 10px
+    fontWeight: 400
+    lineHeight: 1.3
+    letterSpacing: -0.08px
+  nav-link:
+    fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.0
+    letterSpacing: -0.12px
+
+rounded:
+  none: 0px
+  xs: 5px
+  sm: 8px
+  md: 11px
+  lg: 18px
+  pill: 9999px
+  full: 9999px
+
+spacing:
+  xxs: 4px
+  xs: 8px
+  sm: 12px
+  md: 17px
+  lg: 24px
+  xl: 32px
+  xxl: 48px
+  section: 80px
+
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.body}"
+    rounded: "{rounded.pill}"
+    padding: 11px 22px
+  button-primary-focus:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.pill}"
+  button-primary-active:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    rounded: "{rounded.pill}"
+  button-secondary-pill:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.primary}"
+    typography: "{typography.body}"
+    rounded: "{rounded.pill}"
+    padding: 11px 22px
+  button-dark-utility:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.on-dark}"
+    typography: "{typography.button-utility}"
+    rounded: "{rounded.sm}"
+    padding: 8px 15px
+  button-pearl-capsule:
+    backgroundColor: "{colors.surface-pearl}"
+    textColor: "{colors.ink-muted-80}"
+    typography: "{typography.caption}"
+    rounded: "{rounded.md}"
+    padding: 8px 14px
+  button-store-hero:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.on-primary}"
+    typography: "{typography.button-large}"
+    rounded: "{rounded.pill}"
+    padding: 14px 28px
+  button-icon-circular:
+    backgroundColor: "{colors.surface-chip-translucent}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.full}"
+    size: 44px
+  text-link:
+    backgroundColor: transparent
+    textColor: "{colors.primary}"
+    typography: "{typography.body}"
+  text-link-on-dark:
+    backgroundColor: transparent
+    textColor: "{colors.primary-on-dark}"
+    typography: "{typography.body}"
+  global-nav:
+    backgroundColor: "{colors.surface-black}"
+    textColor: "{colors.on-dark}"
+    typography: "{typography.nav-link}"
+    height: 44px
+  sub-nav-frosted:
+    backgroundColor: "{colors.canvas-parchment}"
+    textColor: "{colors.ink}"
+    typography: "{typography.tagline}"
+    height: 52px
+  product-tile-light:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.display-lg}"
+    rounded: "{rounded.none}"
+    padding: 80px
+  product-tile-parchment:
+    backgroundColor: "{colors.canvas-parchment}"
+    textColor: "{colors.ink}"
+    typography: "{typography.display-lg}"
+    rounded: "{rounded.none}"
+    padding: 80px
+  product-tile-dark:
+    backgroundColor: "{colors.surface-tile-1}"
+    textColor: "{colors.on-dark}"
+    typography: "{typography.display-lg}"
+    rounded: "{rounded.none}"
+    padding: 80px
+  product-tile-dark-2:
+    backgroundColor: "{colors.surface-tile-2}"
+    textColor: "{colors.on-dark}"
+    rounded: "{rounded.none}"
+  product-tile-dark-3:
+    backgroundColor: "{colors.surface-tile-3}"
+    textColor: "{colors.on-dark}"
+    rounded: "{rounded.none}"
+  store-utility-card:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-strong}"
+    rounded: "{rounded.lg}"
+    padding: 24px
+  configurator-option-chip:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.caption}"
+    rounded: "{rounded.pill}"
+    padding: 12px 16px
+  configurator-option-chip-selected:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+  search-input:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    rounded: "{rounded.pill}"
+    padding: 12px 20px
+    height: 44px
+  floating-sticky-bar:
+    backgroundColor: "{colors.canvas-parchment}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    height: 64px
+    padding: 12px 32px
+  environment-quote-card:
+    backgroundColor: "{colors.surface-tile-1}"
+    textColor: "{colors.on-dark}"
+    typography: "{typography.display-lg}"
+    rounded: "{rounded.none}"
+    padding: 80px
+  footer:
+    backgroundColor: "{colors.canvas-parchment}"
+    textColor: "{colors.ink-muted-80}"
+    typography: "{typography.fine-print}"
+    padding: 64px
 ---
 
-## 1. Executive Vision & Philosophy
-**DimKhata ("শরিফ এন্ড ইমান এন্টারপ্রাইজ")** adopts an editorial print-magazine aesthetic rather than a typical loud or hyper-saturated SaaS dashboard. 
-- **Base Canvas:** Off-white (`#f5f5f5`) holding warm near-black ink (`#292524` and `#0c0a09`).
-- **Brand Voltage:** Photographic and atmospheric rather than chromatic. Soft pastel atmospheric gradient orbs (mint `#a7e5d3`, peach `#f4c5a8`, lavender `#c8b8e0`, sky `#a8c8e8`, rose `#e8b8c4`) drift as background blooms behind copy and metric cards.
-- **No Saturated Button Colors:** Primary actions are exclusively warm near-black ink pills (`#292524` / `#0c0a09`). Secondary actions are transparent outline pills with a `#d6d3d1` hairline.
-- **Display Typography at Weight 300:** Display headlines sit at weight 300 (EB Garamond / Waldenburg serif, `font-light`), never bolded. Body, navigation, numbers, and Bengali data typography run **Inter** and **Hind Siliguri** at weights 400 and 500 with loose, elegant tracking (+0.16px).
-- **Pill & Soft Rectangle Shape Language:** Every CTA button and status badge is a full pill (`rounded-full` / `9999px`). Form inputs use 8px (`rounded-md`), feature cards use 16px (`rounded-xl`), and atmospheric cards use 24px (`rounded-2xl` / `xxl`).
+## Overview
 
----
+Apple's web presence is a masterclass in **reverent product photography framed by near-invisible UI**. Every page is a stack of edge-to-edge product "tiles" — alternating light and dark canvases, each centered on a hero headline, a one-line tagline, two tiny blue pill CTAs, and an impossibly crisp product render. Nothing competes with the product. Typography is confident but quiet; color is either pure white, an off-white parchment, or a near-black tile; interactive elements are a single, quiet blue.
 
-## 2. Complete Design Tokens
-
-### 2.1 Colors
-
-| Category | Token | Hex | Usage |
-| :--- | :--- | :--- | :--- |
-| **Primary Action** | `colors.primary` | `#292524` | Warm near-black ink pill for primary CTAs |
-| **Primary Active** | `colors.primary-active` | `#0c0a09` | Hover/press state on primary pill |
-| **Primary Text** | `colors.ink` | `#0c0a09` | Display headlines, strong titles, table values |
-| **Body Running** | `colors.body` | `#4e4e4e` | Sub-titles, table text, running notes |
-| **Body Emphasis** | `colors.body-strong` | `#292524` | Metric labels, prominent numbers |
-| **Muted Text** | `colors.muted` | `#777169` | Helper descriptions, timestamps |
-| **Muted Soft** | `colors.muted-soft` | `#a8a29e` | Placeholder text, disabled labels |
-| **Canvas** | `colors.canvas` | `#f5f5f5` | Main page background floor |
-| **Canvas Soft** | `colors.canvas-soft` | `#fafafa` | Alternating section backgrounds, card floors |
-| **Canvas Deep** | `colors.canvas-deep` | `#0c0a09` | Dark mode hero exception & featured summaries |
-| **Surface Card** | `colors.surface-card` | `#ffffff` | Pure white content cards |
-| **Surface Strong** | `colors.surface-strong` | `#f0efed` | Badge backgrounds, circular icon plates |
-| **Hairline** | `colors.hairline` | `#e7e5e4` | Standard 1px divider and card border |
-| **Hairline Soft** | `colors.hairline-soft` | `#f0efed` | Subtle table row borders |
-| **Hairline Strong** | `colors.hairline-strong` | `#d6d3d1` | Outline button borders, active inputs |
-| **On Primary** | `colors.on-primary` | `#ffffff` | Pure white text on ink pills |
-| **On Dark** | `colors.on-dark` | `#ffffff` | White text on dark hero cards |
-| **On Dark Soft** | `colors.on-dark-soft` | `#a8a29e` | Soft gray on dark surfaces |
-| **Gradient Mint** | `colors.gradient-mint` | `#a7e5d3` | Atmospheric radial orb (Mint) |
-| **Gradient Peach** | `colors.gradient-peach` | `#f4c5a8` | Atmospheric radial orb (Peach) |
-| **Gradient Lavender**| `colors.gradient-lavender`| `#c8b8e0` | Atmospheric radial orb (Lavender) |
-| **Gradient Sky** | `colors.gradient-sky` | `#a8c8e8` | Atmospheric radial orb (Sky blue) |
-| **Gradient Rose** | `colors.gradient-rose` | `#e8b8c4` | Atmospheric radial orb (Rose) |
-| **Semantic Success**| `colors.semantic-success`| `#16a34a` | Due paid, confirmation badge |
-| **Semantic Error** | `colors.semantic-error` | `#dc2626` | Over-credit alert, critical warning |
-
-> [!IMPORTANT]
-> **Strict Rule on Gradient Orbs:**  
-> The 5 pastel gradient stops (`mint`, `peach`, `lavender`, `sky`, `rose`) appear ONLY as soft decorative radial blooms (`blur-3xl`, `opacity-40` to `opacity-60`) behind copy and card grids. They are **NEVER** used as button backgrounds or text colors.
-
----
-
-### 2.2 Typography Scale
-
-| Token | Family | Size | Weight | Line Height | Tracking | Usage |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `display-mega` | EB Garamond / Serif | 64px | 300 | 1.05 | -1.92px | App hero h1 |
-| `display-xl` | EB Garamond / Serif | 48px | 300 | 1.08 | -0.96px | Modal headlines |
-| `display-lg` | EB Garamond / Serif | 36px | 300 | 1.17 | -0.36px | Section heads |
-| `display-md` | EB Garamond / Serif | 32px | 300 | 1.13 | -0.32px | Card group titles |
-| `display-sm` | EB Garamond / Serif | 24px | 300 | 1.20 | 0px | Metric summaries |
-| `title-md` | Inter / Hind Siliguri | 20px | 500 | 1.35 | 0px | Component headers |
-| `title-sm` | Inter / Hind Siliguri | 18px | 500 | 1.44 | +0.18px | Form section labels |
-| `body-md` | Inter / Hind Siliguri | 16px | 400 | 1.50 | +0.16px | Default running text |
-| `body-strong` | Inter / Hind Siliguri | 16px | 500 | 1.50 | +0.16px | Emphasized body text |
-| `body-sm` | Inter / Hind Siliguri | 15px | 400 | 1.47 | +0.15px | Table body, secondary notes |
-| `caption` | Inter / Hind Siliguri | 14px | 400 | 1.50 | 0px | Captions, small indicators |
-| `caption-upper`| Inter | 12px | 600 | 1.40 | +0.96px | Uppercase category badges |
-| `button` | Inter / Hind Siliguri | 15px | 500 | 1.00 | 0px | Pill buttons |
-| `nav-link` | Inter / Hind Siliguri | 15px | 500 | 1.40 | 0px | Top-nav and sidebar items |
-
----
-
-### 2.3 Shapes & Corner Radii
-
-| Token | Class | Value | Usage |
-| :--- | :--- | :--- | :--- |
-| `rounded.pill` | `rounded-full` | `9999px` | Every CTA button (`button-primary`, `button-outline`), status pills, filter tabs |
-| `rounded.full` | `rounded-full` | `9999px` | 32px circular icon plates, avatar discs |
-| `rounded.xxl` | `rounded-2xl` | `24px` | Atmospheric gradient-orb cards, banner cards |
-| `rounded.xl` | `rounded-xl` | `16px` | Standard feature cards, pricing tiers, tables |
-| `rounded.lg` | `rounded-lg` | `12px` | Compact cards, dropdown menus |
-| `rounded.md` | `rounded-md` | `8px` | Text inputs, select dropdowns |
-| `rounded.sm` | `rounded-sm` | `6px` | Inline code badges, tags |
-
----
-
-### 2.4 Elevation & Depth
-- **Canvas:** `#f5f5f5` flat plane.
-- **Card:** `#ffffff` surface with `1px solid #e7e5e4` hairline border.
-- **Soft Drop Shadow:** `box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04)` on hover.
-- **Atmospheric Depth:** Radial blur pastel blooms (`bg-gradient-to-tr from-[#a7e5d3] via-[#f4c5a8] to-[#c8b8e0] blur-3xl opacity-50`).
-
----
-
-## 3. Component Specification & Styling Matrix
-
-### 3.1 Buttons
-- **`button-primary`:**  
-  `bg-[#292524] text-white hover:bg-[#0c0a09] active:bg-[#0c0a09] rounded-full px-5 py-2.5 text-[15px] font-medium h-[40px] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.08)]`
-- **`button-outline`:**  
-  `bg-transparent text-[#0c0a09] border border-[#d6d3d1] hover:border-[#0c0a09] hover:bg-[#f0efed] rounded-full px-5 py-2 text-[15px] font-medium h-[40px] transition-all`
-- **`button-tertiary-text`:**  
-  `text-[#0c0a09] hover:text-[#292524] underline-offset-4 hover:underline text-[15px] font-medium`
-
-### 3.2 Form Inputs (`text-input`)
-- `bg-white text-[#0c0a09] border border-[#d6d3d1] focus:border-[#0c0a09] focus:ring-1 focus:ring-[#0c0a09] rounded-md px-3.5 py-2 text-[15px] h-[44px] transition-all placeholder:text-[#a8a29e]`
-
-### 3.3 Badges (`badge-pill`)
-- `bg-[#f0efed] text-[#0c0a09] border border-[#e7e5e4] rounded-full px-3 py-1 text-[12px] font-semibold tracking-wider uppercase inline-flex items-center gap-1.5`
-
-### 3.4 Cards & Surfaces (`feature-card`)
-- `bg-white border border-[#e7e5e4] rounded-xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-shadow hover:shadow-[0_6px_24px_rgba(0,0,0,0.05)]`
-
-### 3.5 Top Navigation (`top-nav`)
-- `bg-[#f5f5f5]/90 backdrop-blur-md border-b border-[#e7e5e4] text-[#0c0a09] h-[64px] sticky top-0 z-40 px-6 flex items-center justify-between`
-
----
-
-## 4. Do's and Don'ts
-
-### ✅ DO:
-1. Use `#292524` (warm near-black ink pill) for primary actions.
-2. Render display headlines in EB Garamond / Serif at `font-light` (weight 300) with `-0.36px` to `-1.92px` tracking.
-3. Keep the canvas clean off-white (`#f5f5f5`) with crisp hairline borders (`#e7e5e4`).
-4. Place pastel atmospheric gradient orbs softly in the background for visual depth.
-5. Use `rounded-full` (9999px) for every button, badge, and tab pill.
-
-### ❌ DON'T:
-1. Do not use bright orange, saturated yellow, neon cyan, or amber button fills.
-2. Do not bold display headlines (keep weight 300).
-3. Do not use gradient orbs as text colors, button backgrounds, or solid card fills.
-4. Do not use sharp 0px corners on CTAs.
-5. Do not turn the entire app into a dark developer-tools theme.
+Store and shop surfaces retain the same chassis. In **DimKhata (ডিমখাতা)** for **শরিফ এন্ড ইমান এন্টারপ্রাইজ**, we apply this exact Apple Design System across every surface:
+- **Two-Row Apple Navigation:**
+  1. `global-nav` (`#000000` pure black, `44px` height, `12px/400` text) for brand identity, branch selector, Admin/Staff role switch, Cloud Sync status, and Backup/Restore.
+  2. `sub-nav-frosted` (`#f5f5f7` at 80% opacity with `backdrop-filter: saturate(180%) blur(20px)`, `52px` height) with active module title (`21px/600`), horizontal module pills, and persistent right-aligned `#0066cc` Action Blue CTAs.
+- **Mobile-First Bottom Bar (`floating-sticky-bar`):** On phones/tablets (`≤ 833px`), a persistent frosted bottom dock gives 1-thumb access to the 5 core daily operations (`হোম/স্টক`, `বিক্রয় মেমো`, `ডিম কেনা`, `কাস্টমার/বাকি`, `সব মেনু`).
+- **Store Utility Cards (`store-utility-card`):** Pure white (`#ffffff`), `1px solid #e0e0e0` hairline border, `18px` radius (`{rounded.lg}`), `24px` padding, **zero shadow**, resting on `#f5f5f7` parchment canvas.
+- **Dark Tiles (`product-tile-dark`):** `#272729` (`{colors.surface-tile-1}`) with `#2a2a2c` (`{colors.surface-tile-2}`) and `#252527` (`{colors.surface-tile-3}`) micro-steps, `#ffffff` primary text, `#cccccc` muted text, and `#2997ff` Sky Link Blue accents.
+- **Single Interactive Accent:** Action Blue `#0066cc` (`{colors.primary}`) on every primary pill CTA (`{component.button-primary}`), secondary ghost pill (`{component.button-secondary-pill}`), link, and active state, with `#0071e3` (`{colors.primary-focus}`) for focus rings and selected configurator chips (`{component.configurator-option-chip-selected}`).
+- **Typography & Micro-Interaction:** `SF Pro Display` / `SF Pro Text` (`system-ui, -apple-system, BlinkMacSystemFont, 'Inter', 'Hind Siliguri', sans-serif`), weight ladder `300 / 400 / 600 / 700` (**weight 500 is absent**), `17px` body copy, negative letter-spacing at display sizes, and `transform: scale(0.95)` on every button press.
